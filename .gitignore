@@ -1,0 +1,42 @@
+# Python environments, caches, tests, and builds
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+build/
+dist/
+*.egg-info/
+.ipynb_checkpoints/
+
+# Local credentials and editor settings
+.env
+.env.*
+!.env.example
+.netrc
+_netrc
+.streamlit/secrets.toml
+*.pem
+*.key
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local data and working outputs
+/data/
+/outputs/
+*.nc
+*.nc4
+*.hdf
+*.hdf5
+*.h5
+*.grib
+*.grib2
+*.tif
+*.tiff
