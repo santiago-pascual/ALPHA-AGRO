@@ -2,15 +2,13 @@
 
 import argparse
 from datetime import date
-from getpass import GetPassWarning, getpass
-import os
 from pathlib import Path
 import sys
-import warnings
 
 import requests
 
 from .acquisition import AcquisitionError, PRODUCTS, checksum, discover, preserve, write_json
+from .auth import CredentialError, earthdata_token
 from .validation import ValidationError, check_bounds, validate_and_subset
 
 
@@ -27,21 +25,10 @@ def main():
     credentials.add_argument("--local-file", type=Path)
     credentials.add_argument("--prompt-token", action="store_true")
     args = parser.parse_args()
-    if args.prompt_token and not sys.stdin.isatty():
-        parser.error("--prompt-token requires an interactive terminal.")
-    if args.prompt_token:
-        with warnings.catch_warnings():
-            warnings.simplefilter("error", GetPassWarning)
-            try:
-                token = getpass("Earthdata user token: ").strip()
-            except GetPassWarning:
-                parser.error("Cannot hide input in this terminal. Open an interactive PowerShell terminal.")
-            except (EOFError, KeyboardInterrupt):
-                parser.exit(1, "Earthdata token entry canceled.\n")
-        if not token:
-            parser.error("The Earthdata token prompt was empty.")
-    else:
-        token = os.getenv("EARTHDATA_TOKEN")
+    try:
+        token = None if args.local_file else earthdata_token(prompt=args.prompt_token)
+    except CredentialError as error:
+        parser.error(str(error))
 
     try:
         check_bounds(args.bounds)
