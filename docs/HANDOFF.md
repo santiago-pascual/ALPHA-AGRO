@@ -66,7 +66,7 @@ The download commands use `EARTHDATA_TOKEN` first, then the Windows credential. 
 
 **Second-phase checkpoint.** Regional sensitivity, spatial contrasts, and temporal persistence are documented in [Scientific discovery results](SCIENTIFIC_DISCOVERY_RESULTS.md). Run `.\.venv\Scripts\python.exe -m gldas.discovery` offline with the verified inputs. The ignored outputs are under `data/analysis/scientific-discovery/`.
 
-**Next task.** Benchmark a single regional OPeNDAP export of the additional GLDAS variables against a local full granule. The two full monthly files are insufficient for estimates of long-term associations.
+**Multivariable workflow.** See the [February validation gate and acquisition commands](MULTIVARIABLE_DATA_VALIDATION.md) and the [Earth system relationship analysis](EARTH_SYSTEM_RELATIONSHIPS.md). Keep the source exports and manifests under ignored `data/phase1/multivariable-opendap/`.
 
 **Limits.** Three-hourly rainfall intervals are labelled by their ending time. These eight labels cover December 31 at 21:00 to January 1 at 21:00 UTC for rainfall. To aggregate the full January 1 UTC rainfall day, use intervals ending at 03:00 through January 2 at 00:00. The subset is a provisional box and the model values have not been validated against field observations.
 

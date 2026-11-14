@@ -13,3 +13,4 @@
 | 2026-11-14 | Use the common valid-cell mask for the historical 0–100 cm series. | The same 867 grid cells contain all three layers across all 240 months. |
 | 2026-11-14 | Use 12 monthly HAC lags for the primary interval and report sensitivity at 6 and 24 lags. | Regression residuals show serial dependence. The interval spans zero at all three lag settings. |
 | 2026-11-14 | Fix second-phase periods, boundaries, and dependence checks before computing results. | Sensitivity results remain interpretable with a known first-phase estimate. [Design](SCIENTIFIC_DISCOVERY_DESIGN.md) |
+| 2026-11-14 | Validate a five-field February export before extending the archive. Use common support, lags 0–6, and a fixed north–south split at 34°S. | The full local granule tests extraction equivalence. The fixed analysis rules limit opportunistic comparisons. [Validation](MULTIVARIABLE_DATA_VALIDATION.md) |

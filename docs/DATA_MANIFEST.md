@@ -28,6 +28,10 @@ The historical exports total 13,919,667 bytes and are stored with their per-mont
 | 2006-03 | G1413723999-GES_DISC | 58220 | `769248d6d43c7fa272feddca5ec71f87a98f410ba31bf8b678ba8e5a4a08b9ac` |
 | 2006-04 | G1413723971-GES_DISC | 58219 | `8246cedb364016bb54601574a79ab73eed6d37c80f73442511ea85d79aa8b716` |
 
+## Multivariable GLDAS archive
+
+Five-field exports and per-month source manifests are under ignored `data/phase1/multivariable-opendap/`. The original soil-water archive remains separate. The five-field February 2020 pilot matched the full NASA granule exactly. [Pilot results and units](MULTIVARIABLE_DATA_VALIDATION.md)
+
 ## Historical trend outputs
 
 The analysis runner reads the historical exports and their provenance manifests in place and checks them against [the monthly checksum index](GLDAS_MONTHLY_SHA256.csv). The JSON and three rendered figures are reproducible under local `data/analysis/2006-2025/`. The tracked [scientific summary](REAL_DATA_RESULTS.md) and [spatial figure](figures/gldas_spatial_trend_2006-2025.png) are derived outputs.
