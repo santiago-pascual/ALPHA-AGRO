@@ -7,6 +7,7 @@ import netCDF4 as nc
 import numpy as np
 import pytest
 
+from gldas.trend_report import regional_diagnostics
 from gldas.trends import (
     SOIL_LAYERS,
     SOIL_UNITS,
@@ -43,6 +44,23 @@ def make_fields(count=120, slope_per_decade=8.0, noise=None):
     layers = dict(zip(SOIL_LAYERS, (layer0, layer1, layer2)))
     units = {name: SOIL_UNITS for name in SOIL_LAYERS}
     return dates, latitudes, longitudes, layers, units
+
+
+def test_report_matches_regional_hac_and_area_weighted_cell_slopes():
+    noise = [math.sin(index / 5) for index in range(120)]
+    dates, lat, lon, layers, units = make_fields(noise=noise)
+    layers[SOIL_LAYERS[0]][:, 1, :] += np.arange(len(dates))[:, None] * 0.08
+    result = analyze_monthly_grids(dates, lat, lon, layers, units=units)
+
+    diagnostics = regional_diagnostics(result)
+
+    trend = result["regional_trend"]
+    intervals = diagnostics["hac_ci95_by_lag_months"]
+    assert set(intervals) == {"6", "12", "24"}
+    assert intervals["12"] == pytest.approx(trend["linear_hac_ci95_per_decade"])
+    assert diagnostics["area_weighted_cell_slope_per_decade"] == pytest.approx(
+        trend["linear_hac_slope_per_decade"]
+    )
 
 
 @pytest.mark.parametrize("slope", [12.0, -12.0, 0.0])

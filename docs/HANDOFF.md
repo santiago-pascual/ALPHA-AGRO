@@ -1,8 +1,8 @@
 # Research handoff
 
-**Branch** `feature/research` tracks `origin/feature/research` in the private `santiago-pascual/quant-alpha-agro` repository.
+**Research branches** `feature/research` carries acquisition work. `feature/real-data-analysis` carries the first historical analysis for review against `main`.
 
-**Latest scientific checkpoint** All 240 monthly OPeNDAP exports from January 2006 through December 2025 verified. Use `git log -1 --oneline` for the exact local commit and `git ls-remote --exit-code origin refs/heads/feature/research` for the published tip.
+**Latest scientific checkpoint** Audited all 240 monthly OPeNDAP exports and ran the trend engine. Use `git log -1 --oneline` for the exact local commit. [Results and reproduction](REAL_DATA_RESULTS.md)
 
 ## Resume
 
@@ -62,7 +62,9 @@ The download commands use `EARTHDATA_TOKEN` first, then the Windows credential. 
 .\.venv\Scripts\python.exe -m gldas.history --batches 60
 ```
 
-**Next task.** Sum the first three soil-water storage layers and build the monthly series with area weights and the common 867-cell mask. Analysis of the local exports needs no Earthdata token.
+**Reproduce the historical analysis.** Run `.\.venv\Scripts\python.exe -m gldas.trend_report` with the 240 local exports and their manifests in place. No Earthdata token is needed. The JSON and figures are ignored under `data/analysis/2006-2025/`. Use `--output` with a new directory for a repeat run.
+
+**Next task.** Check sensitivity to the regional mask and analysis period, then plan checks against independent observations. Preserve the analysis as a retrospective hydrological result.
 
 **Limits.** Three-hourly rainfall intervals are labelled by their ending time. These eight labels cover December 31 at 21:00 to January 1 at 21:00 UTC for rainfall. To aggregate the full January 1 UTC rainfall day, use intervals ending at 03:00 through January 2 at 00:00. The subset is a provisional box and the model values have not been validated against field observations.
 
@@ -70,4 +72,4 @@ The download commands use `EARTHDATA_TOKEN` first, then the Windows credential. 
 
 ## Checkpoint workflow
 
-At each meaningful milestone, run the relevant tests and update this file and [PROJECT_STATUS.md](PROJECT_STATUS.md). Record new evidence and dataset provenance where applicable. Stage explicit source and documentation paths, then check the staged diff for secrets, raw datasets, generated files, and whitespace. Commit and push to `feature/research`, then compare local HEAD with the remote ref. Label an unfinished checkpoint WIP. Keep dataset bytes in ignored local storage and coordinate the next write to the shared feature branch before switching computers.
+At each meaningful milestone, run the relevant tests and update this file and [PROJECT_STATUS.md](PROJECT_STATUS.md). Record new evidence and dataset provenance where applicable. Stage explicit source and documentation paths, then check the staged diff for secrets, raw datasets, generated files, and whitespace. Push to the assigned feature branch, then compare local HEAD with the remote ref. Label an unfinished checkpoint WIP. Keep dataset bytes in ignored local storage and coordinate the next write to the shared feature branch before switching computers.

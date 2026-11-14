@@ -11,3 +11,4 @@
 | 2026-11-14 | Use NASA OPeNDAP for the monthly 0–100 cm soil-water inputs. | The authenticated February export matched the local cutout exactly for the three layers, coordinates and decoded times. Whole-granule HTTPS remains available for fallback and additional variables. |
 | 2026-11-14 | Resume historical retrieval in four-month batches within one authenticated run. | The first four exports passed continuity, schema and checksum checks. The batch runner retains completed months for restart. |
 | 2026-11-14 | Use the common valid-cell mask for the historical 0–100 cm series. | The same 867 grid cells contain all three layers across all 240 months. |
+| 2026-11-14 | Use 12 monthly HAC lags for the primary interval and report sensitivity at 6 and 24 lags. | Regression residuals show serial dependence. The interval spans zero at all three lag settings. |

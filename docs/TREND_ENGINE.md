@@ -4,7 +4,7 @@
 
 The gldas.trends module analyzes complete monthly GLDAS Noah v2.1 regional NetCDF exports produced by the acquisition pipeline. It covers 0–100 cm soil-water storage, area-weighted regional means, seasonal climatology and anomalies, temporal trends, cell-level trends, coverage diagnostics, and false-discovery-rate adjustment.
 
-The module does not download data. Synthetic inputs are used only by unit tests. This branch has not generated scientific findings from NASA data, and no crop-yield or crop-damage inference is supported.
+The module works offline. The January 2006–December 2025 run on 240 NASA exports is documented in [Real-data results](REAL_DATA_RESULTS.md).
 
 ## Input contract
 
@@ -38,13 +38,13 @@ For pipeline outputs, load_monthly_netcdf(paths) returns the validated dates, gr
 
 ## Run
 
-After the 240 regional monthly exports are available under data/phase1/subsets/-64.0_-38.0_-57.0_-30.0/, run from the repository root in PowerShell:
+After the 240 regional monthly exports and their provenance manifests are available under `data/phase1/historical-opendap/`, run from the repository root in PowerShell.
 
 ```powershell
-.\.venv\Scripts\python.exe -m gldas.trends data\phase1\subsets\-64.0_-38.0_-57.0_-30.0 --output data\analysis\trend_analysis.json --minimum-regional-coverage 0.80 --minimum-spatial-months 60 --alpha 0.05 --hac-max-lag-months 12
+.\.venv\Scripts\python.exe -m gldas.trend_report
 ```
 
-The command reads only .nc4 files in the input directory and writes one JSON file. The output includes per-month regional values and area coverage, full-period month climatology, monthly anomalies, a regional trend summary, cell-level trend rows suitable for plotting or tabulation, and the filename plus SHA-256 of each input export. Keep generated analysis output out of Git unless the team explicitly decides otherwise.
+The report audits the exports and writes a JSON file and three figures under `data/analysis/2006-2025/`. The JSON includes regional monthly values and area coverage, climatology and anomalies, regional uncertainty, cell-level trends, and the filename and SHA-256 of each export. The lower-level `gldas.trends` CLI accepts other ordered monthly export series and writes analysis JSON.
 
 ## Definitions and assumptions
 
