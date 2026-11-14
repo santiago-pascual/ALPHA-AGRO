@@ -93,15 +93,17 @@ def test_download_redirect_stays_on_known_nasa_hosts(redirect_host):
     ("d2b3c3wh8s6en5.cloudfront.net", "/data",
      "Expires=2000000000&Signature=placeholder&Key-Pair-Id=placeholder", True),
     ("d2b3c3wh8s6en5.cloudfront.net", "/data", "", True),
-    ("d2b3c3wh8s6en5.cloudfront.net", "/data", "unexpected=placeholder", False),
-    ("d2b3c3wh8s6en5.cloudfront.net", "/other",
-     "Policy=placeholder&Signature=placeholder&Key-Pair-Id=placeholder", False),
-    ("d2b3c3wh8s6en5.cloudfront.net", "", "Expires=2000000000", False),
+    ("d2b3c3wh8s6en5.cloudfront.net", "/distribution", "opaque=a%2Fb%2Bc", True),
+    ("d2b3c3wh8s6en5.cloudfront.net", "/other/..", "opaque=placeholder", False),
     ("unrelated.cloudfront.net", "",
      "Policy=placeholder&Signature=placeholder&Key-Pair-Id=placeholder", False),
 ])
-def test_signed_storage_redirect_never_receives_earthdata_token(host, prefix, query, accepted):
+@pytest.mark.parametrize("wrong_filename", [False, True])
+def test_storage_redirect_never_receives_earthdata_token(host, prefix, query, accepted, wrong_filename):
     object_path = urlsplit(URL).path.removeprefix("/data")
+    if wrong_filename:
+        object_path += ".other"
+    accepted = accepted and not wrong_filename
     signed_url = f"https://{host}{prefix}{object_path}" + (f"?{query}" if query else "")
 
     class Session:

@@ -125,21 +125,17 @@ def checksum(path):
         return file_digest(source, "sha256").hexdigest()
 
 
-def signed_granule(parsed, object_path):
-    """Recognize a signed storage URL for this exact GES DISC object."""
+def storage_granule(parsed, object_path):
+    """Recognize a GES DISC storage redirect for the requested granule."""
     host = parsed.netloc
     path = unquote(parsed.path)
-    query = parse_qs(parsed.query)
     if host == CLOUDFRONT_HOST:
-        if path not in {object_path, f"/data{object_path}", f"/{STORAGE_BUCKET}{object_path}"}:
-            return False
-        # CloudFront fronts the distribution API as well as serving signed URLs.
-        # The API's catalog path is safe to request without a bearer header.
-        return (
-            path == f"/data{object_path}" and not parsed.query
-            or {"Signature", "Key-Pair-Id"} <= query.keys()
-            and ("Policy" in query or "Expires" in query)
-        )
+        # The distribution service controls the route and query. Pass the URL
+        # through unchanged after checking the host and requested filename.
+        return (re.fullmatch(r"/(?:[A-Za-z0-9_.-]+/)*[A-Za-z0-9_.-]+", path) is not None
+                and not {".", ".."}.intersection(path.split("/"))
+                and path.rsplit("/", 1)[-1] == object_path.rsplit("/", 1)[-1])
+    query = parse_qs(parsed.query)
     virtual = {f"{STORAGE_BUCKET}.s3{region}.amazonaws.com"
                for region in ("", ".us-west-2", "-us-west-2")}
     regional = {f"s3{region}.amazonaws.com" for region in ("", ".us-west-2", "-us-west-2")}
@@ -152,17 +148,18 @@ def signed_granule(parsed, object_path):
 
 
 def open_granule(session, url, token):
-    """Exchange Earthdata credentials and fetch a signed GES DISC object when redirected."""
+    """Exchange Earthdata credentials and follow a GES DISC storage redirect."""
     object_path = urlsplit(url).path.removeprefix("/data")
+    nasa_hosts = {DATA_HOST, "urs.earthdata.nasa.gov"}
     previous_host = None
     for _ in range(6):
         try:
             parsed = urlsplit(url)
         except ValueError:
             raise AcquisitionError("GES DISC returned an invalid redirect.") from None
-        nasa_host = parsed.netloc in {DATA_HOST, "urs.earthdata.nasa.gov"}
-        storage = previous_host in {DATA_HOST, CLOUDFRONT_HOST} and signed_granule(parsed, object_path)
-        if parsed.scheme != "https" or not (nasa_host or storage):
+        nasa_host = parsed.netloc in nasa_hosts
+        storage = previous_host in (nasa_hosts | {CLOUDFRONT_HOST}) and storage_granule(parsed, object_path)
+        if parsed.scheme != "https" or parsed.fragment or not (nasa_host or storage):
             host = parsed.hostname or "unknown host"
             if not re.fullmatch(r"[a-z0-9.-]{1,253}", host):
                 host = "unknown host"
@@ -187,7 +184,7 @@ def open_granule(session, url, token):
             continue
         if storage and response.status_code in {401, 403}:
             response.close()
-            raise AcquisitionError("The storage host denied the signed GES DISC link.")
+            raise AcquisitionError(f"The GES DISC storage host denied the download (HTTP {response.status_code}).")
         if response.status_code in {401, 403} or (
                 response.ok and ((parsed.netloc != DATA_HOST and not storage)
                                  or "text/html" in response.headers.get("Content-Type", "").lower())):
