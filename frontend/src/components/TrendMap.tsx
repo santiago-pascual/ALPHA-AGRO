@@ -76,7 +76,7 @@ export function TrendMap({ dataset, region, onRegionChange }: TrendMapProps) {
         </label>
       </div>
       <div className="map-meta">
-        <span><span className="live-dot" /> 0.25° native grid</span>
+        <span><span className="live-dot" /> {dataset.eligibleCells} / {dataset.gridCells} cells with trend estimates · {dataset.resolutionDegrees}° grid</span>
         <span>−30° to −38° · −64° to −57°</span>
       </div>
       <div className="map-frame">
@@ -148,7 +148,7 @@ export function TrendMap({ dataset, region, onRegionChange }: TrendMapProps) {
         <span>
           {dataset.mode === "demo"
             ? "Synthetic cell values · fictitious, for interface demonstration only."
-            : "Cell-level seasonal anomaly trends; significance uses BH-adjusted HAC p-values."}
+            : `Cell-level seasonal anomaly trends; significance uses BH-adjusted HAC p-values. ${dataset.gridCells - dataset.eligibleCells} cells have no eligible trend estimate.`}
         </span>
       </div>
       {selectedCell && (

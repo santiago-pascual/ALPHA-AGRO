@@ -21,9 +21,17 @@ npm run build
 
 ## Connect validated results
 
-The frontend reads the trend engine's schema version 1.0. Copy a reviewed trend_analysis.json to public/data/trend_analysis.json, then select REAL DATA in the header. The JSON is git-ignored by public/data/.gitignore; raw NetCDF files do not belong in this app. If the file is absent or invalid, the overview shows an empty/error state and does not fall back to synthetic results.
+The frontend reads the trend engine's schema version 1.0. On the original data-holding PC, after the 240 monthly GLDAS exports and provenance manifests have passed the audit, run this from the repository root:
 
-The adapter in src/data/loadTrend.ts maps the engine fields into presentation types. It reads months, spatial_grid, quality, regional_monthly_series, regional_monthly_anomalies, regional_trend, and spatial_trends_on_cell_seasonal_anomalies. The schema and statistical assumptions are described in ../docs/TREND_ENGINE.md.
+~~~powershell
+.\.venv\Scripts\python.exe -m gldas.trend_report
+~~~
+
+The report writes `data/analysis/2006-2025/trend_analysis.json`. Copy that reviewed output to `frontend/public/data/trend_analysis.json`, then select REAL DATA in the header. The JSON is git-ignored by public/data/.gitignore; raw NetCDF files do not belong in this app. If the file is absent or invalid, the overview shows an empty/error state and does not fall back to synthetic results.
+
+The adapter in src/data/loadTrend.ts maps and validates the engine fields before presentation. It checks continuous monthly dates, coverage fractions, grid dimensions, eligible-cell counts, and per-input-file SHA-256 provenance in addition to reading months, spatial_grid, quality, regional_monthly_series, regional_monthly_anomalies, regional_trend, and spatial trends. The dashboard identifies this output as a historical retrospective analysis; it does not provide operational forecasts. The schema and statistical assumptions are described in ../docs/TREND_ENGINE.md.
+
+Automated tests use a schema-valid synthetic fixture under `src/data/__fixtures__/`. Its values are test-only and are never loaded by the application. The default DEMO mode remains visibly labeled and uses separate fictional data.
 
 ## Screens
 
