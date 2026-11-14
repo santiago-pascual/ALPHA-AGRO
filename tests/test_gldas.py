@@ -1,5 +1,8 @@
 from datetime import date
+from getpass import GetPassWarning
 import json
+import sys
+import warnings
 
 import netCDF4 as nc
 import numpy as np
@@ -10,11 +13,28 @@ from gldas.acquisition import (
     AcquisitionError, NETCDF4_MAGIC, PRODUCTS, discover, preserve, retry, valid_data_url,
 )
 from gldas.validation import LAYERS, ValidationError, validate_and_subset
+from gldas import __main__ as cli
 
 PRODUCT = PRODUCTS["monthly"]
 FILE = "GLDAS_NOAH025_M.A202001.021.nc4"
 URL = "https://data.gesdisc.earthdata.nasa.gov/data/GLDAS/GLDAS_NOAH025_M.2.1/2020/" + FILE
 GRANULE = {"filename": FILE, "start": "2020-01-01T00:00:00Z", "url": URL}
+
+
+def test_prompt_refuses_getpass_echo_fallback(monkeypatch, capsys):
+    monkeypatch.setattr(sys, "argv", ["gldas", "--start", "2020-01-01",
+                                      "--end", "2020-01-31", "--prompt-token"])
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
+
+    def unavailable(prompt):
+        warnings.warn("Input may be echoed.", GetPassWarning)
+        pytest.fail("The prompt fell back to echoed input.")
+
+    monkeypatch.setattr(cli, "getpass", unavailable)
+    with pytest.raises(SystemExit) as result:
+        cli.main()
+    assert result.value.code == 2
+    assert "Cannot hide input" in capsys.readouterr().err
 
 
 def test_batch_guard():
