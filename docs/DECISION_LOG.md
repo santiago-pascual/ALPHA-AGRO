@@ -7,3 +7,4 @@
 | 2026-11-14 | Preserve source bytes and publish geographic derivatives separately. | Checksums identify the local input, and the source remains available for revalidation. |
 | 2026-11-14 | Keep the scientific checkpoint on `feature/research`. | A shared branch carries reproducible code and evidence between computers while the team reviews integration. |
 | 2026-11-14 | Start the next authenticated check with one UTC day. | Eight granules are enough to test cadence and encoding before scaling. A seasonally low soil-water percentile remains a hydrological candidate, with prediction work downstream of validation. |
+| 2026-11-14 | Use authenticated HTTPS as the historical fallback. | The February OPeNDAP probe returned no data. Require an authenticated matching export and measured transfer before adopting spatial subsetting. |

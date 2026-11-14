@@ -41,7 +41,17 @@ The terminal download accepts an Earthdata user token either through the hidden 
 .\.venv\Scripts\python.exe -m gldas --product monthly --start 2020-01-01 --end 2020-02-29 --max-granules 2 --prompt-token
 ```
 
-**Next task.** Open the [February OPeNDAP granule form](https://opendap.earthdata.nasa.gov/collections/C1342986036-GES_DISC/granules/GLDAS_NOAH025_M.2.1%3AGLDAS_NOAH025_M.A202002.021.nc4.dmr.html) and sign in locally if prompted. Request time, time bounds, the coordinates, and the first three soil-water layers for latitude indices 88–119 and longitude indices 464–491, inclusive. Save the NetCDF export under ignored `data/` with a distinct name. Compare decoded time and bounds, coordinates, units, masks, and values with the local February cutout. Record downloaded size and request duration before planning the full period. The provider subset has yet to be tested, and direct-download authorization may not carry over to OPeNDAP. [NASA OPeNDAP tutorials](https://github.com/nasa/gesdisc-tutorials)
+**Next task.** OPeNDAP redirected without returning data in the noninteractive shell. Run one authenticated attempt in PowerShell from the repository root. It requests time, time bounds, coordinates and the first three soil-water layers at latitude indices 88–119 and longitude indices 464–491. The script compares the returned NetCDF with the local February cutout and records bytes and elapsed time under ignored `data/phase1/benchmark/`. Review the result before adopting OPeNDAP for production. [NASA OPeNDAP tutorials](https://github.com/nasa/gesdisc-tutorials)
+
+```powershell
+.\.venv\Scripts\python.exe -m gldas.benchmark
+```
+
+If the benchmark fails, use the verified GES DISC HTTPS route. January–April 2006 was discovered successfully and is the first bounded batch. The shell needs a token at the hidden prompt for new transfers. Keep subsequent batches to four months and rerun the same date range after interruption to reuse verified raw files. Reuse the existing January and February 2020 files when their batch is reached.
+
+```powershell
+.\.venv\Scripts\python.exe -m gldas --product monthly --start 2006-01-01 --end 2006-04-30 --max-granules 4 --prompt-token
+```
 
 **Limits.** Three-hourly rainfall intervals are labelled by their ending time. These eight labels cover December 31 at 21:00 to January 1 at 21:00 UTC for rainfall. To aggregate the full January 1 UTC rainfall day, use intervals ending at 03:00 through January 2 at 00:00. The subset is a provisional box and the model values have not been validated against field observations.
 

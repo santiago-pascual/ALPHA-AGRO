@@ -13,6 +13,8 @@ The monthly source is CMR collection `C1342986036-GES_DISC`, granule `G169485290
 
 February used the same monthly collection and DOI. Granule `G1709252645-GES_DISC` was acquired through authenticated HTTPS. Its decoded interval is February 1 to March 1, 2020 UTC. [NASA CMR granule metadata](https://cmr.earthdata.nasa.gov/search/granules.umm_json?concept_id=G1709252645-GES_DISC)
 
+The 2006–2025 catalog inventory has 240 unique monthly v2.1 granules. Only the two pilot months above have verified local files, leaving 238 months pending. No OPeNDAP export entered the manifest.
+
 ## Three-hourly GLDAS Noah v2.1
 
 Collection `C1342986035-GES_DISC`, DOI `10.5067/E7TYRXPJKWOQ`. Authenticated HTTPS acquisition and validation passed. Raw files and adjacent provenance JSON files are in `data/phase1/raw/`. Subsets and reports are in `data/phase1/subsets/-64.0_-38.0_-57.0_-30.0/`. [NASA collection](https://search.earthdata.nasa.gov/search/granules?p=C1342986035-GES_DISC)

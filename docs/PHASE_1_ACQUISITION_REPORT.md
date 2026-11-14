@@ -69,6 +69,12 @@ February's decoded bounds are February 1 at 00:00 through March 1 at 00:00 UTC, 
 
 All 27 automated tests passed. They cover the batch limit, source URL and redirect restrictions, credential handling, retries, preservation and checksums, fill values and units. The default limit is eight files per request, and a request cannot exceed 200.
 
+## Bounded OPeNDAP benchmark
+
+The February request selected time, time bounds, coordinates and the first three soil-water layers over native indices lat 88–119 and lon 464–491. The unauthenticated DAP4 NetCDF request returned HTTP 302 in 1.04 seconds with zero response body bytes. No provider export was available to compare. Transfer time for data and effective reduction are therefore unknown. The local February cutout's 335,375 bytes remain a local artifact measurement.
+
+The authenticated HTTPS fallback resolved January–April 2006 before stopping for missing credentials. The two pilot months remain the only file-verified months. Catalog discovery separately confirmed all 240 consecutive monthly v2.1 keys and distinct granule IDs.
+
 ## Next scientific milestone
 
 Benchmark the [February spatial subset](HANDOFF.md#reproduce-on-windows), then acquire the version-pinned monthly series in controlled batches and verify all expected months. Produce a reproducible 2006–2025 seasonal soil-water trend with coverage diagnostics, magnitude, uncertainty and statistical significance. Compare the result across predeclared Pampas subregions before extending to prediction or cross-product analysis.
