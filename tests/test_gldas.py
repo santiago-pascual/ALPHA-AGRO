@@ -90,6 +90,10 @@ def test_download_redirect_stays_on_known_nasa_hosts(redirect_host):
      "Expires=2000000000&Signature=placeholder&Key-Pair-Id=placeholder", True),
     ("d2b3c3wh8s6en5.cloudfront.net", "/gesdisc-cumulus-prod-protected",
      "Policy=placeholder&Signature=placeholder&Key-Pair-Id=placeholder", True),
+    ("d2b3c3wh8s6en5.cloudfront.net", "/data",
+     "Expires=2000000000&Signature=placeholder&Key-Pair-Id=placeholder", True),
+    ("d2b3c3wh8s6en5.cloudfront.net", "/data", "", True),
+    ("d2b3c3wh8s6en5.cloudfront.net", "/data", "unexpected=placeholder", False),
     ("d2b3c3wh8s6en5.cloudfront.net", "/other",
      "Policy=placeholder&Signature=placeholder&Key-Pair-Id=placeholder", False),
     ("d2b3c3wh8s6en5.cloudfront.net", "", "Expires=2000000000", False),
@@ -98,7 +102,7 @@ def test_download_redirect_stays_on_known_nasa_hosts(redirect_host):
 ])
 def test_signed_storage_redirect_never_receives_earthdata_token(host, prefix, query, accepted):
     object_path = urlsplit(URL).path.removeprefix("/data")
-    signed_url = f"https://{host}{prefix}{object_path}?{query}"
+    signed_url = f"https://{host}{prefix}{object_path}" + (f"?{query}" if query else "")
 
     class Session:
         def get(self, url, *, headers, **kwargs):

@@ -131,9 +131,13 @@ def signed_granule(parsed, object_path):
     path = unquote(parsed.path)
     query = parse_qs(parsed.query)
     if host == CLOUDFRONT_HOST:
+        if path not in {object_path, f"/data{object_path}", f"/{STORAGE_BUCKET}{object_path}"}:
+            return False
+        # CloudFront fronts the distribution API as well as serving signed URLs.
+        # The API's catalog path is safe to request without a bearer header.
         return (
-            path in {object_path, f"/{STORAGE_BUCKET}{object_path}"}
-            and {"Signature", "Key-Pair-Id"} <= query.keys()
+            path == f"/data{object_path}" and not parsed.query
+            or {"Signature", "Key-Pair-Id"} <= query.keys()
             and ("Policy" in query or "Expires" in query)
         )
     virtual = {f"{STORAGE_BUCKET}.s3{region}.amazonaws.com"
@@ -157,18 +161,25 @@ def open_granule(session, url, token):
         except ValueError:
             raise AcquisitionError("GES DISC returned an invalid redirect.") from None
         nasa_host = parsed.netloc in {DATA_HOST, "urs.earthdata.nasa.gov"}
-        storage = previous_host == DATA_HOST and signed_granule(parsed, object_path)
+        storage = previous_host in {DATA_HOST, CLOUDFRONT_HOST} and signed_granule(parsed, object_path)
         if parsed.scheme != "https" or not (nasa_host or storage):
             host = parsed.hostname or "unknown host"
             if not re.fullmatch(r"[a-z0-9.-]{1,253}", host):
                 host = "unknown host"
-            raise AcquisitionError(f"GES DISC redirected to an unsupported destination ({host}).")
+            detail = ""
+            if host == CLOUDFRONT_HOST:
+                path = unquote(parsed.path)
+                detail = (
+                    f" Expected filename: {'yes' if path.endswith('/' + object_path.rsplit('/', 1)[-1]) else 'no'}."
+                    f" Query present: {'yes' if parsed.query else 'no'}."
+                )
+            raise AcquisitionError(f"GES DISC redirected to an unsupported destination ({host}).{detail}")
         headers = {"Authorization": f"Bearer {token}"} if nasa_host else {}
         response = session.get(url, headers=headers, timeout=(10, 60), stream=True,
                                allow_redirects=False)
         if response.is_redirect:
             with response:
-                if storage:
+                if storage and parsed.netloc != CLOUDFRONT_HOST:
                     raise AcquisitionError("The signed GES DISC storage link returned another redirect.")
                 destination = response.headers["Location"]
                 url = urljoin(url, destination)
