@@ -16,6 +16,7 @@ import requests
 CMR = "https://cmr.earthdata.nasa.gov/search/granules.umm_json"
 DATA_HOST = "data.gesdisc.earthdata.nasa.gov"
 STORAGE_BUCKET = "gesdisc-cumulus-prod-protected"
+CLOUDFRONT_HOST = "d2b3c3wh8s6en5.cloudfront.net"
 RETRYABLE = {408, 429, 500, 502, 503, 504}
 NETCDF4_MAGIC = b"\x89HDF\r\n\x1a\n"
 
@@ -125,15 +126,21 @@ def checksum(path):
 
 
 def signed_granule(parsed, object_path):
-    """Recognize a signed HTTPS URL for this exact GES DISC object."""
+    """Recognize a signed storage URL for this exact GES DISC object."""
     host = parsed.netloc
+    path = unquote(parsed.path)
+    query = parse_qs(parsed.query)
+    if host == CLOUDFRONT_HOST:
+        return (
+            path in {object_path, f"/{STORAGE_BUCKET}{object_path}"}
+            and {"Signature", "Key-Pair-Id"} <= query.keys()
+            and ("Policy" in query or "Expires" in query)
+        )
     virtual = {f"{STORAGE_BUCKET}.s3{region}.amazonaws.com"
                for region in ("", ".us-west-2", "-us-west-2")}
     regional = {f"s3{region}.amazonaws.com" for region in ("", ".us-west-2", "-us-west-2")}
-    path = unquote(parsed.path)
     matches_object = ((host in virtual and path == object_path)
                       or (host in regional and path == f"/{STORAGE_BUCKET}{object_path}"))
-    query = parse_qs(parsed.query)
     return matches_object and (
         {"X-Amz-Credential", "X-Amz-Signature"} <= query.keys()
         or {"AWSAccessKeyId", "Signature"} <= query.keys()
@@ -169,7 +176,7 @@ def open_granule(session, url, token):
             continue
         if storage and response.status_code in {401, 403}:
             response.close()
-            raise AcquisitionError("The signed GES DISC storage link was denied by Amazon S3.")
+            raise AcquisitionError("The storage host denied the signed GES DISC link.")
         if response.status_code in {401, 403} or (
                 response.ok and ((parsed.netloc != DATA_HOST and not storage)
                                  or "text/html" in response.headers.get("Content-Type", "").lower())):

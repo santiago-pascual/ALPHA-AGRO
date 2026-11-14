@@ -81,15 +81,24 @@ def test_download_redirect_stays_on_known_nasa_hosts(redirect_host):
         assert session.urls == [URL, "https://urs.earthdata.nasa.gov/oauth/authorize", URL]
 
 
-@pytest.mark.parametrize("change_key", [False, True])
-def test_signed_storage_redirect_never_receives_earthdata_token(change_key):
+@pytest.mark.parametrize(("host", "prefix", "query", "accepted"), [
+    ("gesdisc-cumulus-prod-protected.s3.us-west-2.amazonaws.com", "",
+     "X-Amz-Credential=placeholder&X-Amz-Signature=placeholder", True),
+    ("gesdisc-cumulus-prod-protected.s3.us-west-2.amazonaws.com", "/other",
+     "X-Amz-Credential=placeholder&X-Amz-Signature=placeholder", False),
+    ("d2b3c3wh8s6en5.cloudfront.net", "",
+     "Expires=2000000000&Signature=placeholder&Key-Pair-Id=placeholder", True),
+    ("d2b3c3wh8s6en5.cloudfront.net", "/gesdisc-cumulus-prod-protected",
+     "Policy=placeholder&Signature=placeholder&Key-Pair-Id=placeholder", True),
+    ("d2b3c3wh8s6en5.cloudfront.net", "/other",
+     "Policy=placeholder&Signature=placeholder&Key-Pair-Id=placeholder", False),
+    ("d2b3c3wh8s6en5.cloudfront.net", "", "Expires=2000000000", False),
+    ("unrelated.cloudfront.net", "",
+     "Policy=placeholder&Signature=placeholder&Key-Pair-Id=placeholder", False),
+])
+def test_signed_storage_redirect_never_receives_earthdata_token(host, prefix, query, accepted):
     object_path = urlsplit(URL).path.removeprefix("/data")
-    if change_key:
-        object_path += ".other"
-    signed_url = (
-        "https://gesdisc-cumulus-prod-protected.s3.us-west-2.amazonaws.com"
-        f"{object_path}?X-Amz-Credential=placeholder&X-Amz-Signature=placeholder"
-    )
+    signed_url = f"https://{host}{prefix}{object_path}?{query}"
 
     class Session:
         def get(self, url, *, headers, **kwargs):
@@ -100,12 +109,12 @@ def test_signed_storage_redirect_never_receives_earthdata_token(change_key):
                 response.status_code = 302
                 response.headers["Location"] = signed_url
             else:
-                assert url == signed_url and not change_key
+                assert url == signed_url and accepted
                 assert headers == {}
                 response.status_code = 200
             return response
 
-    if change_key:
+    if not accepted:
         with pytest.raises(AcquisitionError, match="unsupported destination"):
             open_granule(Session(), URL, "placeholder")
     else:
