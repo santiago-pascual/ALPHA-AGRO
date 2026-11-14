@@ -29,16 +29,25 @@ For monthly reproduction, download the [January 2020 file from NASA](https://dat
 .\.venv\Scripts\python.exe -m gldas --start 2020-01-01 --end 2020-01-31 --local-file "$env:USERPROFILE\Downloads\GLDAS_NOAH025_M.A202001.021.nc4"
 ```
 
-The terminal download accepts an Earthdata user token either through the hidden prompt below or through `EARTHDATA_TOKEN` in the process environment with `--prompt-token` omitted. From the repository root in the VS Code PowerShell terminal, enter the token at `Earthdata user token:`. It remains in that Python process for the download. The program exits if hidden input is unavailable. Tests and the local-file import need no secret variable. Use the [Earthdata token instructions](https://urs.earthdata.nasa.gov/documentation/for_users/user_token) and keep the token outside chat, shell command text, Git, and logs.
+## Earthdata authentication
+
+From the repository root in PowerShell, install the updated dependencies and run the one-time setup if needed. Enter the token at the hidden prompt. The second command stores it in Windows Credential Manager under service `quant-alpha-agro` and username `earthdata`. Rerun it to replace an expired token. Set up the credential under the Windows account that runs the downloads on each computer. [NASA Earthdata token instructions](https://urs.earthdata.nasa.gov/documentation/for_users/user_token)
 
 ```powershell
-.\.venv\Scripts\python.exe -m gldas --product 3hourly --start 2020-01-01 --end 2020-01-01 --max-granules 8 --prompt-token
+.\.venv\Scripts\python.exe -m pip install --only-binary=:all: -r requirements-dev.txt
+.\.venv\Scripts\python.exe -m gldas.auth
 ```
 
-**Reproduce the completed monthly pilot.** From the repository root, this reuses checksum-verified January and February files when present. A new transfer needs an Earthdata token in an interactive terminal. [NASA GESDISC DATA ARCHIVE authorization](https://urs.earthdata.nasa.gov/approve_app?client_id=e2WVk8Pw6weeLUKZYOxvTQ)
+The download commands use `EARTHDATA_TOKEN` first, then the Windows credential. With either source available, omit `--prompt-token` for an unattended run. Use `--prompt-token` to enter a token for one invocation. The history and benchmark commands also prompt automatically when run interactively without a configured token. Tests and local-file imports need no token. Keep the token out of chat, URLs, command arguments and logs.
 
 ```powershell
-.\.venv\Scripts\python.exe -m gldas --product monthly --start 2020-01-01 --end 2020-02-29 --max-granules 2 --prompt-token
+.\.venv\Scripts\python.exe -m gldas --product 3hourly --start 2020-01-01 --end 2020-01-01 --max-granules 8
+```
+
+**Reproduce the completed monthly pilot.** From the repository root, this reuses checksum-verified January and February files when present. New transfers use the configured token. [NASA GESDISC DATA ARCHIVE authorization](https://urs.earthdata.nasa.gov/approve_app?client_id=e2WVk8Pw6weeLUKZYOxvTQ)
+
+```powershell
+.\.venv\Scripts\python.exe -m gldas --product monthly --start 2020-01-01 --end 2020-02-29 --max-granules 2
 ```
 
 **Verified benchmark.** The February export matched decoded times and bounds, coordinate values, units, missing-data masks, and all retained soil-water values exactly. The export and metrics are under ignored `data/phase1/benchmark/`. The benchmark can be reproduced from PowerShell. [NASA OPeNDAP tutorials](https://github.com/nasa/gesdisc-tutorials)
