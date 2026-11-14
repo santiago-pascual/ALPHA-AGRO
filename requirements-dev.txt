@@ -1,4 +1,4 @@
-# Candidate development environment verified on Windows x64 with Python 3.13.
+# Development requirements installed from binary wheels on Windows x64 with Python 3.15.2.
 altair==6.3.0
 anyio==4.16.0
 attrs==26.1.0
