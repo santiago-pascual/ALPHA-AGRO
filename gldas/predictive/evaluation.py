@@ -47,6 +47,10 @@ def expanding_folds(frame: pd.DataFrame, *, initial_train_months: int = 120,
     return folds, final
 
 
+def _released_labels(train: pd.DataFrame, test: pd.DataFrame) -> pd.DataFrame:
+    return train.loc[train["target_available_at"].le(test["issue_time"].min())]
+
+
 def _target_values(train: pd.DataFrame, test: pd.DataFrame, target: str):
     train_raw = train["target_soil_water_mm"].to_numpy(dtype=float)
     test_raw = test["target_soil_water_mm"].to_numpy(dtype=float)
@@ -268,7 +272,8 @@ def _choose_params(name: str, train: pd.DataFrame, feature_columns: list[str], t
     cut = len(months) - validation_n
     inner_train = train.loc[pd.to_datetime(train["target_month"], utc=True).isin(months[:cut])].copy()
     inner_valid = train.loc[pd.to_datetime(train["target_month"], utc=True).isin(months[cut:])].copy()
-    if inner_train.empty or inner_valid.empty:
+    inner_train = _released_labels(inner_train, inner_valid)
+    if inner_train["target_month"].nunique() < min_inner_train or inner_valid.empty:
         return candidate_specs(name)[0]
     y_train, y_valid, _ = _target_values(inner_train, inner_valid, target)
     fit_frame, columns, _ = _feature_values(
@@ -349,15 +354,19 @@ def evaluate(panel: pd.DataFrame, *, horizons: Iterable[int] = (1, 2, 3),
                 train_mask = pd.to_datetime(supervised["target_month"], utc=True).dt.strftime("%Y-%m").isin(fold.train_months)
                 test_mask = pd.to_datetime(supervised["target_month"], utc=True).dt.strftime("%Y-%m").isin(fold.test_months)
                 train, test = supervised.loc[train_mask].copy(), supervised.loc[test_mask].copy()
+                train = _released_labels(train, test)
                 if train.empty or test.empty:
                     continue
+                fold_info = {**fold.as_dict(), "train_months": sorted(
+                    train["target_month"].dt.strftime("%Y-%m").unique()),
+                    "label_availability_cutoff": test["issue_time"].min().isoformat()}
                 y_train, y_test, target_info = _target_values(train, test, target)
                 baseline_pred = _baseline_predictions(train, test, target, y_train, target_info)
                 for baseline_name, prediction in baseline_pred.items():
                     score = _score_split(test, y_test, prediction, target, baseline_pred)
                     results.append({
                         "horizon_months": horizon, "target": target, "model": baseline_name,
-                        "fold": fold.as_dict(), "target_definition": _public_target_info(target_info), "metrics": score,
+                        "fold": fold_info, "target_definition": _public_target_info(target_info), "metrics": score,
                     })
                 for name in family_names:
                     selection_features = ([column for column in feature_columns
@@ -371,12 +380,12 @@ def evaluate(panel: pd.DataFrame, *, horizons: Iterable[int] = (1, 2, 3),
                             name, train, test, feature_columns, target, params=params)
                     except (ValueError, FloatingPointError) as error:
                         results.append({"horizon_months": horizon, "target": target, "model": name,
-                                        "fold": fold.as_dict(), "status": "not_evaluable", "reason": str(error)})
+                                        "fold": fold_info, "status": "not_evaluable", "reason": str(error)})
                         continue
                     score = _score_split(test, y_evaluated, prediction, target, baseline_pred)
                     results.append({
                         "horizon_months": horizon, "target": target, "model": name,
-                        "fold": fold.as_dict(), "target_definition": _public_target_info(model_target_info),
+                        "fold": fold_info, "target_definition": _public_target_info(model_target_info),
                         "selected_parameters": params, "hmm": hmm_info, "metrics": score,
                     })
     return {
@@ -384,6 +393,6 @@ def evaluate(panel: pd.DataFrame, *, horizons: Iterable[int] = (1, 2, 3),
         "models": ["seasonal_climatology", "persistence", *family_names],
         "selection": "inner chronological validation on training rows only",
         "spatial_panel_rule": "all cells sharing a target month are assigned to the same fold",
-        "release_rule": "each feature row is filtered by available_at <= issue_time",
+        "release_rule": "features use releases by each issue; training labels must be available by the first test issue",
         "results": results,
     }

@@ -44,6 +44,7 @@ def make_supervised(panel: pd.DataFrame, *, horizon: int, n_lags: int = 6) -> tu
                 "origin_month": origin,
                 "issue_time": issue,
                 "target_month": target_month,
+                "target_available_at": target_row.iloc[0]["available_at"],
                 "horizon_months": horizon,
                 "target_soil_water_mm": target_row.iloc[0]["soil_water_mm"],
                 "target_valid": bool(target_row.iloc[0]["soil_water_valid"]),

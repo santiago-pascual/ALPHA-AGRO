@@ -17,7 +17,7 @@ from ..multivariable import (JANUARY, OUTPUT as DRIVER_INPUT, ROOT as PHASE1_ROO
 from ..relationships import convert
 from ..trend_report import INDEX, audit_inputs
 from ..trends import _cell_areas, load_monthly_netcdf
-from .contract import VALUE_COLUMNS, write_parquet
+from .contract import MASK_COLUMNS, REQUIRED_COLUMNS, VALUE_COLUMNS, read_parquet, write_parquet
 
 DRIVER_COLUMNS = dict(zip(
     DRIVERS,
@@ -92,17 +92,43 @@ def build_panel(*, release_lag_months: int = 5) -> pd.DataFrame:
     return pd.concat(rows, ignore_index=True)
 
 
+def regional_panel(panel: pd.DataFrame) -> pd.DataFrame:
+    """Aggregate eligible cells within each month using Phase 3 common support."""
+    metadata = [key for key in REQUIRED_COLUMNS if key not in {
+        "cell_id", "latitude", "longitude", "area_weight", *VALUE_COLUMNS, *MASK_COLUMNS,
+    }]
+    rows = []
+    for _, group in panel.groupby("month", sort=True):
+        if group[metadata].nunique(dropna=False).ne(1).any():
+            raise ValueError("Regional aggregation requires consistent per-month provenance and timing.")
+        supported = group.loc[group[list(MASK_COLUMNS)].all(axis=1)]
+        weights = supported["area_weight"].to_numpy()
+        if weights.sum() / group["area_weight"].sum() < 0.80:
+            raise ValueError("Regional aggregation requires at least 80% common area coverage.")
+        averages = np.average(supported[["latitude", "longitude", *VALUE_COLUMNS]], axis=0, weights=weights)
+        rows.append({**group.iloc[0][metadata].to_dict(),
+                     **dict(zip(("latitude", "longitude", *VALUE_COLUMNS), averages, strict=True)),
+                     **dict.fromkeys(MASK_COLUMNS, True), "cell_id": "pampas-study-box",
+                     "area_weight": float(weights.sum())})
+    return pd.DataFrame(rows, columns=REQUIRED_COLUMNS)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=Path("data/exports/phase4/monthly_panel.parquet"))
     parser.add_argument("--release-lag-months", type=int, default=5)
+    parser.add_argument("--regional-from", type=Path,
+                        help="Aggregate an existing spatial Parquet panel into a one-region panel")
     args = parser.parse_args()
-    frame = build_panel(release_lag_months=args.release_lag_months)
+    if args.regional_from is None:
+        frame = build_panel(release_lag_months=args.release_lag_months)
+    else:
+        frame = regional_panel(read_parquet(args.regional_from))
     path = write_parquet(
         frame, args.output,
-        availability_policy=f"assumed_release_lag_{args.release_lag_months}_calendar_months",
+        availability_policy=frame["availability_policy"].iloc[0],
     )
-    print(f"Exported {len(frame):,} cell-month rows to {path}")
+    print(f"Exported {len(frame):,} rows to {path}")
     return 0
 
 
