@@ -1,0 +1,7 @@
+# Install on the supported Python 3.15 Windows setup with:
+# .\.venv\Scripts\python.exe -m pip install --only-binary=:all: -r requirements-ml.txt
+xgboost==3.4.1
+
+# hmmlearn==0.3.3 was checked against this Python 3.15 Windows environment.
+# PyPI provided no compatible binary wheel, so this project uses its own
+# NumPy/SciPy diagonal Gaussian HMM implementation in gldas.predictive.hmm.
