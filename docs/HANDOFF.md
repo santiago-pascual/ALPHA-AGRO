@@ -2,14 +2,14 @@
 
 **Branch** `feature/research` tracks `origin/feature/research` in the private `santiago-pascual/quant-alpha-agro` repository.
 
-**Latest scientific checkpoint** January 2020 monthly sample and January 1, 2020 three-hourly batch, documented in this revision. Use `git log -1 --oneline` for the exact local commit and `git ls-remote --exit-code origin refs/heads/feature/research` for the published tip.
+**Latest scientific checkpoint** January–February 2020 monthly pilot and January 1, 2020 three-hourly batch. Use `git log -1 --oneline` for the exact local commit and `git ls-remote --exit-code origin refs/heads/feature/research` for the published tip.
 
 ## Resume
 
 1. Read [AGENTS.md](../AGENTS.md), [project status](PROJECT_STATUS.md), this handoff, and the [scientific research charter](SCIENTIFIC_RESEARCH_CHARTER.md).
 2. Phase 1 monthly sample validation is complete. The sample has 896 cells, with 867 valid per soil layer. A fresh subset export matched the existing SHA-256. Consult the [acquisition report](PHASE_1_ACQUISITION_REPORT.md) and [manifest](DATA_MANIFEST.md).
 3. The authenticated three-hourly batch passed for all eight UTC labels from 00:00 through 21:00. Raw and subset hashes matched the manifests and reports. Grid centres, units and masks for the checked fields matched the monthly sample. All 27 tests passed. See [acquisition evidence](PHASE_1_ACQUISITION_REPORT.md#three-hourly-validation).
-4. Next, test two monthly files and verify file-level coverage and grid consistency. Before the 240-month run, benchmark an official spatial subset route to avoid unnecessary global transfers. Use bounded date batches. The CLI resumes at the granule level by reusing checksum-verified files and restarting interrupted transfers.
+4. The two-month pilot passed, including February's 29-day interval. Before the 240-month run, benchmark NASA OPeNDAP spatial subsetting to avoid unnecessary global transfers. Use bounded date batches. The CLI resumes at the granule level by reusing checksum-verified files and restarting interrupted transfers.
 
 ## Reproduce on Windows
 
@@ -35,15 +35,17 @@ The terminal download accepts an Earthdata user token either through the hidden 
 .\.venv\Scripts\python.exe -m gldas --product 3hourly --start 2020-01-01 --end 2020-01-01 --max-granules 8 --prompt-token
 ```
 
-**Next executable task.** From the repository root in interactive PowerShell, run a two-month authenticated pilot. January is reused and February is requested if absent. A new transfer needs the token in that terminal. [NASA GESDISC DATA ARCHIVE authorization](https://urs.earthdata.nasa.gov/approve_app?client_id=e2WVk8Pw6weeLUKZYOxvTQ)
+**Reproduce the completed monthly pilot.** From the repository root, this reuses checksum-verified January and February files when present. A new transfer needs an Earthdata token in an interactive terminal. [NASA GESDISC DATA ARCHIVE authorization](https://urs.earthdata.nasa.gov/approve_app?client_id=e2WVk8Pw6weeLUKZYOxvTQ)
 
 ```powershell
 .\.venv\Scripts\python.exe -m gldas --product monthly --start 2020-01-01 --end 2020-02-29 --max-granules 2 --prompt-token
 ```
 
+**Next task.** Open the [February OPeNDAP granule form](https://opendap.earthdata.nasa.gov/collections/C1342986036-GES_DISC/granules/GLDAS_NOAH025_M.2.1%3AGLDAS_NOAH025_M.A202002.021.nc4.dmr.html) and sign in locally if prompted. Request time, time bounds, the coordinates, and the first three soil-water layers for latitude indices 88–119 and longitude indices 464–491, inclusive. Save the NetCDF export under ignored `data/` with a distinct name. Compare decoded time and bounds, coordinates, units, masks, and values with the local February cutout. Record downloaded size and request duration before planning the full period. The provider subset has yet to be tested, and direct-download authorization may not carry over to OPeNDAP. [NASA OPeNDAP tutorials](https://github.com/nasa/gesdisc-tutorials)
+
 **Limits.** Three-hourly rainfall intervals are labelled by their ending time. These eight labels cover December 31 at 21:00 to January 1 at 21:00 UTC for rainfall. To aggregate the full January 1 UTC rainfall day, use intervals ending at 03:00 through January 2 at 00:00. The subset is a provisional box and the model values have not been validated against field observations.
 
-**Local files.** The monthly and eight three-hourly raw granules, manifests, cutouts and JSON reports are under ignored `data/phase1/`. The browser download and `.venv/` are also local. See [DATA_MANIFEST.md](DATA_MANIFEST.md).
+**Local files.** Both monthly and all eight three-hourly raw granules, manifests, cutouts and JSON reports are under ignored `data/phase1/`. The browser download and `.venv/` are also local. See [DATA_MANIFEST.md](DATA_MANIFEST.md).
 
 ## Checkpoint workflow
 

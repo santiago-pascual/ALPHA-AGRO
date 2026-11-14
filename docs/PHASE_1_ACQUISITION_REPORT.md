@@ -59,10 +59,16 @@ The eight subsets share the monthly sample's coordinates, units and per-field ma
 
 The three-hourly soil-water and air-temperature fields are instantaneous. Rainfall forcing is a mean rate over the preceding three hours. The first time bounds are December 31 at 21:00 to January 1 at 00:00 UTC. The final bounds are January 1 at 18:00 to 21:00 UTC. For a January 1 UTC rainfall total, multiply each interval mean rate by 10,800 seconds and sum the eight intervals ending from January 1 at 03:00 to January 2 at 00:00. The monthly fields are averages over January. One three-hourly day provides a schema and mask comparison and cannot reproduce the monthly values.
 
+## Two-month pilot
+
+The pilot reused the checksum-verified January raw file and downloaded February granule `G1709252645-GES_DISC` via authenticated GES DISC HTTPS. Both raw and subset hashes matched their recorded values. The two files have the same variable schema, Pampas grid and masks for all seven checked fields. Both subsets have 896 cells, including 867 valid cells for each soil-water layer and 877 for each forcing field.
+
+February's decoded bounds are February 1 at 00:00 through March 1 at 00:00 UTC, covering 29 days. The local subset is 335,375 bytes versus 24,978,395 bytes for the full source. This measures the local artifact size. Server-side transfer size and timing remain unmeasured.
+
 ## Pipeline checks
 
 All 27 automated tests passed. They cover the batch limit, source URL and redirect restrictions, credential handling, retries, preservation and checksums, fill values and units. The default limit is eight files per request, and a request cannot exceed 200.
 
 ## Next scientific milestone
 
-Run the [two-month pilot](HANDOFF.md#reproduce-on-windows), benchmark spatial subsetting, then acquire the version-pinned monthly series in controlled batches and verify all expected months. Produce a reproducible 2006–2025 seasonal soil-water trend with coverage diagnostics, magnitude, uncertainty and statistical significance. Compare the result across predeclared Pampas subregions before extending to prediction or cross-product analysis.
+Benchmark the [February spatial subset](HANDOFF.md#reproduce-on-windows), then acquire the version-pinned monthly series in controlled batches and verify all expected months. Produce a reproducible 2006–2025 seasonal soil-water trend with coverage diagnostics, magnitude, uncertainty and statistical significance. Compare the result across predeclared Pampas subregions before extending to prediction or cross-product analysis.

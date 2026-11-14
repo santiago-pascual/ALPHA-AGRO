@@ -8,4 +8,6 @@
 | 2026-11-14 | January 1, 2020 GLDAS Noah three-hourly batch | Authenticated download and validation passed for all eight UTC slots. Raw and subset hashes matched. The seven checked fields have the same coordinates, units and masks as the monthly sample. All 27 tests passed. |
 | 2026-11-14 | Earthdata access preflight | No configured token or local Earthdata credential file detected. The browser profile required login. Prior unauthenticated data probe returned HTTP 303. |
 
+| 2026-11-14 | January–February 2020 monthly pilot | Reused January and downloaded February through authenticated HTTPS. Both raw and subset hashes matched, grid and masks agreed, and February bounds covered 29 days. All 27 tests passed. |
+
 See [acquisition evidence](PHASE_1_ACQUISITION_REPORT.md) and [local artifact identity](DATA_MANIFEST.md).

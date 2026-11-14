@@ -6,8 +6,12 @@ Paths are repository relative and ignored by Git. All timestamps refer to UTC.
 | --- | --- | ---: | --- |
 | January 2020 GLDAS Noah monthly v2.1 raw | `data/phase1/raw/GLDAS_NOAH025_M.A202001.021.nc4` | 24895215 | `5b60e97e2c61ad08cd3d8dc2733508607824446438803abd83e1a815c0bba523` |
 | January 2020 Pampas subset | `data/phase1/subsets/-64.0_-38.0_-57.0_-30.0/GLDAS_NOAH025_M.A202001.021.nc4` | 335666 | `cbc7f89f6ed9d7c3ec2786044c2dae4a39e9b46933180969ca81d664e48f3623` |
+| February 2020 GLDAS Noah monthly v2.1 raw | `data/phase1/raw/GLDAS_NOAH025_M.A202002.021.nc4` | 24978395 | `852e5f7eeab1c9017f632cef8bf07be6d8d9d365bd52d28b7b75b636b1f94602` |
+| February 2020 Pampas subset | `data/phase1/subsets/-64.0_-38.0_-57.0_-30.0/GLDAS_NOAH025_M.A202002.021.nc4` | 335375 | `9e8844157634db4445154e327b90bc315f3b9948878305bd1591f763df92ea0c` |
 
 The monthly source is CMR collection `C1342986036-GES_DISC`, granule `G1694852901-GES_DISC`, DOI `10.5067/SXAVCZFAQLNO`. The pipeline imported the supplied browser file and recorded its local identity on November 14, 2026. The source covers the half-open interval from January 1 to February 1, 2020. Its pipeline manifest is beside the raw file as `GLDAS_NOAH025_M.A202001.021.nc4.json`. The validation JSON is beside the subset with the same base name. Revalidate any new provider copy if its bytes differ. [NASA HTTPS granule](https://data.gesdisc.earthdata.nasa.gov/data/GLDAS/GLDAS_NOAH025_M.2.1/2020/GLDAS_NOAH025_M.A202001.021.nc4)
+
+February used the same monthly collection and DOI. Granule `G1709252645-GES_DISC` was acquired through authenticated HTTPS. Its decoded interval is February 1 to March 1, 2020 UTC. [NASA CMR granule metadata](https://cmr.earthdata.nasa.gov/search/granules.umm_json?concept_id=G1709252645-GES_DISC)
 
 ## Three-hourly GLDAS Noah v2.1
 
