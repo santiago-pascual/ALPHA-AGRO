@@ -42,7 +42,7 @@ The CLI uses inclusive UTC dates, accepts bounds as west, south, east, north, an
 
 ## Authenticated download check
 
-To verify programmatic access, generate an Earthdata user token and enter it at the hidden prompt in an interactive terminal. Authorize the GES DISC app with Earthdata Login if required. The CLI also accepts `EARTHDATA_TOKEN` in its process environment. A fresh output directory forces a real transfer instead of reusing the validated local sample. [Earthdata account guidance](https://urs.earthdata.nasa.gov/documentation/what_do_i_need_to_know) · [Earthdata token guidance](https://urs.earthdata.nasa.gov/documentation/for_users/user_token)
+Use the [Earthdata authentication setup](HANDOFF.md#earthdata-authentication) for Windows Credential Manager, an existing `EARTHDATA_TOKEN`, or hidden input with `--prompt-token`. Authorize the GES DISC app with Earthdata Login if required. A fresh output directory forces a real transfer. [Earthdata account guidance](https://urs.earthdata.nasa.gov/documentation/what_do_i_need_to_know)
 
 ```powershell
 .\.venv\Scripts\python.exe -m gldas --product monthly --start 2020-01-01 --end 2020-01-31 --prompt-token --output data/phase1-direct

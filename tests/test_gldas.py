@@ -15,6 +15,7 @@ from gldas.acquisition import (
 )
 from gldas.validation import LAYERS, ValidationError, validate_and_subset
 from gldas import __main__ as cli
+from gldas import auth, history
 from gldas.history import FIRST, LAST, batch_dates
 
 PRODUCT = PRODUCTS["monthly"]
@@ -32,11 +33,82 @@ def test_prompt_refuses_getpass_echo_fallback(monkeypatch, capsys):
         warnings.warn("Input may be echoed.", GetPassWarning)
         pytest.fail("The prompt fell back to echoed input.")
 
-    monkeypatch.setattr(cli, "getpass", unavailable)
+    monkeypatch.setattr(auth, "getpass", unavailable)
     with pytest.raises(SystemExit) as result:
         cli.main()
     assert result.value.code == 2
     assert "Cannot hide input" in capsys.readouterr().err
+
+
+def test_history_uses_windows_vault_without_prompt(monkeypatch, tmp_path, capsys):
+    from keyring.backends.Windows import WinVaultKeyring
+
+    monkeypatch.delenv("EARTHDATA_TOKEN", raising=False)
+    monkeypatch.setattr(auth.sys, "platform", "win32")
+    monkeypatch.setattr(sys, "argv", ["gldas.history"])
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: False)
+    monkeypatch.setattr(history, "OUTPUT", tmp_path)
+    monkeypatch.setattr(auth, "getpass", lambda *_: pytest.fail("Unexpected prompt"))
+
+    def lookup(self, service, account):
+        assert (service, account) == ("quant-alpha-agro", "earthdata")
+        return "mock-vault-value"
+
+    def acquire(session, granule, token):
+        assert token == "mock-vault-value"
+        return "verified"
+
+    monkeypatch.setattr(WinVaultKeyring, "get_password", lookup)
+    monkeypatch.setattr(history, "discover", lambda *args: [GRANULE])
+    monkeypatch.setattr(history, "acquire", acquire)
+    assert history.main() == 0
+    captured = capsys.readouterr()
+    assert "verified" in captured.out
+    assert "mock-vault-value" not in captured.out + captured.err
+
+
+def test_environment_token_takes_precedence(monkeypatch):
+    monkeypatch.setenv("EARTHDATA_TOKEN", "mock-environment-value")
+    monkeypatch.setattr(auth, "windows_token", lambda: pytest.fail("Unexpected vault lookup"))
+    assert auth.earthdata_token() == "mock-environment-value"
+
+
+def test_vault_failure_is_silent_and_allows_hidden_prompt(monkeypatch, capsys):
+    from keyring.backends.Windows import WinVaultKeyring
+
+    monkeypatch.delenv("EARTHDATA_TOKEN", raising=False)
+    monkeypatch.setattr(auth.sys, "platform", "win32")
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
+
+    def unavailable(*args):
+        raise RuntimeError("sensitive backend diagnostic")
+
+    monkeypatch.setattr(WinVaultKeyring, "get_password", unavailable)
+    monkeypatch.setattr(auth, "getpass", lambda *_: "mock-prompt-value")
+    assert auth.earthdata_token() is None
+    assert auth.earthdata_token(prompt_if_missing=True) == "mock-prompt-value"
+    assert capsys.readouterr() == ("", "")
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows vault persistence setting")
+def test_setup_stores_token_locally_without_printing_it(monkeypatch, capsys):
+    from keyring.backends.Windows import WinVaultKeyring
+    from win32ctypes.pywin32 import win32cred
+
+    monkeypatch.setattr(sys, "argv", ["gldas.auth"])
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
+    monkeypatch.setattr(auth, "getpass", lambda *_: "mock-setup-value")
+    calls = []
+
+    def store(self, service, username, password):
+        assert self.persist == win32cred.CRED_PERSIST_LOCAL_MACHINE
+        calls.append((service, username, password))
+
+    monkeypatch.setattr(WinVaultKeyring, "set_password", store)
+    assert auth.main() == 0
+    assert calls == [("quant-alpha-agro", "earthdata", "mock-setup-value")]
+    captured = capsys.readouterr()
+    assert "mock-setup-value" not in captured.out + captured.err
 
 
 def test_batch_guard():

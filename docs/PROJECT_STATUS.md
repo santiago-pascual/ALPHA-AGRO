@@ -1,5 +1,7 @@
 # Project status
 
+Earthdata downloads support Windows Credential Manager for unattended runs. Set up the token once per Windows account using the [handoff instructions](HANDOFF.md#earthdata-authentication).
+
 Updated November 14, 2026. Phase 1 is at GLDAS sample acquisition and validation. The study uses soybean in Argentina's Pampas, with a provisional west/south/east/north box of `-64 -38 -57 -30` and a historical trend period of 2006–2025.
 
 - **Verified monthly pilot.** The pipeline reused January 2020 and downloaded February through authenticated GES DISC HTTPS. Both subsets have the same grid, schema and masks. Hashes matched and February covered all 29 days. All 27 tests passed. See the [acquisition report](PHASE_1_ACQUISITION_REPORT.md#two-month-pilot).

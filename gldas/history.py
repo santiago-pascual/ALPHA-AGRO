@@ -2,21 +2,18 @@
 
 import argparse
 from datetime import date, timedelta
-from getpass import GetPassWarning, getpass
 import json
-import os
 from pathlib import Path
-import re
 import sys
 from tempfile import NamedTemporaryFile
 from time import monotonic
-import warnings
 
 import netCDF4 as nc
 import numpy as np
 import requests
 
 from .acquisition import AcquisitionError, NETCDF4_MAGIC, PRODUCTS, checksum, discover, retry, write_json
+from .auth import CredentialError, earthdata_token
 from .benchmark import LAYERS, LIMIT, QUERY, ROOT
 from .validation import ValidationError, time_metadata
 
@@ -115,17 +112,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--batches", type=int, choices=range(1, 61), default=1,
                         metavar="1–60", help="Number of four-month batches, starting in January 2006")
+    parser.add_argument("--prompt-token", action="store_true", help="Use hidden input for this run")
     args = parser.parse_args()
-    token = os.getenv("EARTHDATA_TOKEN")
-    if not token and sys.stdin.isatty():
-        with warnings.catch_warnings():
-            warnings.simplefilter("error", GetPassWarning)
-            try:
-                token = getpass("Earthdata user token: ").strip()
-            except (GetPassWarning, EOFError, KeyboardInterrupt):
-                parser.error("Hidden token entry unavailable or canceled.")
-    if not token or re.fullmatch(r"[A-Za-z0-9._~+/=-]+", token) is None:
-        parser.error("An Earthdata token is required. Use interactive PowerShell for hidden entry.")
+    try:
+        token = earthdata_token(prompt=args.prompt_token, prompt_if_missing=True)
+    except CredentialError as error:
+        parser.error(str(error))
+    if not token:
+        parser.error("Use EARTHDATA_TOKEN, Windows Credential Manager, or --prompt-token.")
     try:
         OUTPUT.mkdir(parents=True, exist_ok=True)
         with requests.Session() as session:

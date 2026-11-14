@@ -229,7 +229,7 @@ def preserve(session, granule, raw_dir, token=None, local=None):
     if manifest.exists() or (path.exists() and local is None):
         raise AcquisitionError(f"Incomplete raw provenance for {path.name}; inspect the raw directory.")
     if local is None and not token:
-        raise AcquisitionError("Supply EARTHDATA_TOKEN, --prompt-token, or --local-file.")
+        raise AcquisitionError("Use EARTHDATA_TOKEN, Windows Credential Manager, --prompt-token, or --local-file.")
     if local is None and re.fullmatch(r"[A-Za-z0-9._~+/=-]+", token) is None:
         raise AcquisitionError("The Earthdata token contains unexpected characters.")
 

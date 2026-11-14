@@ -20,6 +20,8 @@ The dependency snapshot captures the candidate packages and their dependencies f
 
 ## Planning documents
 
+On Windows, [configure Earthdata authentication](docs/HANDOFF.md#earthdata-authentication) once for your Windows account to run downloads without a prompt.
+
 For the current research checkpoint, start with [project status](docs/PROJECT_STATUS.md) and [handoff](docs/HANDOFF.md).
 
 - [Vision](docs/PROJECT_VISION.md), [requirements](docs/REQUIREMENTS.md), and [architecture proposal](docs/ARCHITECTURE_PROPOSAL.md)
