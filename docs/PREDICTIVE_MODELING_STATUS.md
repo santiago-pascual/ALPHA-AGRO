@@ -29,12 +29,11 @@
 
 ## Commands
 
-From the original PC's Phase 4 checkout, with audited Phase 3 archives already present:
+From the original PC's Phase 4 checkout, with audited Phase 3 archives already present. These commands read local files and do not download NASA data. Stop if an archive is missing rather than retrieving the 240 files again.
 
 ```powershell
-.\.venv\Scripts\python.exe -m gldas.multivariable --months 240
 .\.venv\Scripts\python.exe -m gldas.predictive.export_panel --release-lag-months 5 --output data/exports/phase4/monthly_panel.parquet
 .\.venv\Scripts\python.exe -m gldas.predictive validate --input data/exports/phase4/monthly_panel.parquet
 ```
 
-The first command may retrieve missing driver exports. It is unnecessary if all 240 validated driver files already exist. It does not redownload the 240 soil-water files. After transfer, run `python -m gldas.predictive evaluate` as shown in the design document. All exports and evaluation outputs stay under ignored `data/`.
+The export requires 240 validated soil-water exports and matching driver exports locally. After transfer, run `python -m gldas.predictive evaluate` as shown in the design document. All exports and evaluation outputs stay under ignored `data/`.

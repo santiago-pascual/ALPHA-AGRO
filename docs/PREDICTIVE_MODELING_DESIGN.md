@@ -34,15 +34,14 @@ Parquet metadata records schema version, units, and availability policy. The val
 
 ## Original data-holding PC workflow
 
-Run these commands from the Phase 4 branch checkout on the original PC, after verifying the Phase 3 soil and driver archives and provenance manifests exist locally. No NASA data is downloaded by the export command.
+Run these commands from the Phase 4 branch checkout on the original PC, after verifying the already-held Phase 3 soil and driver archives and provenance manifests exist locally. These commands only read local archives; they do not download NASA data. Stop if an expected archive is missing and recover it from the original local storage before exporting.
 
 ```powershell
-.\.venv\Scripts\python.exe -m gldas.multivariable --months 240
 .\.venv\Scripts\python.exe -m gldas.predictive.export_panel --release-lag-months 5 --output data/exports/phase4/monthly_panel.parquet
 .\.venv\Scripts\python.exe -m gldas.predictive validate --input data/exports/phase4/monthly_panel.parquet
 ```
 
-The first command resumes and validates the Phase 3 driver archive; it may access NASA if months are missing. It is not needed when all 240 checked driver exports already exist. The export requires both the 240 soil-water OPeNDAP exports and the matching 240 driver exports under the paths documented in `docs/MULTIVARIABLE_DATA_VALIDATION.md`. It refuses to overwrite an existing Parquet file. Transfer the resulting Parquet file using the team's approved private channel; do not commit it.
+The export requires both the 240 soil-water OPeNDAP exports and the matching 240 driver exports under the paths documented in `docs/MULTIVARIABLE_DATA_VALIDATION.md`. It revalidates driver files and refuses to overwrite an existing Parquet file. Transfer the resulting Parquet file using the team's approved private channel; do not commit it.
 
 After transfer to an environment with the model dependencies, evaluate with:
 
