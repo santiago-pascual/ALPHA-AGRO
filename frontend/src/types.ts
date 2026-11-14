@@ -18,6 +18,11 @@ export type TrendCell = {
   significant: boolean;
 };
 
+export type InputFileProvenance = {
+  filename: string;
+  sha256: string;
+};
+
 export type DashboardDataset = {
   mode: DataMode;
   source: string;
@@ -27,7 +32,13 @@ export type DashboardDataset = {
   end: string;
   months: number;
   gridCells: number;
+  latitudeCount: number;
+  longitudeCount: number;
+  eligibleCells: number;
   resolutionDegrees: number;
+  areaWeighting: string;
+  boundaryRule: string;
+  inputFiles: InputFileProvenance[];
   meanCoverage: number;
   minimumCoverage: number;
   missingProfileFraction: number;
@@ -59,6 +70,8 @@ export type TrendAnalysisJson = {
     longitude_count: number;
     cell_count: number;
     resolution_degrees: number;
+    area_weighting: string;
+    boundary_rule: string;
   };
   quality: {
     regional_valid_area_fraction_min: number;
@@ -97,5 +110,6 @@ export type TrendAnalysisJson = {
       significant_after_bh: boolean;
     }>;
   };
+  input_files: InputFileProvenance[];
   limitations: string[];
 };

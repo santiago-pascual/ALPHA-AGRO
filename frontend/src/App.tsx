@@ -187,7 +187,7 @@ function App() {
                 <span className="source-dot real-dot" /> REAL DATA
               </button>
             </div>
-            <div className="top-date"><span>PERIOD</span><b>{dataset ? dataset.start.slice(0, 4) + " — " + dataset.end.slice(0, 4) : "2006 — 2025"}</b></div>
+            <div className="top-date"><span>PERIOD</span><b>{dataset ? dataset.start.slice(0, 4) + " — " + dataset.end.slice(0, 4) : mode === "demo" ? "2006 — 2025" : "NOT LOADED"}</b></div>
           </div>
         </header>
 
@@ -198,12 +198,12 @@ function App() {
                 <div>
                   <div className="eyebrow"><span className="eyebrow-line" /> EARTH SYSTEMS / SOIL WATER</div>
                   <h1>Pampas <em>observatory</em></h1>
-                  <p>Twenty years of modeled soil-water storage, read with uncertainty in view.</p>
+                  <p>Historical GLDAS analysis, read with uncertainty in view. No operational forecasts are provided.</p>
                 </div>
                 <div className="intro-meta">
                   <span className="period-label">ANALYSIS WINDOW</span>
-                  <b>{dataset ? formatDate(dataset.start, { month: "short", year: "numeric" }).toUpperCase() : "JAN 2006"} <i>→</i> {dataset ? formatDate(dataset.end, { month: "short", year: "numeric" }).toUpperCase() : "DEC 2025"}</b>
-                  <span>{dataset?.months ?? 240} monthly records · {dataset?.source ?? "GLDAS Noah v2.1"}</span>
+                  <b>{dataset ? formatDate(dataset.start, { month: "short", year: "numeric" }).toUpperCase() : mode === "demo" ? "JAN 2006" : "PERIOD NOT LOADED"} {dataset && <i>→</i>} {dataset ? formatDate(dataset.end, { month: "short", year: "numeric" }).toUpperCase() : ""}</b>
+                  <span>{dataset ? `${dataset.months} monthly records · ${dataset.source}` : mode === "demo" ? "240 synthetic monthly records · DEMO" : "Validated historical analysis not loaded"}</span>
                 </div>
               </section>
 
@@ -212,7 +212,7 @@ function App() {
               {mode === "real" && loadState.status === "loading" ? (
                 <section className="state-card" aria-live="polite">
                   <LoaderCircle className="spin" size={22} />
-                  <div><b>Reading validated analysis</b><span>Loading /data/trend_analysis.json</span></div>
+                  <div><b>Reading validated historical analysis</b><span>Loading /data/trend_analysis.json · no forecast is included</span></div>
                 </section>
               ) : mode === "real" && loadState.status === "error" ? (
                 <EmptyState
@@ -237,7 +237,7 @@ function App() {
                   <AgricultureContext />
                   <footer className="page-footer">
                     <span><Database size={13} /> SOURCE: {mode === "demo" ? "SYNTHETIC DEMONSTRATION" : dataset.source.toUpperCase()}</span>
-                    <span>REGIONAL MODEL OUTPUT · NOT FIELD MEASUREMENTS</span>
+                    <span>HISTORICAL ANALYSIS · NO OPERATIONAL FORECAST · NOT FIELD MEASUREMENTS</span>
                   </footer>
                 </>
               ) : null}
@@ -256,7 +256,7 @@ function DemoNotice() {
     <div className="demo-notice" role="note">
       <div className="demo-badge"><span /> DEMO</div>
       <p><b>Fictitious demonstration values.</b> These charts, trends and map cells are synthetic and are not NASA findings.</p>
-      <span className="demo-notice-right">LIVE ANALYSIS NOT CONNECTED</span>
+      <span className="demo-notice-right">VALIDATED FILE NOT CONNECTED</span>
     </div>
   );
 }
@@ -592,11 +592,25 @@ function MethodologyPage({ dataset, mode }: { dataset: DashboardDataset | null; 
           <div className="eyebrow">05 / PROVENANCE</div>
           <h2>Source, period & status</h2>
           <div className="provenance-list">
-            <div><span>Data source</span><b>{dataset?.source ?? "GLDAS Noah v2.1 · monthly"}</b></div>
-            <div><span>Period</span><b>{dataset ? formatDate(dataset.start, { month: "short", year: "numeric" }) + " — " + formatDate(dataset.end, { month: "short", year: "numeric" }) : "Jan 2006 — Dec 2025"}</b></div>
-            <div><span>Records</span><b>{dataset?.months ?? 240} monthly</b></div>
-            <div><span>Interface status</span><b>{mode === "demo" ? "Synthetic demonstration" : "Validated JSON mode"}</b></div>
+            <div><span>Data source</span><b>{dataset?.source ?? (mode === "demo" ? "Synthetic demonstration dataset" : "Not loaded")}</b></div>
+            <div><span>Period</span><b>{dataset ? formatDate(dataset.start, { month: "short", year: "numeric" }) + " — " + formatDate(dataset.end, { month: "short", year: "numeric" }) : mode === "demo" ? "Jan 2006 — Dec 2025 · synthetic" : "Not loaded"}</b></div>
+            <div><span>Records</span><b>{dataset ? `${dataset.months} monthly` : mode === "demo" ? "240 monthly · synthetic" : "Not loaded"}</b></div>
+            <div><span>Geographic coverage</span><b>{dataset ? `${dataset.latitudeCount} × ${dataset.longitudeCount} cells · ${dataset.eligibleCells} trend estimates · ${dataset.resolutionDegrees}°` : "Not loaded"}</b></div>
+            <div><span>Study-grid rule</span><b>{dataset && dataset.mode === "real" ? dataset.boundaryRule : dataset ? "Synthetic demo grid · not validated" : "Not loaded"}</b></div>
+            <div><span>Area weighting</span><b>{dataset && dataset.mode === "real" ? dataset.areaWeighting : dataset ? "Synthetic demo metadata" : "Not loaded"}</b></div>
+            <div><span>Input files</span><b>{dataset && dataset.mode === "real" ? `${dataset.inputFiles.length} files with SHA-256 provenance` : dataset ? "No source files · synthetic demo" : "Not loaded"}</b></div>
+            <div><span>Analysis status</span><b>{mode === "demo" ? "DEMO · synthetic only" : dataset ? "Historical retrospective · no forecast" : "Validated output not loaded"}</b></div>
           </div>
+          {dataset && dataset.mode === "real" && (
+            <details className="provenance-files">
+              <summary>Inspect source-file checksums ({dataset.inputFiles.length})</summary>
+              <ul>
+                {dataset.inputFiles.map((file) => (
+                  <li key={file.filename}><code>{file.filename}</code><code>{file.sha256}</code></li>
+                ))}
+              </ul>
+            </details>
+          )}
         </article>
         <article className="panel method-card limitations-card">
           <div className="eyebrow">06 / LIMITATIONS</div>
@@ -611,7 +625,7 @@ function MethodologyPage({ dataset, mode }: { dataset: DashboardDataset | null; 
       </section>
       <section className="source-footer panel">
         <div className="source-symbol"><CloudRain size={19} /></div>
-        <div><b>NASA Global Land Data Assimilation System</b><span>GLDAS Noah Land Surface Model · Version 2.1</span></div>
+        <div><b>NASA Global Land Data Assimilation System</b><span>GLDAS Noah Land Surface Model · Version 2.1 · Historical analysis only</span></div>
         <a href="https://doi.org/10.5067/SXAVCZFAQLNO" target="_blank" rel="noreferrer">DATASET DOI <ArrowUpRight size={14} /></a>
       </section>
       <footer className="page-footer"><span><Database size={13} /> PROVENANCE IS PART OF THE RESULT</span><span>METHOD NOTES REFLECT THE ANALYSIS OUTPUT CONTRACT</span></footer>
@@ -623,7 +637,7 @@ function loadUnavailableMessage(dataset: DashboardDataset | null) {
   if (dataset) {
     return (
       <div className="inline-source-status">
-        <span className="source-dot real-dot" /> Loaded validated analysis · schema 1.0 · {dataset.months} months
+        <span className="source-dot real-dot" /> Loaded validated historical analysis · schema 1.0 · {dataset.months} months · no operational forecast
       </div>
     );
   }

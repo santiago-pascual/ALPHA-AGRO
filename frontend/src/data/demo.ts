@@ -59,6 +59,12 @@ export const demoDataset: DashboardDataset = {
   meanCoverage: 0.967,
   minimumCoverage: 0.914,
   missingProfileFraction: 0.033,
+  latitudeCount: GRID_ROWS,
+  longitudeCount: GRID_COLUMNS,
+  eligibleCells: GRID_ROWS * GRID_COLUMNS,
+  areaWeighting: "Synthetic demonstration metadata only",
+  boundaryRule: "Synthetic demonstration grid; not a validated geographic footprint",
+  inputFiles: [],
   regionalTrend: {
     slopePerDecade: -7.6,
     ci95: [-24.8, 9.6],
