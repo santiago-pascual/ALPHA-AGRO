@@ -31,3 +31,28 @@ For the current research checkpoint, start with [project status](docs/PROJECT_ST
 - [Phase 1 dataset inventory](docs/PHASE_1_DATA_INVENTORY.md), [GLDAS data dictionary](docs/PHASE_1_DATA_DICTIONARY.md), and [acquisition report](docs/PHASE_1_ACQUISITION_REPORT.md)
 - [48-hour development plan](docs/DEVELOPMENT_PLAN.md), [two-computer workflow](docs/TEAM_WORKFLOW.md), and [submission checklist](docs/SUBMISSION_CHECKLIST.md)
 - [Agent instructions](AGENTS.md)
+
+## Reproduce the validated research
+
+Quant Alpha Agro studies changes in modelled soil-water storage in a provisional Pampas region of Argentina, with soybean as the initial use case. The validated acquisition covers all **240 months from January 2006 through December 2025**. Each monthly export contains three soil-water layers for a 0.25° grid. The same 867 of 896 cells have all three layers throughout the record.
+
+| NASA dataset | Role |
+| --- | --- |
+| GLDAS Noah v2.1 monthly | Verified historical inputs for 0–100 cm soil-water trend analysis |
+| GLDAS Noah v2.1 three-hourly | Verified one-day sample for checking data cadence and units |
+| GPM IMERG Final V07B, Terra MODIS MOD13Q1 v061, and SMAP | Candidate precipitation, vegetation, and soil-moisture comparisons. Coverage and dependencies differ by product. |
+
+See the [dataset inventory](docs/PHASE_1_DATA_INVENTORY.md) for collection identifiers, DOIs, and coverage.
+
+The acquisition layer discovers version-pinned NASA granules, downloads the Pampas subset, and validates its schema, time bounds, and provenance. The statistical engine reads those local exports and produces regional and grid-cell trend results. The planned interface will consume validated results.
+
+After installing the dependencies above, store an authorized Earthdata token once per Windows account using the hidden prompt, then fetch the monthly inputs. Run the trend engine on the **historical OPeNDAP directory**. The NetCDF exports and generated outputs stay under ignored `data/`.
+
+```powershell
+.\.venv\Scripts\python.exe -m gldas.auth
+.\.venv\Scripts\python.exe -m gldas.history --batches 60
+.\.venv\Scripts\python.exe -m gldas.trends data/phase1/historical-opendap --output data/analysis/trend_analysis.json
+.\.venv\Scripts\python.exe -m pytest -q
+```
+
+The verification run on all 240 months estimated a regional linear trend of **−2.83 mm per decade**. The 95% interval allowing for temporal autocorrelation was **−23.69 to +18.03 mm per decade** (`p = 0.79`). The estimate is uncertain for this period and provisional box. The grid represents modelled regional soil water, and field conditions, soybean damage, and forecast skill require separate evidence. [Trend engine and assumptions](docs/TREND_ENGINE.md) · [Input checksums](docs/GLDAS_MONTHLY_SHA256.csv) · [Earthdata setup](docs/HANDOFF.md#earthdata-authentication)

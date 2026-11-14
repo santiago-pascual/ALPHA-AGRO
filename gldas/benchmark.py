@@ -1,17 +1,17 @@
 """Retrieve and compare the February 2020 OPeNDAP pilot once."""
 
-from getpass import GetPassWarning, getpass
+import argparse
 from pathlib import Path
 import sys
 from tempfile import NamedTemporaryFile
 from time import monotonic
-import warnings
 
 import netCDF4 as nc
 import numpy as np
 import requests
 
 from .acquisition import NETCDF4_MAGIC, checksum, write_json
+from .auth import CredentialError, earthdata_token
 
 STEM = "GLDAS_NOAH025_M.A202002.021"
 BASE = ("https://opendap.earthdata.nasa.gov/collections/C1342986036-GES_DISC/granules/"
@@ -47,21 +47,20 @@ def compare(candidate, reference):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--prompt-token", action="store_true", help="Use hidden input for this run")
+    args = parser.parse_args()
     reference = ROOT / "subsets/-64.0_-38.0_-57.0_-30.0" / f"{STEM}.nc4"
     raw = ROOT / "raw" / f"{STEM}.nc4"
-    if not reference.is_file() or not raw.is_file() or not sys.stdin.isatty():
-        print("Use interactive PowerShell with the verified February pilot files.", file=sys.stderr)
+    if not reference.is_file() or not raw.is_file():
+        print("The verified February pilot files are required.", file=sys.stderr)
         return 1
-    with warnings.catch_warnings():
-        warnings.simplefilter("error", GetPassWarning)
-        try:
-            token = getpass("Earthdata user token: ").strip()
-        except (GetPassWarning, EOFError, KeyboardInterrupt):
-            print("Hidden token entry unavailable or canceled.", file=sys.stderr)
-            return 1
+    try:
+        token = earthdata_token(prompt=args.prompt_token, prompt_if_missing=True)
+    except CredentialError as error:
+        parser.error(str(error))
     if not token:
-        print("Earthdata token entry was empty.", file=sys.stderr)
-        return 1
+        parser.error("Use EARTHDATA_TOKEN, Windows Credential Manager, or --prompt-token.")
 
     destination = ROOT / "benchmark"
     destination.mkdir(parents=True, exist_ok=True)
