@@ -37,6 +37,8 @@ The terminal download accepts an Earthdata user token either through the hidden 
 
 **Blocker and limits.** The user reached the hidden token prompt, and the earlier CLI stopped on a redirect or access error. The first granule's unauthenticated response is HTTP 302 to Earthdata Login for NASA GESDISC DATA ARCHIVE. The CLI now follows a bounded exchange between the GES DISC data host and Earthdata Login. Sign in with the account that issued the token and approve the application if prompted, then rerun the same command. The real three-hourly schema and authenticated CLI transfer remain unverified. [NASA GESDISC DATA ARCHIVE authorization](https://urs.earthdata.nasa.gov/approve_app?client_id=e2WVk8Pw6weeLUKZYOxvTQ)
 
+**Storage handoff.** A subsequent attempt reached a redirect outside the sign-in hosts. The CLI accepts a signed HTTPS link for the exact requested object in NASA's cataloged GES DISC bucket. Only the NASA sign-in and data hosts receive the Earthdata token. If the next attempt reports an unsupported destination, record the hostname shown by the CLI.
+
 **Batch completion.** Confirm eight successful reports and corresponding raw files, spanning 00:00–21:00 UTC at three-hour intervals. If validation stops on a granule, inspect its JSON report and preserved raw data before restarting. The process can reuse completed raw files after checking their SHA-256.
 
 **Local files.** The raw monthly granule and checksum manifest, the Pampas cutout, and the JSON report are under ignored `data/phase1/`. The original browser download and `.venv/` are also local. See relative paths and hashes in [DATA_MANIFEST.md](DATA_MANIFEST.md).

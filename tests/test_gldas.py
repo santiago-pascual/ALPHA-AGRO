@@ -3,6 +3,7 @@ from getpass import GetPassWarning
 import json
 import sys
 import warnings
+from urllib.parse import urlsplit
 
 import netCDF4 as nc
 import numpy as np
@@ -71,13 +72,45 @@ def test_download_redirect_stays_on_known_nasa_hosts(redirect_host):
 
     session = Session()
     if redirect_host == "other.example":
-        with pytest.raises(AcquisitionError, match="outside"):
+        with pytest.raises(AcquisitionError, match="unsupported destination"):
             open_granule(session, URL, "placeholder")
         assert session.urls == [URL]
     else:
         with open_granule(session, URL, "placeholder") as response:
             assert response.status_code == 200
         assert session.urls == [URL, "https://urs.earthdata.nasa.gov/oauth/authorize", URL]
+
+
+@pytest.mark.parametrize("change_key", [False, True])
+def test_signed_storage_redirect_never_receives_earthdata_token(change_key):
+    object_path = urlsplit(URL).path.removeprefix("/data")
+    if change_key:
+        object_path += ".other"
+    signed_url = (
+        "https://gesdisc-cumulus-prod-protected.s3.us-west-2.amazonaws.com"
+        f"{object_path}?X-Amz-Credential=placeholder&X-Amz-Signature=placeholder"
+    )
+
+    class Session:
+        def get(self, url, *, headers, **kwargs):
+            response = requests.Response()
+            response._content_consumed = True
+            if url == URL:
+                assert headers == {"Authorization": "Bearer placeholder"}
+                response.status_code = 302
+                response.headers["Location"] = signed_url
+            else:
+                assert url == signed_url and not change_key
+                assert headers == {}
+                response.status_code = 200
+            return response
+
+    if change_key:
+        with pytest.raises(AcquisitionError, match="unsupported destination"):
+            open_granule(Session(), URL, "placeholder")
+    else:
+        with open_granule(Session(), URL, "placeholder") as response:
+            assert response.status_code == 200
 
 
 @pytest.mark.parametrize(("status", "attempts"), [(503, 3), (401, 1)])

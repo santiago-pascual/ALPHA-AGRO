@@ -9,12 +9,13 @@ from pathlib import Path
 import re
 from tempfile import NamedTemporaryFile
 from time import sleep
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import parse_qs, unquote, urljoin, urlsplit
 
 import requests
 
 CMR = "https://cmr.earthdata.nasa.gov/search/granules.umm_json"
 DATA_HOST = "data.gesdisc.earthdata.nasa.gov"
+STORAGE_BUCKET = "gesdisc-cumulus-prod-protected"
 RETRYABLE = {408, 429, 500, 502, 503, 504}
 NETCDF4_MAGIC = b"\x89HDF\r\n\x1a\n"
 
@@ -123,22 +124,54 @@ def checksum(path):
         return file_digest(source, "sha256").hexdigest()
 
 
+def signed_granule(parsed, object_path):
+    """Recognize a signed HTTPS URL for this exact GES DISC object."""
+    host = parsed.netloc
+    virtual = {f"{STORAGE_BUCKET}.s3{region}.amazonaws.com"
+               for region in ("", ".us-west-2", "-us-west-2")}
+    regional = {f"s3{region}.amazonaws.com" for region in ("", ".us-west-2", "-us-west-2")}
+    path = unquote(parsed.path)
+    matches_object = ((host in virtual and path == object_path)
+                      or (host in regional and path == f"/{STORAGE_BUCKET}{object_path}"))
+    query = parse_qs(parsed.query)
+    return matches_object and (
+        {"X-Amz-Credential", "X-Amz-Signature"} <= query.keys()
+        or {"AWSAccessKeyId", "Signature"} <= query.keys()
+    )
+
+
 def open_granule(session, url, token):
-    """Follow the Earthdata OAuth exchange within the two trusted NASA hosts."""
-    headers = {"Authorization": f"Bearer {token}"}
+    """Exchange Earthdata credentials and fetch a signed GES DISC object when redirected."""
+    object_path = urlsplit(url).path.removeprefix("/data")
+    previous_host = None
     for _ in range(6):
-        parsed = urlsplit(url)
-        if parsed.scheme != "https" or parsed.netloc not in {DATA_HOST, "urs.earthdata.nasa.gov"}:
-            raise AcquisitionError("GES DISC redirected outside its approved Earthdata hosts.")
+        try:
+            parsed = urlsplit(url)
+        except ValueError:
+            raise AcquisitionError("GES DISC returned an invalid redirect.") from None
+        nasa_host = parsed.netloc in {DATA_HOST, "urs.earthdata.nasa.gov"}
+        storage = previous_host == DATA_HOST and signed_granule(parsed, object_path)
+        if parsed.scheme != "https" or not (nasa_host or storage):
+            host = parsed.hostname or "unknown host"
+            if not re.fullmatch(r"[a-z0-9.-]{1,253}", host):
+                host = "unknown host"
+            raise AcquisitionError(f"GES DISC redirected to an unsupported destination ({host}).")
+        headers = {"Authorization": f"Bearer {token}"} if nasa_host else {}
         response = session.get(url, headers=headers, timeout=(10, 60), stream=True,
                                allow_redirects=False)
         if response.is_redirect:
             with response:
+                if storage:
+                    raise AcquisitionError("The signed GES DISC storage link returned another redirect.")
                 destination = response.headers["Location"]
                 url = urljoin(url, destination)
+                previous_host = parsed.netloc
             continue
+        if storage and response.status_code in {401, 403}:
+            response.close()
+            raise AcquisitionError("The signed GES DISC storage link was denied by Amazon S3.")
         if response.status_code in {401, 403} or (
-                response.ok and (parsed.netloc != DATA_HOST
+                response.ok and ((parsed.netloc != DATA_HOST and not storage)
                                  or "text/html" in response.headers.get("Content-Type", "").lower())):
             response.close()
             raise AcquisitionError(
