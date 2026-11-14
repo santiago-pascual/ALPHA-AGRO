@@ -1,8 +1,8 @@
 # Research handoff
 
-**Research branches** `feature/research` carries acquisition work. `feature/real-data-analysis` carries the first historical analysis for review against `main`.
+**Starting branch** Use `main` for new work. It includes the acquisition workflow and both historical analyses.
 
-**Latest scientific checkpoint** Audited all 240 monthly OPeNDAP exports and ran the trend engine. Use `git log -1 --oneline` for the exact local commit. [Results and reproduction](REAL_DATA_RESULTS.md)
+**Latest scientific checkpoint** Both analyses reproduced against all 240 monthly exports. The full-record regional slope was −2.83 mm per decade (95% HAC interval −23.69 to +18.03). Use `git log -1 --oneline` for the current commit. [First analysis](REAL_DATA_RESULTS.md) · [Sensitivity results](SCIENTIFIC_DISCOVERY_RESULTS.md) · [Machine-readable JSON](GLDAS_DISCOVERY_RESULTS.json)
 
 ## Resume
 
@@ -16,7 +16,7 @@
 For a fresh checkout, authenticate to the private repo and run these commands in PowerShell. On an existing checkout, confirm the working tree is clean before switching branches or pulling with `--ff-only`.
 
 ```powershell
-git clone --branch feature/research https://github.com/santiago-pascual/quant-alpha-agro.git
+git clone --branch main https://github.com/santiago-pascual/quant-alpha-agro.git
 Set-Location quant-alpha-agro
 py -3.13 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --only-binary=:all: -r requirements-dev.txt
