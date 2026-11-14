@@ -67,7 +67,7 @@ February's decoded bounds are February 1 at 00:00 through March 1 at 00:00 UTC, 
 
 ## Pipeline checks
 
-All 27 automated tests passed. They cover the batch limit, source URL and redirect restrictions, credential handling, retries, preservation and checksums, fill values and units. The default limit is eight files per request, and a request cannot exceed 200.
+All 28 automated tests passed, including coverage of the 60 four-month historical batches. Other checks cover source URL and redirect restrictions, credential handling, retries, preservation and checksums, fill values and units.
 
 ## Bounded OPeNDAP benchmark
 
@@ -75,8 +75,12 @@ The February request selected time, time bounds, coordinates and the first three
 
 The subsequent authenticated request returned HTTP 200 and 58,258 bytes in 2.46 seconds. The export matched decoded times and bounds, coordinates, units, masks and every retained soil-water value. The full February granule is 24,978,395 bytes, so the constrained transfer was 99.77% smaller. This timing is for one OPeNDAP transfer. A same-session HTTPS timing comparison was not performed.
 
-The HTTPS fallback resolved January–April 2006 before stopping for missing credentials. The two pilot months remain the only file-verified months. Catalog discovery separately confirmed all 240 consecutive monthly v2.1 keys and distinct granule IDs.
+The unauthenticated HTTPS fallback preflight resolved January–April 2006 before stopping for missing credentials. The later authenticated OPeNDAP run completed the historical acquisition.
+
+## Historical acquisition audit
+
+All 240 regional NetCDF exports and adjacent manifests are present. The audit verified collection, DOI, source URLs, OPeNDAP constraint, unique granule IDs, file sizes, and recomputed SHA-256. Decoded monthly bounds join continuously from January 1, 2006 through January 1, 2026 UTC. Each export passed coordinate and layer validation. The same 867 of 896 cells contain all three soil-water layers in every month. The exports total 13,919,667 bytes. [Checksum index](GLDAS_MONTHLY_SHA256.csv)
 
 ## Next scientific milestone
 
-Run the [four-month OPeNDAP batch](HANDOFF.md#reproduce-on-windows), then acquire the version-pinned monthly series in controlled batches and verify all expected months. Produce a reproducible 2006–2025 seasonal soil-water trend with coverage diagnostics, magnitude, uncertainty and statistical significance. Compare the result across predeclared Pampas subregions before extending to prediction or cross-product analysis.
+Use the complete local series to estimate the 2006–2025 seasonal soil-water trend with coverage diagnostics, magnitude, uncertainty and statistical significance. Compare the result across predeclared Pampas subregions before extending to prediction or cross-product analysis.

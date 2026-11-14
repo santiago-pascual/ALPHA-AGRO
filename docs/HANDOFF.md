@@ -2,14 +2,14 @@
 
 **Branch** `feature/research` tracks `origin/feature/research` in the private `santiago-pascual/quant-alpha-agro` repository.
 
-**Latest scientific checkpoint** January–April 2006 historical OPeNDAP batch. Use `git log -1 --oneline` for the exact local commit and `git ls-remote --exit-code origin refs/heads/feature/research` for the published tip.
+**Latest scientific checkpoint** All 240 monthly OPeNDAP exports from January 2006 through December 2025 verified. Use `git log -1 --oneline` for the exact local commit and `git ls-remote --exit-code origin refs/heads/feature/research` for the published tip.
 
 ## Resume
 
 1. Read [AGENTS.md](../AGENTS.md), [project status](PROJECT_STATUS.md), this handoff, and the [scientific research charter](SCIENTIFIC_RESEARCH_CHARTER.md).
 2. Phase 1 monthly sample validation is complete. The sample has 896 cells, with 867 valid per soil layer. A fresh subset export matched the existing SHA-256. Consult the [acquisition report](PHASE_1_ACQUISITION_REPORT.md) and [manifest](DATA_MANIFEST.md).
 3. The authenticated three-hourly batch passed for all eight UTC labels from 00:00 through 21:00. Raw and subset hashes matched the manifests and reports. Grid centres, units and masks for the checked fields matched the monthly sample. All 27 tests passed. See [acquisition evidence](PHASE_1_ACQUISITION_REPORT.md#three-hourly-validation).
-4. The two-month pilot passed, including February's 29-day interval. Before the 240-month run, benchmark NASA OPeNDAP spatial subsetting to avoid unnecessary global transfers. Use bounded date batches. The CLI resumes at the granule level by reusing checksum-verified files and restarting interrupted transfers.
+4. The historical acquisition passed validation for all 240 months. The grid and common valid-cell mask are consistent throughout the series. Use the [data manifest](DATA_MANIFEST.md) and [scientific plan](SCIENTIFIC_PLAN.md) for the 0–100 cm analysis.
 
 ## Reproduce on Windows
 
@@ -47,11 +47,13 @@ The terminal download accepts an Earthdata user token either through the hidden 
 .\.venv\Scripts\python.exe -m gldas.benchmark
 ```
 
-**Next task.** Resume the full historical series in four-month batches with a single hidden token prompt. January–April 2006 will be reused after checksum and schema verification, then the runner continues in May. Use `--batches 2` to stop after August 2006. Each provider export and JSON manifest is stored under ignored `data/phase1/historical-opendap/`. If a later month fails, retain the completed exports and rerun the same command after reviewing the error. The authenticated `python -m gldas` HTTPS route remains available for a bounded fallback with separate provenance.
+**Reproduce the historical inputs.** The provider exports and JSON manifests are in ignored `data/phase1/historical-opendap/`. Use the command below to retrieve the inputs on another machine. The runner checks and reuses complete files.
 
 ```powershell
 .\.venv\Scripts\python.exe -m gldas.history --batches 60
 ```
+
+**Next task.** Sum the first three soil-water storage layers and build the monthly series with area weights and the common 867-cell mask. Analysis of the local exports needs no Earthdata token.
 
 **Limits.** Three-hourly rainfall intervals are labelled by their ending time. These eight labels cover December 31 at 21:00 to January 1 at 21:00 UTC for rainfall. To aggregate the full January 1 UTC rainfall day, use intervals ending at 03:00 through January 2 at 00:00. The subset is a provisional box and the model values have not been validated against field observations.
 
