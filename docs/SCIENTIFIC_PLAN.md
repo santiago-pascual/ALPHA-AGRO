@@ -1,5 +1,7 @@
 # Proposed scientific plan
 
+Use the [scientific research charter](SCIENTIFIC_RESEARCH_CHARTER.md) to set priorities. The MVP starts by validating one feasible prediction horizon. Assess the data support for 7, 14, and 28 days, evaluate each feasible horizon against the baselines, and document any horizon that could not be evaluated.
+
 ## Historical trend and relationships
 
 1. After opening, select one Argentine region and one crop based on coverage and agricultural relevance. Predefine analysis windows, a seasonal grouping, a small set of regions or grid cells, and a primary outcome. Keep the inclusion rules independent of the results.
@@ -15,3 +17,4 @@
 3. Separate older training, chronological validation and a final later held-out test. Use blocked or rolling-origin validation, and purge windows where forecast labels overlap a split boundary. Fit thresholds, climatologies, imputation, transforms and calibration using only eligible training and validation periods. Keep the holdout untouched until the final evaluation.
 4. Compare seasonal climatology and persistence before testing an optional gradient-boosting model. For a binary target, report event counts, Brier score and skill against climatology, plus reliability and precision–recall if counts permit. For continuous targets, report MAE against both baselines and interval coverage if intervals are provided. Use time-blocked resampling for uncertainty when defensible and report metric limitations with small samples.
 5. Calibrate probabilities using time-separated validation when supported and measure reliability on held-out data. Ship a historical replay if realistic data availability can be reproduced but live delivery cannot. If skill, calibration evidence, or input availability is insufficient, report the evaluation and withhold the forecast display. Keep crop damage outside the claim.
+6. Where geographic coverage supports a spatial test, hold out blocks of locations and preserve chronological ordering within the evaluation. Choose blocks with spatial dependence and shared source footprints in mind. Report temporal skill and spatial transfer separately, including any limits on the locations the results represent.
