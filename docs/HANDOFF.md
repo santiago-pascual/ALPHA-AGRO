@@ -2,7 +2,7 @@
 
 **Branch** `feature/research` tracks `origin/feature/research` in the private `santiago-pascual/quant-alpha-agro` repository.
 
-**Latest scientific checkpoint** January–February 2020 monthly pilot and January 1, 2020 three-hourly batch. Use `git log -1 --oneline` for the exact local commit and `git ls-remote --exit-code origin refs/heads/feature/research` for the published tip.
+**Latest scientific checkpoint** January–April 2006 historical OPeNDAP batch. Use `git log -1 --oneline` for the exact local commit and `git ls-remote --exit-code origin refs/heads/feature/research` for the published tip.
 
 ## Resume
 
@@ -47,10 +47,10 @@ The terminal download accepts an Earthdata user token either through the hidden 
 .\.venv\Scripts\python.exe -m gldas.benchmark
 ```
 
-**Next task.** Run the January–April 2006 OPeNDAP batch with a token at the hidden prompt. Verify the first batch before increasing the cumulative batch count with `--batches 2`, up to `--batches 60` for the full period. The runner revisits prior months and reuses verified exports. Each provider export and JSON manifest is kept under ignored `data/phase1/historical-opendap/`. If OPeNDAP fails for a month, use the existing authenticated `python -m gldas` HTTPS command for that bounded date range and record the separate provenance. The runner has been checked against February's real provider export. A historical live transfer still needs interactive authentication.
+**Next task.** Resume the full historical series in four-month batches with a single hidden token prompt. January–April 2006 will be reused after checksum and schema verification, then the runner continues in May. Use `--batches 2` to stop after August 2006. Each provider export and JSON manifest is stored under ignored `data/phase1/historical-opendap/`. If a later month fails, retain the completed exports and rerun the same command after reviewing the error. The authenticated `python -m gldas` HTTPS route remains available for a bounded fallback with separate provenance.
 
 ```powershell
-.\.venv\Scripts\python.exe -m gldas.history
+.\.venv\Scripts\python.exe -m gldas.history --batches 60
 ```
 
 **Limits.** Three-hourly rainfall intervals are labelled by their ending time. These eight labels cover December 31 at 21:00 to January 1 at 21:00 UTC for rainfall. To aggregate the full January 1 UTC rainfall day, use intervals ending at 03:00 through January 2 at 00:00. The subset is a provisional box and the model values have not been validated against field observations.

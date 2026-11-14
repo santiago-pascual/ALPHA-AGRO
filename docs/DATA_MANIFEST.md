@@ -13,11 +13,20 @@ The monthly source is CMR collection `C1342986036-GES_DISC`, granule `G169485290
 
 February used the same monthly collection and DOI. Granule `G1709252645-GES_DISC` was acquired through authenticated HTTPS. Its decoded interval is February 1 to March 1, 2020 UTC. [NASA CMR granule metadata](https://cmr.earthdata.nasa.gov/search/granules.umm_json?concept_id=G1709252645-GES_DISC)
 
-The 2006–2025 catalog inventory has 240 unique monthly v2.1 granules. Two pilot months have verified local files, leaving 238 months pending. The February OPeNDAP export uses granule `G1709252645-GES_DISC` and covers the same 896 cells for the three soil-water layers.
+The 2006–2025 catalog inventory has 240 unique monthly v2.1 granules. Six distinct months have verified local data, including the two pilot months and January–April 2006. The February OPeNDAP export uses granule `G1709252645-GES_DISC` and covers the same 896 cells for the three soil-water layers.
 
 | Artifact | Local path | Size (bytes) | SHA-256 |
 | --- | --- | ---: | --- |
 | February OPeNDAP provider export | `data/phase1/benchmark/GLDAS_NOAH025_M.A202002.021.opendap.nc4` | 58258 | `10f95842f3ba813d6cbf01e4840b18cd9695c0d38fa6f2127faea22a885bf91d` |
+
+The historical exports and their per-month JSON manifests are under ignored `data/phase1/historical-opendap/`.
+
+| Month | CMR granule | Bytes | SHA-256 |
+| --- | --- | ---: | --- |
+| 2006-01 | G1413723949-GES_DISC | 58216 | `c803fd1a624fd1d52361784c9102cfb59564830aa93244af6d420937a265cb05` |
+| 2006-02 | G1413724007-GES_DISC | 58224 | `6d0343469f6dd5d3aaee7f8b76d185d501fae2f02024169aebc5d4c23401907e` |
+| 2006-03 | G1413723999-GES_DISC | 58220 | `769248d6d43c7fa272feddca5ec71f87a98f410ba31bf8b678ba8e5a4a08b9ac` |
+| 2006-04 | G1413723971-GES_DISC | 58219 | `8246cedb364016bb54601574a79ab73eed6d37c80f73442511ea85d79aa8b716` |
 
 ## Three-hourly GLDAS Noah v2.1
 

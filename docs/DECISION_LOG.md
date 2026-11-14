@@ -9,3 +9,4 @@
 | 2026-11-14 | Start the next authenticated check with one UTC day. | Eight granules are enough to test cadence and encoding before scaling. A seasonally low soil-water percentile remains a hydrological candidate, with prediction work downstream of validation. |
 | 2026-11-14 | Use authenticated HTTPS as the historical fallback. | The February OPeNDAP probe returned no data. Require an authenticated matching export and measured transfer before adopting spatial subsetting. |
 | 2026-11-14 | Use NASA OPeNDAP for the monthly 0–100 cm soil-water inputs. | The authenticated February export matched the local cutout exactly for the three layers, coordinates and decoded times. Whole-granule HTTPS remains available for fallback and additional variables. |
+| 2026-11-14 | Resume historical retrieval in four-month batches within one authenticated run. | The first four exports passed continuity, schema and checksum checks. The batch runner retains completed months for restart. |
