@@ -21,6 +21,7 @@ The dependency snapshot captures the candidate packages and their dependencies f
 ## Planning documents
 
 - [Vision](docs/PROJECT_VISION.md), [requirements](docs/REQUIREMENTS.md), and [architecture proposal](docs/ARCHITECTURE_PROPOSAL.md)
-- [NASA source research](docs/DATA_SOURCE_RESEARCH.md) and [scientific plan](docs/SCIENTIFIC_PLAN.md)
+- [Scientific research charter](docs/SCIENTIFIC_RESEARCH_CHARTER.md), [NASA source research](docs/DATA_SOURCE_RESEARCH.md), and [scientific plan](docs/SCIENTIFIC_PLAN.md)
+- [Phase 1 dataset inventory](docs/PHASE_1_DATA_INVENTORY.md), [GLDAS data dictionary](docs/PHASE_1_DATA_DICTIONARY.md), and [acquisition report](docs/PHASE_1_ACQUISITION_REPORT.md)
 - [48-hour development plan](docs/DEVELOPMENT_PLAN.md), [two-computer workflow](docs/TEAM_WORKFLOW.md), and [submission checklist](docs/SUBMISSION_CHECKLIST.md)
 - [Agent instructions](AGENTS.md)
