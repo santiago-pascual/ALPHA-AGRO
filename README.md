@@ -20,6 +20,8 @@ The dependency snapshot captures the candidate packages and their dependencies f
 
 ## Planning documents
 
+For the current research checkpoint, start with [project status](docs/PROJECT_STATUS.md) and [handoff](docs/HANDOFF.md).
+
 - [Vision](docs/PROJECT_VISION.md), [requirements](docs/REQUIREMENTS.md), and [architecture proposal](docs/ARCHITECTURE_PROPOSAL.md)
 - [Scientific research charter](docs/SCIENTIFIC_RESEARCH_CHARTER.md), [NASA source research](docs/DATA_SOURCE_RESEARCH.md), and [scientific plan](docs/SCIENTIFIC_PLAN.md)
 - [Phase 1 dataset inventory](docs/PHASE_1_DATA_INVENTORY.md), [GLDAS data dictionary](docs/PHASE_1_DATA_DICTIONARY.md), and [acquisition report](docs/PHASE_1_ACQUISITION_REPORT.md)
