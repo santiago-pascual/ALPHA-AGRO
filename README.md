@@ -51,4 +51,4 @@ After installing the dependencies above, store an authorized Earthdata token onc
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
-The box is a provisional geographic window, and the grid represents modelled hydrology at regional scale. The analysis does not establish field-level conditions, soybean damage, or forecast skill. Review the estimation assumptions and input checks before interpreting results. [Trend engine](docs/TREND_ENGINE.md) · [Data manifest](docs/DATA_MANIFEST.md) · [Earthdata setup](docs/HANDOFF.md#earthdata-authentication)
+The verification run on all 240 months estimated a regional linear trend of **−2.83 mm per decade**. The 95% interval allowing for temporal autocorrelation was **−23.69 to +18.03 mm per decade** (`p = 0.79`). The estimate is uncertain for this period and provisional box. The grid represents modelled regional soil water, and field conditions, soybean damage, and forecast skill require separate evidence. [Trend engine and assumptions](docs/TREND_ENGINE.md) · [Input checksums](docs/GLDAS_MONTHLY_SHA256.csv) · [Earthdata setup](docs/HANDOFF.md#earthdata-authentication)
