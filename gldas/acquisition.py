@@ -9,7 +9,7 @@ from pathlib import Path
 import re
 from tempfile import NamedTemporaryFile
 from time import sleep
-from urllib.parse import urlsplit
+from urllib.parse import urljoin, urlsplit
 
 import requests
 
@@ -123,6 +123,32 @@ def checksum(path):
         return file_digest(source, "sha256").hexdigest()
 
 
+def open_granule(session, url, token):
+    """Follow the Earthdata OAuth exchange within the two trusted NASA hosts."""
+    headers = {"Authorization": f"Bearer {token}"}
+    for _ in range(6):
+        parsed = urlsplit(url)
+        if parsed.scheme != "https" or parsed.netloc not in {DATA_HOST, "urs.earthdata.nasa.gov"}:
+            raise AcquisitionError("GES DISC redirected outside its approved Earthdata hosts.")
+        response = session.get(url, headers=headers, timeout=(10, 60), stream=True,
+                               allow_redirects=False)
+        if response.is_redirect:
+            with response:
+                destination = response.headers["Location"]
+                url = urljoin(url, destination)
+            continue
+        if response.status_code in {401, 403} or (
+                response.ok and (parsed.netloc != DATA_HOST
+                                 or "text/html" in response.headers.get("Content-Type", "").lower())):
+            response.close()
+            raise AcquisitionError(
+                f"Earthdata did not return a data file (HTTP {response.status_code}). "
+                "Authorize NASA GESDISC DATA ARCHIVE and verify that the token is active."
+            )
+        return response
+    raise AcquisitionError("Earthdata exceeded the sign-in redirect limit. Check GES DISC authorization.")
+
+
 def write_json(path, value):
     with NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent, delete=False) as file:
         temp = Path(file.name)
@@ -169,13 +195,7 @@ def preserve(session, granule, raw_dir, token=None, local=None):
                             temp_file.write(chunk)
                     expected = local.stat().st_size
                 else:
-                    with session.get(granule["url"], headers={"Authorization": f"Bearer {token}"},
-                                     timeout=(10, 60), stream=True, allow_redirects=False) as response:
-                        if response.is_redirect or response.status_code in {401, 403}:
-                            raise AcquisitionError(
-                                "GES DISC requires authorized Earthdata access. Check the token and GES DISC "
-                                "authorization, or import the official file after a browser download."
-                            )
+                    with open_granule(session, granule["url"], token) as response:
                         response.raise_for_status()
                         for chunk in response.iter_content(1024 * 1024):
                             temp_file.write(chunk)

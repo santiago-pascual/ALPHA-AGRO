@@ -49,7 +49,7 @@ To verify programmatic access, generate an Earthdata user token and enter it at 
 .\.venv\Scripts\python.exe -m gldas --product 3hourly --start 2020-01-01 --end 2020-01-01 --prompt-token
 ```
 
-Any redirect from the direct endpoint is treated as requiring manual attention. If authenticated direct HTTPS still redirects, check GES DISC authorization and the token-compatible Earthdata download route. Browser import remains available for one granule at a time. Inspect the first actual three-hourly file for fields, grid and time semantics before increasing its batch size.
+The CLI allows a bounded sign-in exchange between the GES DISC data host and Earthdata Login. If Earthdata returns a login page or denies access, authorize the archive in the browser with the account that issued the token. Browser import remains available for one granule at a time. Inspect the first actual three-hourly file for fields, grid and time semantics before increasing its batch size. [NASA GESDISC DATA ARCHIVE authorization](https://urs.earthdata.nasa.gov/approve_app?client_id=e2WVk8Pw6weeLUKZYOxvTQ)
 
 ## Pipeline acceptance criteria
 

@@ -10,7 +10,7 @@ import pytest
 import requests
 
 from gldas.acquisition import (
-    AcquisitionError, NETCDF4_MAGIC, PRODUCTS, discover, preserve, retry, valid_data_url,
+    AcquisitionError, NETCDF4_MAGIC, PRODUCTS, discover, open_granule, preserve, retry, valid_data_url,
 )
 from gldas.validation import LAYERS, ValidationError, validate_and_subset
 from gldas import __main__ as cli
@@ -47,6 +47,37 @@ def test_official_url_boundary():
     assert not valid_data_url(URL.replace(".2.1/", ".2.0/"), PRODUCT, FILE)
     assert not valid_data_url(URL + "?token=placeholder", PRODUCT, FILE)
     assert not valid_data_url(URL.replace("https://", "https://other.example@"), PRODUCT, FILE)
+
+
+@pytest.mark.parametrize("redirect_host", ["urs.earthdata.nasa.gov", "other.example"])
+def test_download_redirect_stays_on_known_nasa_hosts(redirect_host):
+    class Session:
+        urls = []
+
+        def get(self, url, **kwargs):
+            self.urls.append(url)
+            assert kwargs["allow_redirects"] is False
+            response = requests.Response()
+            response._content = b""
+            response._content_consumed = True
+            response.status_code = 302
+            response.headers["Location"] = (
+                f"https://{redirect_host}/oauth/authorize" if len(self.urls) == 1 else URL
+            )
+            if len(self.urls) == 3:
+                response.status_code = 200
+                response.headers.clear()
+            return response
+
+    session = Session()
+    if redirect_host == "other.example":
+        with pytest.raises(AcquisitionError, match="outside"):
+            open_granule(session, URL, "placeholder")
+        assert session.urls == [URL]
+    else:
+        with open_granule(session, URL, "placeholder") as response:
+            assert response.status_code == 200
+        assert session.urls == [URL, "https://urs.earthdata.nasa.gov/oauth/authorize", URL]
 
 
 @pytest.mark.parametrize(("status", "attempts"), [(503, 3), (401, 1)])

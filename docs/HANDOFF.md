@@ -35,7 +35,7 @@ The terminal download accepts an Earthdata user token either through the hidden 
 .\.venv\Scripts\python.exe -m gldas --product 3hourly --start 2020-01-01 --end 2020-01-01 --max-granules 8 --prompt-token
 ```
 
-**Blocker and limits.** This session has no available Earthdata token. The browser profile route requested login. The real three-hourly schema and authenticated CLI transfer remain unverified. If an authorized request redirects, use the [acquisition report](PHASE_1_ACQUISITION_REPORT.md) to check GES DISC authorization or import browser downloads by granule.
+**Blocker and limits.** The user reached the hidden token prompt, and the earlier CLI stopped on a redirect or access error. The first granule's unauthenticated response is HTTP 302 to Earthdata Login for NASA GESDISC DATA ARCHIVE. The CLI now follows a bounded exchange between the GES DISC data host and Earthdata Login. Sign in with the account that issued the token and approve the application if prompted, then rerun the same command. The real three-hourly schema and authenticated CLI transfer remain unverified. [NASA GESDISC DATA ARCHIVE authorization](https://urs.earthdata.nasa.gov/approve_app?client_id=e2WVk8Pw6weeLUKZYOxvTQ)
 
 **Batch completion.** Confirm eight successful reports and corresponding raw files, spanning 00:00–21:00 UTC at three-hour intervals. If validation stops on a granule, inspect its JSON report and preserved raw data before restarting. The process can reuse completed raw files after checking their SHA-256.
 
