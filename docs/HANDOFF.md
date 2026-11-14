@@ -64,7 +64,9 @@ The download commands use `EARTHDATA_TOKEN` first, then the Windows credential. 
 
 **Reproduce the historical analysis.** Run `.\.venv\Scripts\python.exe -m gldas.trend_report` with the 240 local exports and their manifests in place. No Earthdata token is needed. The JSON and figures are ignored under `data/analysis/2006-2025/`. Use `--output` with a new directory for a repeat run.
 
-**Next task.** Check sensitivity to the regional mask and analysis period, then plan checks against independent observations. Preserve the analysis as a retrospective hydrological result.
+**Second-phase checkpoint.** Regional sensitivity, spatial contrasts, and temporal persistence are documented in [Scientific discovery results](SCIENTIFIC_DISCOVERY_RESULTS.md). Run `.\.venv\Scripts\python.exe -m gldas.discovery` offline with the verified inputs. The ignored outputs are under `data/analysis/scientific-discovery/`.
+
+**Next task.** Benchmark a single regional OPeNDAP export of the additional GLDAS variables against a local full granule. The two full monthly files are insufficient for estimates of long-term associations.
 
 **Limits.** Three-hourly rainfall intervals are labelled by their ending time. These eight labels cover December 31 at 21:00 to January 1 at 21:00 UTC for rainfall. To aggregate the full January 1 UTC rainfall day, use intervals ending at 03:00 through January 2 at 00:00. The subset is a provisional box and the model values have not been validated against field observations.
 

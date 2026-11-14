@@ -15,5 +15,6 @@
 | 2026-11-14 | Historical OPeNDAP batch 1 | January–April 2006 passed catalog and file validation. Recomputed hashes matched, and each export has 867 valid and 29 masked values per layer. The four files total 232,879 bytes. |
 | 2026-11-14 | Full historical acquisition audit | 240 exports passed schema, provenance and checksum checks. Monthly intervals are continuous, with 240 distinct granule IDs and the same 867 joint valid cells throughout. Total export size is 13,919,667 bytes. |
 | 2026-11-14 | Historical soil-water trends, 2006–2025 | The seasonal OLS estimate was −2.83 mm per decade. Its 95% HAC interval was −23.69 to +18.03 mm per decade. Two offline runs produced identical JSON and figures. [Results](REAL_DATA_RESULTS.md) |
+| 2026-11-14 | Second-phase GLDAS analysis | Regional trend intervals span zero across all estimable sensitivities. Lag-one anomaly correlation was 0.84. Two full monthly local input files contain additional fields, so historical association estimates remain pending. [Results](SCIENTIFIC_DISCOVERY_RESULTS.md) |
 
 See [acquisition evidence](PHASE_1_ACQUISITION_REPORT.md) and [local artifact identity](DATA_MANIFEST.md).
