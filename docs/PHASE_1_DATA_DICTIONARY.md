@@ -1,6 +1,6 @@
 # Phase 1 GLDAS data dictionary and candidate target
 
-The January 2020 monthly sample confirms the variable names and units below. Its science fields are ordered `(time, lat, lon)`, and all seven checked fields are float32 monthly means with `_FillValue` and `missing_value` set to −9999. The `_inst` suffix is inherited from the underlying three-hourly fields. The [acquisition report](PHASE_1_ACQUISITION_REPORT.md) records the measured schema and missingness. Three-hourly file encoding remains unverified. [GES DISC field table](https://disc.gsfc.nasa.gov/datasets/GLDAS_NOAH025_3H_2.1/summary?keywords=GLDAS) · [NASA monthly product description](https://data.nasa.gov/dataset/gldas-noah-land-surface-model-l4-monthly-0-25-x-0-25-degree-v2-1-gldas-noah025-m-at-ges-di-23acd)
+The January 2020 monthly sample and January 1 three-hourly batch confirm the names and units below. The fields are ordered `(time, lat, lon)` and use −9999 for fill and missing values. The monthly fields are float32 monthly means, including fields with the inherited `_inst` suffix. The three-hourly fields with that suffix are instantaneous. `Rainf_f_tavg` is a mean rate over the three hours ending at the time label. See the [measured acquisition report](PHASE_1_ACQUISITION_REPORT.md). [GES DISC field table](https://disc.gsfc.nasa.gov/datasets/GLDAS_NOAH025_3H_2.1/summary?keywords=GLDAS) · [NASA monthly product description](https://data.nasa.gov/dataset/gldas-noah-land-surface-model-l4-monthly-0-25-x-0-25-degree-v2-1-gldas-noah025-m-at-ges-di-23acd)
 
 | Field | Meaning | Native unit | Sample validation |
 | --- | --- | --- | --- |
@@ -9,8 +9,8 @@ The January 2020 monthly sample confirms the variable names and units below. Its
 | `SoilMoi40_100cm_inst` | 40–100 cm soil water storage | kg/m² | Same checks. Layer thickness 0.60 m. |
 | `SoilMoi100_200cm_inst` | 100–200 cm soil water storage | kg/m² | Same checks. Layer thickness 1.00 m. |
 | `RootMoist_inst` | Model-defined root-zone soil water storage | kg/m² | Verify the Noah variable's depth and meaning before using it. The explicit 0–100 cm aggregate is defined separately. |
-| `Rainf_f_tavg` | Total precipitation forcing rate | kg/m²/s | Check observed time semantics before converting rate to accumulation. Integrate rate over its interval. |
-| `Tair_f_inst` | Near-surface air temperature forcing | K | Check sampling convention. Convert to °C by subtracting 273.15 when needed. |
+| `Rainf_f_tavg` | Total precipitation forcing rate | kg/m²/s | Integrate the three-hourly mean rate over its preceding interval. Use bounds rather than grouping end labels by date. |
+| `Tair_f_inst` | Near-surface air temperature forcing | K | Instantaneous in the three-hourly files. Convert to °C by subtracting 273.15 when needed. |
 | Latitude and longitude coordinates | Grid cell centers | degrees north and degrees east | Verify actual names, axes, axis orientation, spacing, bounds, longitude convention and unique finite coordinates. |
 | Time coordinate | Source time label in UTC | CF encoded time | Inspect encoding, calendar, coverage metadata, ordering and duplicates. Compare to CMR and identify what interval each field represents. |
 

@@ -2,14 +2,14 @@
 
 **Branch** `feature/research` tracks `origin/feature/research` in the private `santiago-pascual/quant-alpha-agro` repository.
 
-**Latest scientific checkpoint** `36962343fdc0410d520b27c99900bee370dfe8b3`. Use `git log -1 --oneline` to read the exact tip of the branch containing this file. Use `git ls-remote --exit-code origin refs/heads/feature/research` to check the published tip.
+**Latest scientific checkpoint** January 2020 monthly sample and January 1, 2020 three-hourly batch, documented in this revision. Use `git log -1 --oneline` for the exact local commit and `git ls-remote --exit-code origin refs/heads/feature/research` for the published tip.
 
 ## Resume
 
 1. Read [AGENTS.md](../AGENTS.md), [project status](PROJECT_STATUS.md), this handoff, and the [scientific research charter](SCIENTIFIC_RESEARCH_CHARTER.md).
 2. Phase 1 monthly sample validation is complete. The sample has 896 cells, with 867 valid per soil layer. A fresh subset export matched the existing SHA-256. Consult the [acquisition report](PHASE_1_ACQUISITION_REPORT.md) and [manifest](DATA_MANIFEST.md).
-3. Next, acquire and validate the January 1, 2020 three-hourly batch. CMR resolved the eight expected UTC slots. Check time labels, grid coordinates, variable units, fill and missing values, and provenance against the files. Compare shared fields and masks with the monthly product. A single day cannot reproduce a monthly mean.
-4. After the three-hourly check passes, test a bounded monthly batch and verify file-level coverage and grid consistency. For the full period, benchmark an official spatial subset route first to avoid unnecessary global transfers. Keep the date plan in bounded batches. The current CLI resumes by reusing checksum-verified complete granules and restarts interrupted individual transfers.
+3. The authenticated three-hourly batch passed for all eight UTC labels from 00:00 through 21:00. Raw and subset hashes matched the manifests and reports. Grid centres, units and masks for the checked fields matched the monthly sample. All 27 tests passed. See [acquisition evidence](PHASE_1_ACQUISITION_REPORT.md#three-hourly-validation).
+4. Next, test two monthly files and verify file-level coverage and grid consistency. Before the 240-month run, benchmark an official spatial subset route to avoid unnecessary global transfers. Use bounded date batches. The CLI resumes at the granule level by reusing checksum-verified files and restarting interrupted transfers.
 
 ## Reproduce on Windows
 
@@ -35,13 +35,15 @@ The terminal download accepts an Earthdata user token either through the hidden 
 .\.venv\Scripts\python.exe -m gldas --product 3hourly --start 2020-01-01 --end 2020-01-01 --max-granules 8 --prompt-token
 ```
 
-**Blocker and limits.** The user reached the hidden token prompt, and the earlier CLI stopped on a redirect or access error. The first granule's unauthenticated response is HTTP 302 to Earthdata Login for NASA GESDISC DATA ARCHIVE. The CLI now follows a bounded exchange between the GES DISC data host and Earthdata Login. Sign in with the account that issued the token and approve the application if prompted, then rerun the same command. The real three-hourly schema and authenticated CLI transfer remain unverified. [NASA GESDISC DATA ARCHIVE authorization](https://urs.earthdata.nasa.gov/approve_app?client_id=e2WVk8Pw6weeLUKZYOxvTQ)
+**Next executable task.** From the repository root in interactive PowerShell, run a two-month authenticated pilot. January is reused and February is requested if absent. A new transfer needs the token in that terminal. [NASA GESDISC DATA ARCHIVE authorization](https://urs.earthdata.nasa.gov/approve_app?client_id=e2WVk8Pw6weeLUKZYOxvTQ)
 
-**Storage handoff.** An authenticated attempt reached `d2b3c3wh8s6en5.cloudfront.net` with the expected filename and a query string. The CLI accepts that exact host and filename in the trusted redirect chain and passes the query through without interpreting or logging it. Only the NASA sign-in and data hosts receive the Earthdata token. The next run must verify a live transfer.
+```powershell
+.\.venv\Scripts\python.exe -m gldas --product monthly --start 2020-01-01 --end 2020-02-29 --max-granules 2 --prompt-token
+```
 
-**Batch completion.** Confirm eight successful reports and corresponding raw files, spanning 00:00–21:00 UTC at three-hour intervals. If validation stops on a granule, inspect its JSON report and preserved raw data before restarting. The process can reuse completed raw files after checking their SHA-256.
+**Limits.** Three-hourly rainfall intervals are labelled by their ending time. These eight labels cover December 31 at 21:00 to January 1 at 21:00 UTC for rainfall. To aggregate the full January 1 UTC rainfall day, use intervals ending at 03:00 through January 2 at 00:00. The subset is a provisional box and the model values have not been validated against field observations.
 
-**Local files.** The raw monthly granule and checksum manifest, the Pampas cutout, and the JSON report are under ignored `data/phase1/`. The original browser download and `.venv/` are also local. See relative paths and hashes in [DATA_MANIFEST.md](DATA_MANIFEST.md).
+**Local files.** The monthly and eight three-hourly raw granules, manifests, cutouts and JSON reports are under ignored `data/phase1/`. The browser download and `.venv/` are also local. See [DATA_MANIFEST.md](DATA_MANIFEST.md).
 
 ## Checkpoint workflow
 
