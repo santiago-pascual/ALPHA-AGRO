@@ -41,16 +41,16 @@ The terminal download accepts an Earthdata user token either through the hidden 
 .\.venv\Scripts\python.exe -m gldas --product monthly --start 2020-01-01 --end 2020-02-29 --max-granules 2 --prompt-token
 ```
 
-**Next task.** OPeNDAP redirected without returning data in the noninteractive shell. Run one authenticated attempt in PowerShell from the repository root. It requests time, time bounds, coordinates and the first three soil-water layers at latitude indices 88–119 and longitude indices 464–491. The script compares the returned NetCDF with the local February cutout and records bytes and elapsed time under ignored `data/phase1/benchmark/`. Review the result before adopting OPeNDAP for production. [NASA OPeNDAP tutorials](https://github.com/nasa/gesdisc-tutorials)
+**Verified benchmark.** The February export matched decoded times and bounds, coordinate values, units, missing-data masks, and all retained soil-water values exactly. The export and metrics are under ignored `data/phase1/benchmark/`. The benchmark can be reproduced from PowerShell. [NASA OPeNDAP tutorials](https://github.com/nasa/gesdisc-tutorials)
 
 ```powershell
 .\.venv\Scripts\python.exe -m gldas.benchmark
 ```
 
-If the benchmark fails, use the verified GES DISC HTTPS route. January–April 2006 was discovered successfully and is the first bounded batch. The shell needs a token at the hidden prompt for new transfers. Keep subsequent batches to four months and rerun the same date range after interruption to reuse verified raw files. Reuse the existing January and February 2020 files when their batch is reached.
+**Next task.** Run the January–April 2006 OPeNDAP batch with a token at the hidden prompt. Verify the first batch before increasing the cumulative batch count with `--batches 2`, up to `--batches 60` for the full period. The runner revisits prior months and reuses verified exports. Each provider export and JSON manifest is kept under ignored `data/phase1/historical-opendap/`. If OPeNDAP fails for a month, use the existing authenticated `python -m gldas` HTTPS command for that bounded date range and record the separate provenance. The runner has been checked against February's real provider export. A historical live transfer still needs interactive authentication.
 
 ```powershell
-.\.venv\Scripts\python.exe -m gldas --product monthly --start 2006-01-01 --end 2006-04-30 --max-granules 4 --prompt-token
+.\.venv\Scripts\python.exe -m gldas.history
 ```
 
 **Limits.** Three-hourly rainfall intervals are labelled by their ending time. These eight labels cover December 31 at 21:00 to January 1 at 21:00 UTC for rainfall. To aggregate the full January 1 UTC rainfall day, use intervals ending at 03:00 through January 2 at 00:00. The subset is a provisional box and the model values have not been validated against field observations.

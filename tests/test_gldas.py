@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from getpass import GetPassWarning
 import json
 import sys
@@ -15,6 +15,7 @@ from gldas.acquisition import (
 )
 from gldas.validation import LAYERS, ValidationError, validate_and_subset
 from gldas import __main__ as cli
+from gldas.history import FIRST, LAST, batch_dates
 
 PRODUCT = PRODUCTS["monthly"]
 FILE = "GLDAS_NOAH025_M.A202001.021.nc4"
@@ -41,6 +42,14 @@ def test_prompt_refuses_getpass_echo_fallback(monkeypatch, capsys):
 def test_batch_guard():
     with pytest.raises(AcquisitionError, match="240 granules"):
         discover(None, PRODUCT, date(2006, 1, 1), date(2025, 12, 31), 8)
+
+
+def test_historical_batches_cover_exactly_2006_through_2025():
+    batches = [batch_dates(index) for index in range(60)]
+    assert batches[0] == (FIRST, date(2006, 4, 30))
+    assert batches[-1] == (date(2025, 9, 1), LAST)
+    for previous, current in zip(batches, batches[1:]):
+        assert previous[1] + timedelta(days=1) == current[0]
 
 
 def test_official_url_boundary():

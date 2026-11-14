@@ -11,5 +11,6 @@
 | 2026-11-14 | January–February 2020 monthly pilot | Reused January and downloaded February through authenticated HTTPS. Both raw and subset hashes matched, grid and masks agreed, and February bounds covered 29 days. All 27 tests passed. |
 | 2026-11-14 | Constrained February OPeNDAP request | Unauthenticated HTTP 302, zero response body bytes, 1.04 seconds. No NetCDF export or numerical comparison was available. The comparison code passed a local same-file control. |
 | 2026-11-14 | Historical monthly catalog and first batch | 240 unique consecutive v2.1 granules passed pinned discovery. The first four months of 2006 resolved, then stopped before transfer because the shell lacked a credential. |
+| 2026-11-14 | Authenticated February OPeNDAP | HTTP 200, 58,258 bytes in 2.46 seconds. Exact comparison against the local cutout passed for decoded times and bounds, grid, units, masks and all retained values. |
 
 See [acquisition evidence](PHASE_1_ACQUISITION_REPORT.md) and [local artifact identity](DATA_MANIFEST.md).
