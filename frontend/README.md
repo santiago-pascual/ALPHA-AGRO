@@ -78,6 +78,14 @@ The current `forecast_v1` contract in `../config/forecast_v1.schema.json` define
 
 See [FORECAST_GENERATION_AND_LOCALIZATION.md](docs/FORECAST_GENERATION_AND_LOCALIZATION.md) for request behavior and the artifact fields needed to enable this workflow.
 
+### Phase 8 experimental outlook bundle
+
+The Forecast workspace has a separate **Research / Experimental Outlook** reader for `phase8_forecast_bundle_v1`. Its adapter follows the versioned contract introduced by scientific commit `a381248af3320a497d543a5cf0384c764b604bdd` in `config/phase8_forecast_bundle_v1.schema.json`. It validates the complete three-horizon regional and spatial bundle, checks provenance digests, bounds and missing-cell masks, and verifies regional/spatial agreement before exposing any result. The current scientific issue is marked experimental with `operationally_eligible: false`; this panel cannot enable operational forecasts.
+
+On the scientific computer, copy the locally validated `data/analysis/phase8_2026_bounded/phase8_forecast_bundle_v1.json` to `frontend/public/data/phase8_forecast_bundle_v1.json`. The destination is git-ignored and must not be force-added. The UI reads only this artifact; a missing or invalid bundle produces an explicit unavailable/error state. It shows the regional outlook by default. Spatial lookup uses the nearest bundle grid center only when that cell is valid; masked or out-of-support locations stay unavailable, with no replacement or interpolation. It does not calculate predictions in the browser or derive crop guidance.
+
+The Phase 8 reader and UI tests use synthetic test-only contract fixtures. If the ignored real bundle is present locally, an additional regression test validates it during `npm test`; the artifact itself is never required by or included in a clean Git checkout.
+
 ## Demo and static hosting
 
 The English presenter script is in [../docs/ALPHA_AGRO_DEMO_SCRIPT.md](../docs/ALPHA_AGRO_DEMO_SCRIPT.md). GitHub Pages static hosting is prepared as a manual-only workflow; see [DEPLOYMENT.md](DEPLOYMENT.md). No public deployment is triggered by the workflow file or by building locally. The standard checkout build does not include ignored NASA or predictive JSON artifacts.

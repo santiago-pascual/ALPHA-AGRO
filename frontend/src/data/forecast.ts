@@ -18,7 +18,10 @@ const text = (v: unknown): v is string => typeof v === "string" && !!v.trim();
 const instant = (v: unknown): v is string => {
   if (!text(v) || !/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?Z$/.test(v)) return false;
   const parsed = new Date(v);
-  return Number.isFinite(parsed.getTime()) && parsed.toISOString().replace(/\.000Z$/, "Z") === v;
+  // JavaScript Date retains milliseconds, while scientific artifacts may carry
+  // microsecond or nanosecond UTC timestamps. Validate the calendar second
+  // without rejecting valid sub-millisecond precision.
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 19) === v.slice(0, 19);
 };
 
 export function gridCellId(point: CoordinatePoint, resolution: number): string {

@@ -11,6 +11,7 @@ import { predictiveEvaluationFixture } from "../data/__fixtures__/predictiveEval
 import { adaptPredictiveEvaluation } from "../data/loadPredictive";
 import { gridCellId, selectedPreHoldoutModel } from "../data/forecast";
 import { DEFAULT_CROP_CONFIGURATION, type CropConfiguration } from "../data/agronomy";
+import { phase8ForecastFixture } from "../data/__fixtures__/phase8Forecast.fixture";
 
 vi.mock("./TrendMap", async () => {
   const React = await import("react");
@@ -78,6 +79,22 @@ describe("ForecastPage location selection", () => {
     expect(container.textContent).toContain("Select a supported field location first.");
     expect(container.textContent).toContain("No scientifically validated forecast is currently available");
     expect(container.textContent).toContain("forecast_v1.json");
+  });
+
+  it("integrates the Phase 8 bundle as a separate experimental outlook, never an operational prediction", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const path = String(input);
+      if (path.includes("predictive_evaluation")) return { ok: true, status: 200, json: async () => predictiveEvaluationFixture };
+      if (path.includes("phase8_forecast_bundle")) return { ok: true, status: 200, json: async () => phase8ForecastFixture };
+      return { ok: false, status: 404, json: async () => ({}) };
+    }));
+    const container = renderForecast();
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+    expect(container.textContent).toContain("Experimental soil-storage outlook");
+    expect(container.textContent).toContain("EXPERIMENTAL · NOT OPERATIONAL");
+    expect(container.textContent).toContain("101 mm");
+    expect(container.textContent).toContain("operationally_eligible = false");
+    expect(container.textContent).not.toContain("2026-12 · 1 month · Experimental forecast");
   });
 
   it("renders only a matching validated artifact after an explicit request", async () => {
