@@ -51,19 +51,23 @@ function clickButton(container: HTMLElement, name: string) {
 }
 
 describe("ForecastPage location selection", () => {
-  it("keeps forecasts unavailable and maintains monthly horizon options", () => {
+  it("keeps forecasts gated while allowing horizon and target selection", () => {
     const container = renderForecast();
-    expect(container.textContent).toContain("NOT OPERATIONALLY ELIGIBLE");
-    expect(container.textContent).toContain("No prospective result is connected");
+    expect(container.textContent).toContain("Forecast result withheld");
     expect(container.textContent).toContain("frontend/public/data/forecast_v1.json");
     expect(container.textContent).toContain("Argentine Pampas");
     expect(container.textContent).not.toContain("predicted value");
     const horizon = container.querySelector<HTMLSelectElement>("select[aria-label='Forecast horizon']");
-    expect(horizon?.disabled).toBe(true);
+    expect(horizon?.disabled).toBe(false);
     expect(Array.from(horizon?.options ?? []).map((option) => option.textContent)).toEqual([
       "1 month ahead", "2 months ahead", "3 months ahead",
     ]);
-    expect(container.querySelector<HTMLSelectElement>("select[aria-label='Forecast target']")?.disabled).toBe(true);
+    expect(container.querySelector<HTMLSelectElement>("select[aria-label='Forecast target']")?.disabled).toBe(false);
+    act(() => {
+      if (horizon) { horizon.value = "3"; horizon.dispatchEvent(new Event("change", { bubbles: true })); }
+    });
+    expect(horizon?.value).toBe("3");
+    expect(container.textContent).toContain("Forecast result withheld");
   });
 
   it("selects a clicked supported map point and represents the selected marker in the map", () => {

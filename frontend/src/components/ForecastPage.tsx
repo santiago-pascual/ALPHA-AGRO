@@ -1,8 +1,12 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { AlertTriangle, CalendarClock, CircleHelp, Crosshair, Database, LockKeyhole, MapPin } from "lucide-react";
 import type { DashboardDataset } from "../types";
 import { coordinateError, findEligibleCell, formatCoordinate, type CoordinatePoint, type LocationSource, type SelectedLocation } from "../data/location";
 import { TrendMap } from "./TrendMap";
+import type { ForecastTarget } from "../types/forecast";
+import type { PredictiveEvaluation } from "../types/predictive";
+import { buildForecastRequest, loadForecastArtifact, resolveForecast, selectedPreHoldoutModel, type ForecastIssueRequest, type ForecastLoad } from "../data/forecast";
+import { loadPredictiveEvaluation } from "../data/loadPredictive";
 
 const forecastFile = "frontend/public/data/forecast_v1.json";
 
@@ -17,6 +21,34 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange }: Fo
   const [longitude, setLongitude] = useState("");
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locationNotice, setLocationNotice] = useState<string | null>(null);
+  const [horizon, setHorizon] = useState<1 | 2 | 3>(1);
+  const [target, setTarget] = useState<ForecastTarget>("storage");
+  const [issueMode, setIssueMode] = useState<ForecastIssueRequest["issue"]["mode"]>("latest_verified_eligible");
+  const [issueDate, setIssueDate] = useState("");
+  const [evaluation, setEvaluation] = useState<PredictiveEvaluation | null>(null);
+  const [evaluationState, setEvaluationState] = useState<"loading" | "ready" | "error">("loading");
+  const [evaluationError, setEvaluationError] = useState("");
+  const [forecastState, setForecastState] = useState<ForecastLoad>({ status: "loading" });
+
+  useEffect(() => {
+    let active = true;
+    setEvaluationState("loading");
+    loadPredictiveEvaluation().then((loadedEvaluation) => {
+      if (active) { setEvaluation(loadedEvaluation); setEvaluationState("ready"); }
+    }).catch((error: unknown) => {
+      if (active) { setEvaluationState("error"); setEvaluationError(error instanceof Error ? error.message : "Predictive evaluation could not be loaded."); }
+    });
+    loadForecastArtifact().then((loadedForecast) => { if (active) setForecastState(loadedForecast); });
+    return () => { active = false; };
+  }, []);
+
+  const selectedModel = selectedPreHoldoutModel(evaluation, horizon, target);
+  const requestResult = useMemo(() => {
+    try {
+      return { request: buildForecastRequest({ location: selectedLocation, dataset, evaluation, horizon, target, issue: issueMode === "date" ? { mode: "date", value: issueDate } : { mode: "latest_verified_eligible" } }), error: null };
+    } catch (error) { return { request: null, error: error instanceof Error ? error.message : "Forecast request is invalid." }; }
+  }, [selectedLocation, dataset, evaluation, horizon, target, issueMode, issueDate]);
+  const resolution = requestResult.request && forecastState.status === "ready" ? resolveForecast(requestResult.request, forecastState.artifact) : null;
 
   const selectLocation = (point: CoordinatePoint, source: LocationSource, accuracyMeters: number | null = null) => {
     const invalid = coordinateError(point);
@@ -84,29 +116,43 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange }: Fo
       <div>
         <div className="eyebrow"><span className="eyebrow-line" /> PROSPECTIVE SOIL-WATER OUTLOOK</div>
         <h1>Forecast <em>availability</em></h1>
-        <p>Monthly forecasts are not available yet. Historical evaluation and retrospective simulations are not current forecasts.</p>
+        <p>Configure a spatial request for the selected eligible Pampas grid cell. Results appear only after issue-time availability and scientific eligibility are verified.</p>
       </div>
-      <div className="forecast-status" role="status"><span /><b>NOT OPERATIONALLY ELIGIBLE</b><small>NO VALIDATED FORECAST ARTIFACT</small></div>
+      <div className="forecast-status" role="status"><span /><b>{resolution?.status === "available" ? "OPERATIONALLY ELIGIBLE" : forecastState.status === "loading" ? "CHECKING ARTIFACT" : "NOT OPERATIONALLY ELIGIBLE"}</b><small>{forecastState.status === "ready" ? "FORECAST WITHHELD · REQUEST OR EVIDENCE MISMATCH" : forecastState.status === "loading" ? "VALIDATING FORECAST CONTRACT" : "NO VERIFIED LIVE RESULT · FORECAST WITHHELD"}</small></div>
     </section>
 
     <section className="forecast-unavailable panel" aria-labelledby="forecast-unavailable-title">
       <div className="forecast-unavailable-icon"><LockKeyhole size={19} /></div>
       <div>
         <div className="eyebrow">FORECAST WORKSPACE / UNAVAILABLE</div>
-        <h2 id="forecast-unavailable-title">No prospective result is connected</h2>
-        <p>The application will show a result only after a schema-valid <code>forecast_v1.json</code> includes issue time, an observation availability cutoff, predictive uncertainty, provenance, and verified operational eligibility. No historical hindcast is substituted.</p>
+        <h2 id="forecast-unavailable-title">{resolution?.status === "available" ? "Verified forecast record" : "Forecast result withheld"}</h2>
+        <p>{forecastState.status === "loading" ? "Checking for a forecast_v1 artifact. No prediction is displayed while validation is in progress." : forecastState.status === "missing" || forecastState.status === "error" ? `${forecastState.message} Historical evaluations are never substituted.` : resolution?.status === "unavailable" ? resolution.reason : requestResult.error ?? "A verified record must match this request, selected pre-holdout model, issue time, target month, cell, cutoff and publication evidence. Historical evaluations are never substituted."}</p>
         <div className="forecast-file-path"><Database size={14} /><code>{forecastFile}</code></div>
+        {resolution?.status === "available" && <dl className="phase7-metrics" aria-label="Operational forecast details">
+          <div><dt>Value</dt><dd>{resolution.artifact.value} {resolution.artifact.units}</dd></div>
+          <div><dt>Issue / target</dt><dd>{resolution.artifact.issue_time} → {resolution.artifact.target_month}</dd></div>
+          <div><dt>Horizon / model</dt><dd>{resolution.artifact.horizon_months} months · {resolution.artifact.model.name} {resolution.artifact.model.version}</dd></div>
+          <div><dt>Observation cutoff</dt><dd>{resolution.artifact.input_observation_cutoff}</dd></div>
+          {resolution.artifact.predictive_interval && <div><dt>{Math.round(resolution.artifact.predictive_interval.level * 100)}% predictive interval</dt><dd>{resolution.artifact.predictive_interval.lower}–{resolution.artifact.predictive_interval.upper} mm · {resolution.artifact.predictive_interval.method}</dd></div>}
+          <div><dt>Source</dt><dd>{resolution.artifact.source.collection} · {resolution.artifact.source.doi}</dd></div>
+        </dl>}
       </div>
     </section>
 
     <section className="forecast-setup panel" aria-labelledby="forecast-setup-title">
-      <div className="panel-heading"><div><div className="eyebrow">SUPPORTED CONFIGURATION</div><h2 id="forecast-setup-title">Monthly horizons</h2></div><span className="historical-chip">CONTROLS DISABLED</span></div>
+      <div className="panel-heading"><div><div className="eyebrow">SPATIAL REQUEST · NO AUTOMATIC ISSUE DATE</div><h2 id="forecast-setup-title">Forecast configuration</h2></div><span className="historical-chip">{forecastState.status === "ready" ? "CHECKING EVIDENCE" : forecastState.status === "loading" ? "LOADING ARTIFACT" : "RESULTS WITHHELD"}</span></div>
       <div className="forecast-controls">
-        <label><span>Study region</span><div className="forecast-fixed-field"><MapPin size={14} /> Argentine Pampas · regional model grid</div></label>
-        <label><span>Forecast horizon</span><select disabled aria-label="Forecast horizon"><option>1 month ahead</option><option>2 months ahead</option><option>3 months ahead</option></select></label>
-        <label><span>Target variable</span><select disabled aria-label="Forecast target"><option>Soil-water storage (mm)</option><option>Storage anomaly (mm)</option><option>Low-moisture probability</option></select></label>
+        <label><span>Geographic support</span><div className="forecast-fixed-field"><MapPin size={14} /> {selectedLocation && requestResult.request ? `Selected GLDAS cell · ${requestResult.request.grid_cell_id}` : "Argentine Pampas · select eligible cell"}</div></label>
+        <label><span>Forecast horizon</span><select aria-label="Forecast horizon" value={horizon} onChange={(event) => setHorizon(Number(event.target.value) as 1 | 2 | 3)}><option value="1">1 month ahead</option><option value="2">2 months ahead</option><option value="3">3 months ahead</option></select></label>
+        <label><span>Target variable</span><select aria-label="Forecast target" value={target} onChange={(event) => setTarget(event.target.value as ForecastTarget)}><option value="storage">Soil-water storage (mm)</option><option value="anomaly">Storage anomaly (mm)</option><option value="low_moisture">Low-moisture probability</option></select></label>
+        <label><span>Model selection</span><div className="forecast-fixed-field">{evaluationState === "loading" ? "Loading evaluation…" : selectedModel ? `${selectedModel} · selected before holdout` : "No matching evaluation configuration"}</div></label>
+        <label><span>Issue-time request</span><select aria-label="Issue-time request" value={issueMode} onChange={(event) => setIssueMode(event.target.value as ForecastIssueRequest["issue"]["mode"])}><option value="latest_verified_eligible">Latest verified eligible issue</option><option value="date">Specific UTC issue time</option></select></label>
+        {issueMode === "date" && <label><span>UTC issue timestamp</span><input aria-label="UTC issue timestamp" type="text" inputMode="text" placeholder="2025-10-31T23:59:59Z" value={issueDate} onChange={(event) => setIssueDate(event.target.value)} /> <small>Enter an explicit UTC timestamp ending in Z. A current date is never assumed to be scientifically valid.</small></label>}
       </div>
-      <p className="forecast-controls-note"><CircleHelp size={14} /> The interface is prepared for the validated 1–3 month research horizons. Configuration stays locked until an eligible forecast artifact is available.</p>
+      <p className="forecast-controls-note"><CircleHelp size={14} /> {evaluationState === "error" ? evaluationError : requestResult.error ?? `Request updates with each selection. Model selection is derived from the spatial walk-forward evaluation; holdout rankings are not used. ${selectedModel ? `Selected model: ${selectedModel}.` : "Model selection is unavailable until the evaluation artifact loads."}`}</p>
+      <div className="research-status-ladder" aria-label="Scientific readiness levels">
+        <div><b>1 · Historical research</b><span>Available separately in Observatory</span></div><div><b>2 · Retrospective evaluation</b><span>{evaluationState === "ready" ? "Evaluation artifact loaded" : "Loading or unavailable"}</span></div><div><b>3 · Experimental prospective</b><span>Not connected</span></div><div><b>4 · Operational eligibility</b><span>{resolution?.status === "available" ? "Evidence matched" : "Not established"}</span></div>
+      </div>
     </section>
 
     <section className="location-workspace" aria-labelledby="location-title">

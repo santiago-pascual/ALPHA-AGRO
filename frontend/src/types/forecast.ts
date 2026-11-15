@@ -1,6 +1,15 @@
 /** Typed view of config/forecast_v1.schema.json. Optional values remain optional. */
 export type ForecastTarget = "storage" | "anomaly" | "low_moisture";
 export type ForecastStatus = "retrospective_simulation" | "experimental" | "operationally_eligible";
+export type ForecastInputMonth = {
+  month: string;
+  observation_end: string;
+  provider_publication_at: string | null;
+  available_at: string;
+  availability_is_assumed: boolean;
+  soil_sha256: string;
+  driver_sha256: string;
+};
 
 export type ForecastArtifact = {
   schema_version: "forecast_v1";
@@ -16,7 +25,7 @@ export type ForecastArtifact = {
     policy: string;
     publication_evidence: Record<string, unknown> | null;
     operationally_eligible: boolean;
-    input_months: string[];
+    input_months: ForecastInputMonth[];
   };
   value: number;
   units: "mm" | "probability";

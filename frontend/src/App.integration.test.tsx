@@ -137,7 +137,7 @@ describe("dashboard real-data integration", () => {
     await act(async () => forecastButton.dispatchEvent(new MouseEvent("click", { bubbles: true })));
     expect(container.querySelector("h1")?.textContent).toContain("Forecast availability");
     expect(container.textContent).toContain("NOT OPERATIONALLY ELIGIBLE");
-    expect(container.textContent).toContain("not current forecasts");
+    expect(container.textContent).toContain("Historical evaluations are never substituted.");
     expect(container.textContent).not.toContain("999");
   });
 
