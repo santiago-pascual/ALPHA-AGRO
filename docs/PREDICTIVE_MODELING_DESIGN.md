@@ -16,6 +16,7 @@ Models are seasonal climatology, persistence, autoregressive Ridge, Ridge, XGBoo
 - The anomaly climatology and low-moisture thresholds are fitted independently from each training fold, per cell and target calendar month. The low-moisture threshold is the training 20th percentile, with a training-only calendar-month fallback and then a training-only pooled fallback.
 - Imputation and scaling are fitted inside model pipelines on training rows. Nested chronological validation chooses model parameters inside each outer training window.
 - Expanding walk-forward folds group all cells from the same target month together. The last requested contiguous months form one final untouched holdout.
+- At both the outer and inner split, fitting uses only training labels released by the first validation or test issue time. Outer results record the actual training months and label-availability cutoff.
 - The HMM implementation exposes forward filtering only. For training features it refits on prefixes through each issue month; for validation/test it fits state parameters on training issue months and filters new observations sequentially. No full-sequence smoothing or future-dependent state path is used.
 
 ## Parquet contract
@@ -42,6 +43,15 @@ Run these commands from the Phase 4 branch checkout on the original PC, after ve
 ```
 
 The export requires both the 240 soil-water OPeNDAP exports and the matching 240 driver exports under the paths documented in `docs/MULTIVARIABLE_DATA_VALIDATION.md`. It revalidates driver files and refuses to overwrite an existing Parquet file. Transfer the resulting Parquet file using the team's approved private channel; do not commit it.
+
+To run the same CLI on area-weighted regional means, create a one-region panel from the validated spatial file.
+
+```powershell
+.\.venv\Scripts\python.exe -m gldas.predictive.export_panel --regional-from data/exports/phase4/monthly_panel.parquet --output data/exports/phase4/regional_panel.parquet
+.\.venv\Scripts\python.exe -m gldas.predictive validate --input data/exports/phase4/regional_panel.parquet
+```
+
+The regional panel uses the Phase 3 common valid mask and spherical cell areas and preserves the source granule IDs and assumed release policy. Its latitude and longitude are the area-weighted centroid of the contributing grid cells.
 
 After transfer to an environment with the model dependencies, evaluate with:
 

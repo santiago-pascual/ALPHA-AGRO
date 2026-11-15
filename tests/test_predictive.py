@@ -6,6 +6,7 @@ import pytest
 
 from gldas.predictive.contract import read_parquet, validate_frame, write_parquet
 from gldas.predictive.evaluation import _target_values, evaluate, expanding_folds
+from gldas.predictive.export_panel import regional_panel
 from gldas.predictive.features import make_supervised
 from gldas.predictive.hmm import DiagonalGaussianHMM
 from gldas.predictive.metrics import classification_metrics, regression_metrics
@@ -65,6 +66,20 @@ def test_contract_rejects_missing_provenance_and_inconsistent_availability():
         validate_frame(panel)
 
 
+def test_regional_panel_uses_joint_mask_and_area_weights():
+    panel = synthetic_panel(months=24, cells=3)
+    panel["area_weight"] = panel["cell_id"].map({"cell-0": 2.0, "cell-1": 3.0, "cell-2": 1.0})
+    missing = panel["cell_id"].eq("cell-2")
+    panel.loc[missing, "precipitation_valid"] = False
+    panel.loc[missing, "precipitation_mm_month"] = np.nan
+    regional = regional_panel(panel)
+    validate_frame(regional)
+    assert len(regional) == 24
+    assert regional["area_weight"].eq(5.0).all()
+    assert regional.loc[0, "soil_water_mm"] == pytest.approx(
+        np.average(panel.loc[:1, "soil_water_mm"], weights=[2, 3]))
+
+
 def test_horizon_alignment_and_released_feature_cutoff():
     panel = synthetic_panel(months=48, release_lag=2)
     supervised, columns = make_supervised(panel, horizon=2, n_lags=3)
@@ -89,6 +104,19 @@ def test_future_record_mutation_cannot_change_earlier_features():
     right = altered.loc[altered["origin_month"].eq(key)].sort_values("cell_id")
     feature_columns = [name for name in original if "_lag_" in name]
     np.testing.assert_allclose(left[feature_columns], right[feature_columns], equal_nan=True)
+
+
+def test_shared_release_features_match_general_release_path(monkeypatch):
+    from gldas.predictive import features
+
+    panel = synthetic_panel(months=36, cells=3, release_lag=5)
+    panel.loc[0, "precipitation_valid"] = False
+    panel.loc[0, "precipitation_mm_month"] = np.nan
+    fast, columns = features.make_supervised(panel, horizon=3, n_lags=6)
+    monkeypatch.setattr(features, "_shared_release_panel", lambda *_: None)
+    slow, slow_columns = features.make_supervised(panel, horizon=3, n_lags=6)
+    assert columns == slow_columns
+    pd.testing.assert_frame_equal(fast[slow.columns], slow, check_dtype=False)
 
 
 def test_expanding_folds_keep_each_calendar_month_together_and_reserve_holdout():
@@ -161,6 +189,18 @@ def test_regression_and_probability_metrics_are_finite():
     assert len(classifier["calibration_bins"]) == 1
 
 
+def test_paired_loss_comparison_uses_same_spatial_month_blocks():
+    from gldas.predictive.evaluation import _paired_comparisons
+
+    frame, _ = make_supervised(synthetic_panel(months=36, cells=3), horizon=1)
+    y = frame["target_soil_water_mm"].to_numpy()
+    predictions = {"xgboost": y + 3, "xgboost_hmm": y + 2, "persistence": y + 5}
+    paired = _paired_comparisons(frame, y, predictions, "storage")["xgboost_hmm"]
+    assert paired["xgboost"]["difference"] == pytest.approx(-1)
+    assert paired["xgboost"]["interval_95"] == pytest.approx([-1, -1])
+    assert paired["persistence"]["difference"] == pytest.approx(-3)
+
+
 def test_end_to_end_walk_forward_and_untouched_holdout_on_fixture():
     result = evaluate(synthetic_panel(months=72, cells=2), horizons=(1,), targets=("anomaly", "low_moisture"),
                       initial_train_months=24, test_window_months=24, holdout_months=12,
@@ -170,6 +210,18 @@ def test_end_to_end_walk_forward_and_untouched_holdout_on_fixture():
     assert all(row.get("metrics", {}).get("n_rows", 0) > 0 for row in result["results"])
     event_rows = [row for row in result["results"] if row["target"] == "low_moisture"]
     assert event_rows and all("brier" in row.get("metrics", {}) for row in event_rows)
+
+
+def test_walk_forward_excludes_training_labels_unreleased_at_first_issue():
+    result = evaluate(synthetic_panel(months=72, cells=1, release_lag=5),
+                      horizons=(2,), targets=("storage",), initial_train_months=24,
+                      test_window_months=24, holdout_months=12, model_families=())
+    assert result["results"]
+    for row in result["results"]:
+        fold = row["fold"]
+        latest_label_release = pd.Timestamp(fold["train_months"][-1], tz="UTC") + pd.DateOffset(months=5)
+        assert latest_label_release <= pd.Timestamp(fold["label_availability_cutoff"])
+        assert latest_label_release + pd.DateOffset(months=1) > pd.Timestamp(fold["label_availability_cutoff"])
 
 
 def test_hmm_augmented_xgboost_uses_causal_filtered_features():

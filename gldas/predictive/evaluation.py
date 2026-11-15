@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from typing import Iterable
+from functools import lru_cache
+from typing import Callable, Iterable
 import hashlib
 import json
 
@@ -12,10 +13,22 @@ import pandas as pd
 
 from .features import make_supervised
 from .hmm import DiagonalGaussianHMM
-from .metrics import classification_metrics, regression_metrics
+from .metrics import classification_metrics, month_block_scores, regression_metrics
 from .models import candidate_specs, estimator, fit, predict
 
 HMM_INPUTS = ("soil_water_mm_lag_0", "precipitation_mm_month_lag_0", "air_temperature_c_lag_0")
+
+
+@lru_cache(maxsize=512)
+def _hmm_fit(raw: bytes, count: int):
+    values = np.frombuffer(raw, dtype=np.float64).reshape(count, len(HMM_INPUTS))
+    center = values.mean(axis=0)
+    scale = values.std(axis=0)
+    scale = np.where(scale > 1e-9, scale, 1.0)
+    standardized = (values - center) / scale
+    candidates = [DiagonalGaussianHMM(states).fit(standardized) for states in (2, 3)]
+    fitted = min(candidates, key=lambda item: item.bic)
+    return fitted, fitted.filter(standardized)[-1], center, scale, candidates
 
 
 @dataclass(frozen=True)
@@ -47,6 +60,10 @@ def expanding_folds(frame: pd.DataFrame, *, initial_train_months: int = 120,
     return folds, final
 
 
+def _released_labels(train: pd.DataFrame, test: pd.DataFrame) -> pd.DataFrame:
+    return train.loc[train["target_available_at"].le(test["issue_time"].min())]
+
+
 def _target_values(train: pd.DataFrame, test: pd.DataFrame, target: str):
     train_raw = train["target_soil_water_mm"].to_numpy(dtype=float)
     test_raw = test["target_soil_water_mm"].to_numpy(dtype=float)
@@ -66,9 +83,9 @@ def _target_values(train: pd.DataFrame, test: pd.DataFrame, target: str):
     def train_cell_month(statistic):
         by_cell_month = {}
         by_month = {}
-        for cell, month in sorted(set(zip(train_cells, train_moy, strict=True))):
-            mask = (train_cells == cell) & (train_moy == month)
-            by_cell_month[f"{cell}|{month}"] = float(statistic(train_raw[mask], train_weights[mask]))
+        groups = pd.DataFrame({"cell": train_cells, "month": train_moy}).groupby(["cell", "month"]).indices
+        for (cell, month), indices in groups.items():
+            by_cell_month[f"{cell}|{month}"] = float(statistic(train_raw[indices], train_weights[indices]))
         for month in np.unique(train_moy):
             mask = train_moy == month
             by_month[str(int(month))] = float(statistic(train_raw[mask], train_weights[mask]))
@@ -148,38 +165,35 @@ def _feature_values(frame: pd.DataFrame, base_columns: list[str], model_name: st
         raise ValueError("HMM requires at least 12 available training issue months.")
     posterior_by_month: dict[pd.Timestamp, np.ndarray] = {}
 
-    def standardize(values, center=None, scale=None):
-        center = np.nanmean(values, axis=0) if center is None else center
-        scale = np.nanstd(values, axis=0) if scale is None else scale
-        scale = np.where(scale > 1e-9, scale, 1.0)
-        return (values - center) / scale, center, scale
-
     train_values = source.loc[train_keys, list(HMM_INPUTS)].to_numpy(dtype=float)
-    final_z, center, scale = standardize(train_values)
-    final_candidates = [DiagonalGaussianHMM(states).fit(final_z) for states in (2, 3)]
-    final_hmm = min(final_candidates, key=lambda item: item.bic)
+    final_hmm, initial, center, scale, final_candidates = _hmm_fit(train_values.tobytes(), len(train_values))
     final_states = final_hmm.n_states
     # Each historical feature is produced by a model fit only through that issue month.
     for index, key in enumerate(train_keys):
-        prefix = source.loc[train_keys[:index + 1], list(HMM_INPUTS)].to_numpy(dtype=float)
+        prefix = train_values[:index + 1]
         if len(prefix) < 12:
             continue
-        prefix_z, _, _ = standardize(prefix)
-        candidates = [DiagonalGaussianHMM(states).fit(prefix_z) for states in (2, 3)]
-        fitted = min(candidates, key=lambda item: item.bic)
-        probability = fitted.filter(prefix_z)[-1]
+        fitted, probability, _, _, _ = _hmm_fit(prefix.tobytes(), len(prefix))
         ordering = np.argsort(fitted.means_[:, 0])
         ordered = probability[ordering]
         padded = np.zeros(3)
         padded[:min(3, len(ordered))] = ordered[:3]
         posterior_by_month[key] = padded
     # The final model is fitted exclusively on the outer training window.
-    initial = final_hmm.filter(final_z)[-1]
     test_keys = [pd.Timestamp(value) for value in source.index if pd.Timestamp(value) not in training_months]
     if test_keys:
         test_values = source.loc[test_keys, list(HMM_INPUTS)].to_numpy(dtype=float)
-        test_z, _, _ = standardize(test_values, center, scale)
-        filtered = final_hmm.filter(test_z, initial_probability=initial)
+        test_z = (test_values - center) / scale
+        origin = train_keys[-1]
+        filtered = []
+        for key, values in zip(test_keys, test_z, strict=True):
+            elapsed = (key.year - origin.year) * 12 + key.month - origin.month
+            if elapsed < 1:
+                raise ValueError("HMM inference must follow the last training month.")
+            prior = initial @ np.linalg.matrix_power(final_hmm.transmat_, elapsed - 1)
+            initial = final_hmm.filter(values[None, :], initial_probability=prior)[0]
+            filtered.append(initial)
+            origin = key
         order = np.argsort(final_hmm.means_[:, 0])
         for key, probability in zip(test_keys, filtered, strict=True):
             ordered = probability[order]
@@ -212,9 +226,9 @@ def _baseline_predictions(train: pd.DataFrame, test: pd.DataFrame, target: str,
     def seasonal_values(values):
         cell_month = {}
         month_fallback = {}
-        for cell, month in sorted(set(zip(train_cells, train_month, strict=True))):
-            mask = (train_cells == cell) & (train_month == month)
-            cell_month[f"{cell}|{month}"] = float(np.average(values[mask], weights=train_weights[mask]))
+        groups = pd.DataFrame({"cell": train_cells, "month": train_month}).groupby(["cell", "month"]).indices
+        for (cell, month), indices in groups.items():
+            cell_month[f"{cell}|{month}"] = float(np.average(values[indices], weights=train_weights[indices]))
         for month in np.unique(train_month):
             mask = train_month == month
             month_fallback[str(int(month))] = float(np.average(values[mask], weights=train_weights[mask]))
@@ -268,7 +282,8 @@ def _choose_params(name: str, train: pd.DataFrame, feature_columns: list[str], t
     cut = len(months) - validation_n
     inner_train = train.loc[pd.to_datetime(train["target_month"], utc=True).isin(months[:cut])].copy()
     inner_valid = train.loc[pd.to_datetime(train["target_month"], utc=True).isin(months[cut:])].copy()
-    if inner_train.empty or inner_valid.empty:
+    inner_train = _released_labels(inner_train, inner_valid)
+    if inner_train["target_month"].nunique() < min_inner_train or inner_valid.empty:
         return candidate_specs(name)[0]
     y_train, y_valid, _ = _target_values(inner_train, inner_valid, target)
     fit_frame, columns, _ = _feature_values(
@@ -328,11 +343,34 @@ def _score_split(frame: pd.DataFrame, y: np.ndarray, prediction: np.ndarray, tar
     return regression_metrics(frame, y, prediction, persistence)
 
 
+def _paired_comparisons(frame, y, predictions, target):
+    names = list(predictions)
+    probability = target == "low_moisture"
+    errors = [(np.clip(predictions[name], 1e-6, 1 - 1e-6) - y) ** 2
+              if probability else (predictions[name] - y) ** 2 for name in names]
+    observed, draws = month_block_scores(frame, errors)
+    if not probability:
+        observed = np.sqrt(observed)
+        draws = np.sqrt(draws) if draws is not None else None
+    comparisons = {}
+    for i, name in enumerate(names):
+        peers = {}
+        for peer in ("seasonal_climatology", "persistence", "autoregressive_ridge", "xgboost"):
+            if peer != name and peer in predictions:
+                j = names.index(peer)
+                peers[peer] = {"difference": float(observed[i] - observed[j]),
+                               "interval_95": ([None, None] if draws is None else
+                                               np.quantile(draws[:, i] - draws[:, j], [0.025, 0.975]).tolist())}
+        comparisons[name] = peers
+    return comparisons
+
+
 def evaluate(panel: pd.DataFrame, *, horizons: Iterable[int] = (1, 2, 3),
              targets: Iterable[str] = ("storage", "anomaly", "low_moisture"),
              initial_train_months: int = 120, test_window_months: int = 12,
              holdout_months: int = 24, n_lags: int = 6,
-             model_families: Iterable[str] = ("autoregressive_ridge", "ridge", "xgboost", "xgboost_hmm")) -> dict:
+             model_families: Iterable[str] = ("autoregressive_ridge", "ridge", "xgboost", "xgboost_hmm"),
+             progress: Callable[[str], None] | None = None) -> dict:
     from .contract import validate_frame
     validate_frame(panel)
     results = []
@@ -349,15 +387,21 @@ def evaluate(panel: pd.DataFrame, *, horizons: Iterable[int] = (1, 2, 3),
                 train_mask = pd.to_datetime(supervised["target_month"], utc=True).dt.strftime("%Y-%m").isin(fold.train_months)
                 test_mask = pd.to_datetime(supervised["target_month"], utc=True).dt.strftime("%Y-%m").isin(fold.test_months)
                 train, test = supervised.loc[train_mask].copy(), supervised.loc[test_mask].copy()
+                train = _released_labels(train, test)
                 if train.empty or test.empty:
                     continue
+                fold_info = {**fold.as_dict(), "train_months": sorted(
+                    train["target_month"].dt.strftime("%Y-%m").unique()),
+                    "label_availability_cutoff": test["issue_time"].min().isoformat()}
                 y_train, y_test, target_info = _target_values(train, test, target)
                 baseline_pred = _baseline_predictions(train, test, target, y_train, target_info)
+                start_result = len(results)
+                predictions = baseline_pred.copy()
                 for baseline_name, prediction in baseline_pred.items():
                     score = _score_split(test, y_test, prediction, target, baseline_pred)
                     results.append({
                         "horizon_months": horizon, "target": target, "model": baseline_name,
-                        "fold": fold.as_dict(), "target_definition": _public_target_info(target_info), "metrics": score,
+                        "fold": fold_info, "target_definition": _public_target_info(target_info), "metrics": score,
                     })
                 for name in family_names:
                     selection_features = ([column for column in feature_columns
@@ -371,19 +415,26 @@ def evaluate(panel: pd.DataFrame, *, horizons: Iterable[int] = (1, 2, 3),
                             name, train, test, feature_columns, target, params=params)
                     except (ValueError, FloatingPointError) as error:
                         results.append({"horizon_months": horizon, "target": target, "model": name,
-                                        "fold": fold.as_dict(), "status": "not_evaluable", "reason": str(error)})
+                                        "fold": fold_info, "status": "not_evaluable", "reason": str(error)})
                         continue
                     score = _score_split(test, y_evaluated, prediction, target, baseline_pred)
+                    predictions[name] = prediction
                     results.append({
                         "horizon_months": horizon, "target": target, "model": name,
-                        "fold": fold.as_dict(), "target_definition": _public_target_info(model_target_info),
+                        "fold": fold_info, "target_definition": _public_target_info(model_target_info),
                         "selected_parameters": params, "hmm": hmm_info, "metrics": score,
                     })
+                comparisons = _paired_comparisons(test, y_test, predictions, target)
+                for row in results[start_result:]:
+                    if row["model"] in comparisons:
+                        row["paired_loss_comparisons"] = comparisons[row["model"]]
+            if progress is not None:
+                progress(f"Finished horizon={horizon}, target={target}.")
     return {
         "schema_version": "1.0.0", "evaluation": "expanding-window walk-forward plus untouched final holdout",
         "models": ["seasonal_climatology", "persistence", *family_names],
         "selection": "inner chronological validation on training rows only",
         "spatial_panel_rule": "all cells sharing a target month are assigned to the same fold",
-        "release_rule": "each feature row is filtered by available_at <= issue_time",
+        "release_rule": "features use releases by each issue; training labels must be available by the first test issue",
         "results": results,
     }

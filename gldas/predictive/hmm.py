@@ -41,7 +41,7 @@ class DiagonalGaussianHMM:
         alpha = np.empty_like(emission)
         alpha[0] = log_start + emission[0]
         for t in range(1, len(x)):
-            alpha[t] = emission[t] + logsumexp(alpha[t - 1][:, None] + log_trans, axis=0)
+            alpha[t] = emission[t] + np.logaddexp.reduce(alpha[t - 1][:, None] + log_trans, axis=0)
         return alpha, float(logsumexp(alpha[-1]))
 
     def fit(self, X: np.ndarray, *, lengths: list[int] | None = None) -> "DiagonalGaussianHMM":
@@ -77,18 +77,17 @@ class DiagonalGaussianHMM:
                 log_trans = np.log(np.maximum(self.transmat_, 1e-300))
                 beta = np.zeros_like(emission)
                 for t in range(len(seq) - 2, -1, -1):
-                    beta[t] = logsumexp(log_trans + emission[t + 1][None, :] + beta[t + 1][None, :], axis=1)
+                    beta[t] = np.logaddexp.reduce(log_trans + emission[t + 1][None, :] + beta[t + 1][None, :], axis=1)
                 gamma = np.exp(alpha + beta - ll)
                 gamma /= np.maximum(gamma.sum(axis=1, keepdims=True), 1e-300)
                 start_sum += gamma[0]
                 gamma_sum += gamma.sum(axis=0)
                 weighted_sum += gamma.T @ seq
                 weighted_sq += gamma.T @ (seq * seq)
-                for t in range(len(seq) - 1):
-                    log_xi = (alpha[t][:, None] + log_trans + emission[t + 1][None, :]
-                              + beta[t + 1][None, :] - ll)
-                    xi = np.exp(log_xi - logsumexp(log_xi))
-                    transition_sum += xi
+                log_xi = (alpha[:-1, :, None] + log_trans + emission[1:, None, :]
+                          + beta[1:, None, :])
+                transition_sum += np.exp(log_xi - logsumexp(
+                    log_xi, axis=(1, 2), keepdims=True)).sum(axis=0)
                 likelihood += ll
             self.startprob_ = start_sum / start_sum.sum()
             self.transmat_ = transition_sum / np.maximum(transition_sum.sum(axis=1, keepdims=True), 1e-12)
