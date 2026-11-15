@@ -47,11 +47,18 @@ def verify_snapshot(snapshot, receipts, cutoff, config):
     if not matches:
         raise ValueError("No complete validated asset evidence for snapshot.")
     stamps = []
+    authority = config.get("verified_receipt_authority")
+    if not authority:
+        raise ValueError("No independent receipt authority is pinned.")
     start = month(snapshot["month"])
     end = start + pd.DateOffset(months=1)
     for record in matches:
         if (record.get("checksum_scope") != "full_validated_assets"
                 or record.get("usable_scientific_data") is not True
+                or record.get("evidence_status") != "independently_witnessed"
+                or record.get("authority_id") != authority
+                or not DIGEST.fullmatch(record.get("capture_manifest_sha256", ""))
+                or not record.get("witness_record_id")
                 or record.get("collection") != config["collection"]
                 or record.get("version") != config["version"]
                 or record.get("scope") != config["scope"]
@@ -64,7 +71,10 @@ def verify_snapshot(snapshot, receipts, cutoff, config):
         publication = record.get("provider_publication_at")
         if (publication is not None and not end <= instant(publication) <= accessed) or accessed < end:
             raise ValueError("Invalid publication or access timing.")
-        if accessed <= cutoff:
+        witnessed = instant(record["witnessed_at"])
+        if witnessed < accessed:
+            raise ValueError("Independent receipt predates the locally observed access.")
+        if witnessed <= cutoff and accessed <= cutoff:
             stamps.append((accessed, record))
     if not stamps:
         raise ValueError("Snapshot was unavailable at the issue cutoff.")
@@ -153,26 +163,41 @@ def issue_prediction(config, model, lags, receipts, issue, now):
             "input_evidence": evidence}
 
 
-def score(record, truth, receipts, now, config):
+def verify_prediction_seal(record, seal, outcome_access, config):
+    recorded = instant(record["recorded_at"])
+    witnessed = instant(seal["witnessed_at"])
+    if (seal.get("schema_version") != "pilot_prediction_seal_v1"
+            or seal.get("authority_id") != config.get("verified_receipt_authority")
+            or not seal.get("witness_record_id")
+            or seal.get("prediction_sha256") != fingerprint(record)
+            or not recorded <= witnessed < outcome_access):
+        raise ValueError("Prediction seal must bind this record before first outcome access.")
+
+
+def score(record, truth, receipts, now, config, *, seal):
     if (record["status"] != "experimental" or record["config_sha256"] != fingerprint(config)
             or truth["month"] != record["target_month"]):
         raise ValueError("Target or pilot does not match the sealed prediction.")
     evidence = verify_snapshot(truth, receipts, now, config)
     if instant(record["recorded_at"]) >= instant(evidence["first_success_at"]):
         raise ValueError("Prediction was not recorded before target access.")
-    first = min(instant(r["first_success_at"]) for r in receipts
-                if r.get("scope") == config["scope"] and r.get("collection") == config["collection"]
-                and r.get("observation_start") == evidence["observation_start"]
-                and r.get("version") == config["version"]
-                and r.get("checksum_scope") == "full_validated_assets" and r.get("usable_scientific_data") is True)
+    scope_keys = ("scope", "collection", "observation_start", "version", "checksum_scope",
+                  "usable_scientific_data", "authority_id", "evidence_status")
+    target_receipts = [row for row in receipts if all(row.get(k) == evidence[k] for k in scope_keys)]
+    first = min(instant(row["first_success_at"]) for row in target_receipts)
     if instant(evidence["first_success_at"]) != first:
         raise ValueError("Score the first verified target vintage, not a revision.")
+    digest_keys = ("soil_sha256", "driver_sha256", "snapshot_sha256")
+    if any(any(row.get(k) != evidence[k] for k in digest_keys)
+           for row in target_receipts if instant(row["first_success_at"]) == first):
+        raise ValueError("First target vintage is ambiguous at the recorded access time.")
+    verify_prediction_seal(record, seal, first, config)
     actual = float(truth["values"]["soil_water_mm"])
     if not np.isfinite(actual):
         raise ValueError("Missing target value.")
     errors = {model: point - actual for model, point in record["predictions"].items()}
     return {"schema_version": "prospective_pilot_score_v1", "prediction_sha256": fingerprint(record),
-            "target_evidence": evidence, "target_month": truth["month"], "scored_at": now.isoformat(),
+            "target_evidence": evidence, "prediction_seal": seal, "target_month": truth["month"], "scored_at": now.isoformat(),
             "observed_mm": actual, "errors_mm": errors}
 
 
@@ -193,8 +218,8 @@ def summarize(scores):
 
 def trusted_receipts(payload, signature, config):
     key = config.get("verified_receipt_public_key")
-    if not key or not signature:
-        raise ValueError("No approved receipt signer or detached signature.")
+    if not key or not config.get("verified_receipt_authority") or not signature:
+        raise ValueError("No approved receipt signer, independent authority or detached signature.")
     node = which("node")
     if node is None:
         raise ValueError("Node.js is required to verify Ed25519 evidence.")
@@ -237,6 +262,8 @@ def main():
     p.add_argument("--model-sha256", help="Previously anchored canonical frozen-model digest")
     p.add_argument("--record", type=Path)
     p.add_argument("--record-sha256", help="Previously anchored canonical prediction digest")
+    p.add_argument("--prediction-seal", type=Path, help="Independently witnessed prediction record seal")
+    p.add_argument("--prediction-seal-signature", type=Path)
     p.add_argument("--issue-time")
     a = p.parse_args()
     now = pd.Timestamp(datetime.now(timezone.utc))
@@ -260,12 +287,13 @@ def main():
             result = issue_prediction(config, model, payload, receipts, instant(a.issue_time), now)
             name = "prediction-" + result["target_month"] + ".json"
         else:
-            if a.record is None:
-                raise ValueError("Score requires a sealed prediction record.")
+            if a.record is None or a.prediction_seal is None or a.prediction_seal_signature is None:
+                raise ValueError("Score requires a prediction record and signed independent seal.")
             record = read(a.record)
             if fingerprint(record) != a.record_sha256:
                 raise ValueError("Prediction does not match the anchored issue digest.")
-            result = score(record, payload, receipts, now, config)
+            seal = trusted_receipts(read(a.prediction_seal), a.prediction_seal_signature.read_text(), config)
+            result = score(record, payload, receipts, now, config, seal=seal)
             name = "score-" + result["target_month"] + ".json"
         append(a.output_dir / name, result)
         print(f"{a.output_dir / name} SHA-256 (canonical content): {fingerprint(result)}")
