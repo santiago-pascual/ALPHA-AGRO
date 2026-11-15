@@ -1,8 +1,13 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { adaptTrendAnalysis, loadValidatedTrend } from "./loadTrend";
 import { trendAnalysisFixture } from "./__fixtures__/trendAnalysis.fixture";
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
+});
 
 describe("adaptTrendAnalysis", () => {
   it("adapts the version 1.0 schema while retaining missing values and provenance", () => {
@@ -80,5 +85,13 @@ describe("loadValidatedTrend", () => {
   it("keeps a missing real file as an error without substituting demo data", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 404 }));
     await expect(loadValidatedTrend()).rejects.toThrow("No validated trend_analysis.json was found");
+  });
+
+  it("prefixes public JSON paths with the GitHub Pages repository base", async () => {
+    vi.stubEnv("BASE_URL", "/quant-alpha-agro/");
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => trendAnalysisFixture });
+    vi.stubGlobal("fetch", fetchMock);
+    await loadValidatedTrend();
+    expect(fetchMock).toHaveBeenCalledWith("/quant-alpha-agro/data/trend_analysis.json", { headers: { Accept: "application/json" } });
   });
 });

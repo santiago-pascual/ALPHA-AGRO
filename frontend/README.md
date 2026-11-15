@@ -37,7 +37,8 @@ Automated tests use a schema-valid synthetic fixture under `src/data/__fixtures_
 
 ## Screens
 
-- Landing and guided demonstration: study context, evidence boundaries, and a seven-step presenter walkthrough. The cross-variable relationship chart is not connected in this frontend.
+- Landing and guided demonstration: study context, evidence boundaries, and a seven-step presenter walkthrough.
+- Environmental relationships: validated lag, region, confidence interval, and provenance view; shows an explicit missing-artifact state if the approved file is unavailable.
 
 - Overview: regional trend, HAC interval and p-value, coverage, cell-level map, date-filtered monthly storage/anomalies, and cautious crop context.
 - Methods & data: GLDAS variables and units, coverage rules, trend methods, provenance, and limits.
@@ -45,9 +46,9 @@ Automated tests use a schema-valid synthetic fixture under `src/data/__fixtures_
 
 ## Predictive evaluation integration
 
-The data-holding PC must provide `predictive_evaluation_v1.json` at `frontend/public/data/predictive_evaluation_v1.json`. Use the exact contract and engine mapping notes in [docs/PREDICTIVE_EVALUATION_V1.md](docs/PREDICTIVE_EVALUATION_V1.md). The current Python evaluator produces spatial fold records only; the artifact must also contain separately evaluated regional mean results, provenance hashes and pre-holdout model selection derived only from walk-forward data. Do not fill missing fields with synthetic values. This JSON is ignored by Git.
+The local artifact path is `frontend/public/data/predictive_evaluation_v1.json`; the JSON is ignored by Git and must be transferred separately to other checkouts. Its integrity should be checked against the transfer checksum and its contents validated before use. The typed adapter supports source-declared selection of either a baseline or candidate model, plus an optional descriptive holdout comparison identifier. Do not fill missing fields with synthetic values.
 
-The page labels the best candidate on the untouched holdout as descriptive only. Its 95% intervals describe score differences against a baseline, not uncertainty intervals for a future prediction. The separate Forecast Explorer is disabled until a validated, operationally defined `forecast_v1.json` exists. `forecast_v1.json` and the evaluation artifact are both ignored by Git.
+The page labels the source-declared lowest holdout model as descriptive only. Its 95% intervals describe score differences against a baseline, not uncertainty intervals for a future prediction. The separate Forecast Explorer is disabled until a validated, operationally defined `forecast_v1.json` exists. `forecast_v1.json` and the evaluation artifact are both ignored by Git.
 
 Component and adapter tests use a fixture explicitly marked **TEST ONLY — SYNTHETIC**. It is never imported into application runtime code.
 
@@ -55,4 +56,4 @@ The map uses free OpenStreetMap tiles with visible attribution. It requires an i
 
 ## Demo and static hosting
 
-The English presenter script is in [../docs/ALPHA_AGRO_DEMO_SCRIPT.md](../docs/ALPHA_AGRO_DEMO_SCRIPT.md). GitHub Pages static hosting is prepared as a manual-only workflow; see [DEPLOYMENT.md](DEPLOYMENT.md). No public deployment is triggered by the workflow file or by building locally. The standard checkout build does not include ignored NASA or predictive JSON artifacts.
+The English presenter script is in [../docs/ALPHA_AGRO_DEMO_SCRIPT.md](../docs/ALPHA_AGRO_DEMO_SCRIPT.md). GitHub Pages static hosting is prepared as a manual-only workflow; see [DEPLOYMENT.md](DEPLOYMENT.md). No public deployment is triggered by the workflow file or by building locally. The standard checkout build fails its release gate unless the complete, reviewed bundle is present under `release-data/`.

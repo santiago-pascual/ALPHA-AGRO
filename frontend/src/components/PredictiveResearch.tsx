@@ -41,7 +41,9 @@ export function PredictiveResearchPage() {
     holdout: item.holdout.metrics[score] ?? null,
     id: item.model,
   })) ?? [], [selected, score]);
-  const holdoutWinner = selected?.models.filter((item) => item.role === "candidate" && isValue(item.holdout.metrics[score])).sort((a, b) => (a.holdout.metrics[score] as number) - (b.holdout.metrics[score] as number))[0];
+  const holdoutWinner = selected?.models.find((item) => item.model === selected.descriptive_holdout_model)
+    ?? selected?.models.filter((item) => item.role === "candidate" && isValue(item.holdout.metrics[score])).sort((a, b) => (a.holdout.metrics[score] as number) - (b.holdout.metrics[score] as number))[0];
+  const preHoldoutSelection = selected?.models.find((item) => item.selected_before_holdout);
 
   return <>
     <section className="page-intro predictive-intro">
@@ -63,8 +65,8 @@ export function PredictiveResearchPage() {
 
     <section className="research-selection-context" aria-labelledby="selection-context-title">
       <div className="eyebrow">MODEL SELECTION / HOLDOUT DISCIPLINE</div>
-      <h2 id="selection-context-title">Why seasonal climatology remains selected</h2>
-      <p>Selection uses pooled, completed walk-forward results from before the final holdout. In the recorded evaluation, seasonal climatology was selected on that basis. Some XGBoost or HMM configurations scored lower on holdout comparisons, but those holdout rankings are descriptive; selecting a model from them would use the reserved test period to tune the choice.</p>
+      <h2 id="selection-context-title">Pre-holdout model selection</h2>
+      <p>{preHoldoutSelection ? `${modelNames[preHoldoutSelection.model] ?? preHoldoutSelection.model} is marked as selected before holdout in this evaluation.` : "The selected model is identified from the evaluation artifact."} Selection uses walk-forward evidence only. Holdout rankings remain descriptive; selecting a model from them would tune against the reserved test period.</p>
       <span>The holdout measures historical generalization. It does not establish prospective or operational forecast skill.</span>
     </section>
 
@@ -97,14 +99,14 @@ export function PredictiveResearchPage() {
             <Bar dataKey="holdout" name="holdout" fill="#d3b883" radius={[3, 3, 0, 0]} maxBarSize={32} />
           </BarChart></ResponsiveContainer> : <div className="chart-empty">No finite scores are available for this selection.</div>}
         </div>
-        <div className="selection-labels"><span><b>Pre-holdout selection</b> Marked model selected using walk-forward results only.</span><span><b>Holdout winner</b> {holdoutWinner ? `${modelNames[holdoutWinner.model] ?? holdoutWinner.model} · descriptive lowest candidate score` : "Not available"}; holdout is not used for model selection.</span></div>
+        <div className="selection-labels"><span><b>Pre-holdout selection</b> {preHoldoutSelection ? `${modelNames[preHoldoutSelection.model] ?? preHoldoutSelection.model} · selected using walk-forward results only` : "Not identified in this result."}</span><span><b>Holdout comparison</b> {holdoutWinner ? `${modelNames[holdoutWinner.model] ?? holdoutWinner.model} · descriptive holdout lowest score` : "Not available"}; holdout is not used for model selection.</span></div>
       </section>
 
       <section className="panel research-table-panel">
         <div className="panel-heading"><div><div className="eyebrow">SCORES / BASELINES / UNCERTAINTY</div><h2>Evaluation details</h2></div><span className="panel-period">{scoreLabel[score]} · {selected.target_definition.units}</span></div>
         <div className="research-table-wrap"><table className="research-table"><thead><tr><th>Model</th><th>Role / selection</th><th>Walk-forward mean</th><th>Holdout score</th><th>Skill vs persistence</th><th>Skill vs climatology</th><th>95% score-difference interval</th></tr></thead><tbody>
           {selected.models.map((item) => <tr key={item.model}>
-            <th scope="row">{modelNames[item.model] ?? item.model}</th><td>{item.role === "baseline" ? "Baseline" : item.selected_before_holdout ? "Pre-holdout selected" : "Candidate"}</td>
+            <th scope="row">{modelNames[item.model] ?? item.model}</th><td>{item.selected_before_holdout ? "Pre-holdout selected · " : ""}{item.role === "baseline" ? "Baseline" : "Candidate"}</td>
             <td>{show(mean(item.walk_forward.folds.map((fold) => fold.metrics[score])))}</td><td>{show(item.holdout.metrics[score])}</td>
             <td>{show(item.skill_scores.vs_persistence)}</td><td>{show(item.skill_scores.vs_climatology)}</td>
             <td>{intervalText(item.uncertainty.metric_difference_interval_95)}<small>{item.uncertainty.method}</small></td>

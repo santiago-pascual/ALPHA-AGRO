@@ -96,8 +96,13 @@ function series(value: unknown, index: number): PredictiveEvaluationSeries {
   if (!Array.isArray(row.models) || row.models.length < 2) throw new Error(`Invalid predictive evaluation: model and baseline results are required at ${path}.models.`);
   const models = row.models.map((item, i) => model(item, `${path}.models[${i}]`));
   if (new Set(models.map((item) => item.model)).size !== models.length || !models.some((item) => item.role === "baseline")) throw new Error(`Invalid predictive evaluation: models must be unique and include a baseline at ${path}.models.`);
-  if (models.filter((item) => item.selected_before_holdout && item.role === "candidate").length !== 1) throw new Error(`Invalid predictive evaluation: exactly one pre-holdout candidate must be selected at ${path}.models.`);
-  return { scope, scope_definition: string(row.scope_definition, `${path}.scope_definition`), horizon_months: horizon as 1 | 2 | 3, target, target_definition: { method: string(targetDefinition.method, `${path}.target_definition.method`), units: string(targetDefinition.units, `${path}.target_definition.units`), ...(targetDefinition.threshold === undefined ? {} : { threshold: string(targetDefinition.threshold, `${path}.target_definition.threshold`) }) }, primary_metric: metric, models };
+  const selectedModels = models.filter((item) => item.selected_before_holdout);
+  if (selectedModels.length !== 1) throw new Error(`Invalid predictive evaluation: exactly one model (baseline or candidate) must be selected before holdout at ${path}.models.`);
+  const selectedModel = row.selected_model === undefined ? selectedModels[0].model : string(row.selected_model, `${path}.selected_model`);
+  if (selectedModel !== selectedModels[0].model) throw new Error(`Invalid predictive evaluation: selected_model must match the model marked selected_before_holdout at ${path}.selected_model.`);
+  const descriptiveHoldoutModel = row.descriptive_holdout_model === undefined ? undefined : string(row.descriptive_holdout_model, `${path}.descriptive_holdout_model`);
+  if (descriptiveHoldoutModel !== undefined && !models.some((item) => item.model === descriptiveHoldoutModel)) throw new Error(`Invalid predictive evaluation: descriptive_holdout_model must identify a listed model at ${path}.descriptive_holdout_model.`);
+  return { scope, scope_definition: string(row.scope_definition, `${path}.scope_definition`), horizon_months: horizon as 1 | 2 | 3, target, target_definition: { method: string(targetDefinition.method, `${path}.target_definition.method`), units: string(targetDefinition.units, `${path}.target_definition.units`), ...(targetDefinition.threshold === undefined ? {} : { threshold: string(targetDefinition.threshold, `${path}.target_definition.threshold`) }) }, primary_metric: metric, models, selected_model: selectedModel, ...(descriptiveHoldoutModel === undefined ? {} : { descriptive_holdout_model: descriptiveHoldoutModel }) };
 }
 
 export function adaptPredictiveEvaluation(input: unknown): PredictiveEvaluation {

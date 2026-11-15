@@ -23,7 +23,7 @@ describe("PredictiveResearchPage", () => {
     expect(container.textContent).toContain("TEST ONLY — SYNTHETIC FIXTURE");
     expect(container.textContent).toContain("Predictive research");
     expect(container.textContent).toContain("Pre-holdout selection");
-    expect(container.textContent).toContain("descriptive lowest candidate score");
+    expect(container.textContent).toContain("descriptive holdout lowest score");
     expect(container.textContent).toContain("Historical holdout predictions shown above are not live forecasts.");
     const forecastButton = Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Forecast unavailable"));
     expect(forecastButton?.disabled).toBe(true);

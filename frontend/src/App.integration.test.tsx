@@ -17,6 +17,7 @@ afterEach(() => {
   }
   document.body.innerHTML = "";
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
 });
 
 async function openRealDataMode() {
@@ -79,7 +80,42 @@ describe("dashboard real-data integration", () => {
       await act(async () => next.dispatchEvent(new MouseEvent("click", { bubbles: true })));
     }
     expect(container.textContent).toContain("STEP 4 OF 7");
-    expect(container.textContent).toContain("no connected cross-variable result artifact");
+    expect(container.textContent).toContain("Open the validated environmental-relationships artifact");
+    expect(container.textContent).toContain("If the approved artifact is missing, the page reports that state");
+    expect(Array.from(container.querySelectorAll("button")).some((button) => button.textContent?.includes("Open environmental relationships"))).toBe(true);
+  });
+
+  it("renders verified relationship artifact data without substituting demo results", async () => {
+    const relationshipFixture = await import("./data/__fixtures__/environmentalRelationships.fixture");
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(async (input: RequestInfo | URL) => String(input).includes("environmental_relationships")
+      ? { ok: true, json: async () => relationshipFixture.environmentalRelationshipsFixture }
+      : { ok: false, status: 404 }));
+    const container = await openRealDataMode();
+    const relationshipsButton = container.querySelector('button[aria-label="Environmental relationships"]');
+    if (!relationshipsButton) throw new Error("Environmental relationships navigation control not found.");
+    await act(async () => {
+      relationshipsButton.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(container.textContent).toContain("TEST ONLY — NASA GLDAS fixture");
+    expect(container.textContent).toContain("DE-TRENDED ANOMALY ASSOCIATIONS");
+    expect(container.textContent).toContain("not establish causality");
+    expect(container.querySelectorAll(".relationship-controls label select")).toHaveLength(2);
+    expect(container.querySelector('[role="img"][aria-label*="95 percent block-bootstrap"]')).not.toBeNull();
+    expect(container.querySelector(".sr-only table caption")?.textContent).toContain("Full study box");
+  });
+
+  it("shows an explicit relationship artifact missing state", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 404 }));
+    const container = await openRealDataMode();
+    const relationshipsButton = container.querySelector('button[aria-label="Environmental relationships"]');
+    if (!relationshipsButton) throw new Error("Environmental relationships navigation control not found.");
+    await act(async () => {
+      relationshipsButton.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(container.textContent).toContain("Environmental relationship results unavailable");
+    expect(container.textContent).toContain("No approved environmental_relationships_v1.json is available");
   });
 
   it("renders schema fixture values, source provenance, and historical-only status", async () => {

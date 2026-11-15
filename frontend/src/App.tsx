@@ -33,9 +33,10 @@ import { loadValidatedTrend } from "./data/loadTrend";
 import { TrendMap, type RegionSelection } from "./components/TrendMap";
 import { PredictiveResearchPage } from "./components/PredictiveResearch";
 import { LandingPage } from "./components/LandingPage";
+import { RelationshipsPage } from "./components/RelationshipsPage";
 import type { DashboardDataset, DataMode, MonthlyObservation } from "./types";
 
-type Page = "landing" | "overview" | "methodology" | "predictive";
+type Page = "landing" | "overview" | "methodology" | "relationships" | "predictive";
 type ChartMeasure = "storage" | "anomaly";
 type LoadState =
   | { status: "idle" }
@@ -151,6 +152,18 @@ function App() {
             <BookOpen size={17} /><span>Methods & data</span>
           </button>
           <button
+            className={"nav-item" + (page === "relationships" ? " active" : "")}
+            aria-label="Environmental relationships"
+            onClick={() => {
+              setMode("real");
+              setPage("relationships");
+              setMenuOpen(false);
+            }}
+            aria-current={page === "relationships" ? "page" : undefined}
+          >
+            <ChartNoAxesCombined size={17} /><span>Relationships</span>
+          </button>
+          <button
             className={"nav-item" + (page === "predictive" ? " active" : "")}
             aria-label="Predictive research"
             title="Predictive research"
@@ -192,7 +205,7 @@ function App() {
           </button>
           <div className="breadcrumb">
             <span>ALPHA AGRO</span><span className="crumb-slash">/</span>
-            <b>{page === "overview" ? "PAMPAS OVERVIEW" : page === "methodology" ? "METHODS & DATA" : "PREDICTIVE RESEARCH"}</b>
+            <b>{page === "overview" ? "PAMPAS OVERVIEW" : page === "methodology" ? "METHODS & DATA" : page === "relationships" ? "ENVIRONMENTAL RELATIONSHIPS" : "PREDICTIVE RESEARCH"}</b>
           </div>
           <div className="topbar-right">
             <div className="source-switch" aria-label="Data source mode">
@@ -269,6 +282,8 @@ function App() {
             </>
           ) : page === "methodology" ? (
             <MethodologyPage dataset={dataset} mode={mode} />
+          ) : page === "relationships" ? (
+            <RelationshipsPage />
           ) : (
             <PredictiveResearchPage />
           )}

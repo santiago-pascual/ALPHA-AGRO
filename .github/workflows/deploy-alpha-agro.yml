@@ -27,6 +27,9 @@ jobs:
       - name: Install dependencies
         working-directory: frontend
         run: npm ci
+      - name: Validate and stage explicitly approved scientific bundle
+        working-directory: frontend
+        run: npm run prepare:public-data
       - name: TypeScript check
         working-directory: frontend
         run: npm run lint
@@ -38,11 +41,17 @@ jobs:
         env:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
         run: npm run build -- --base="$VITE_BASE_PATH"
+      - name: Verify subpath assets, data allowlist, checksums, and reproducibility manifest
+        working-directory: frontend
+        env:
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+        run: npm run verify:pages-build -- --base "$VITE_BASE_PATH"
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: frontend/dist
   deploy:
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

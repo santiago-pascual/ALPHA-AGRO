@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Activity, ArrowDown, ArrowRight, BookOpen, ChartNoAxesCombined, Database, MapPin, Sprout } from "lucide-react";
 import type { DataMode } from "../types";
 
-export type LandingPageName = "overview" | "methodology" | "predictive";
+export type LandingPageName = "overview" | "methodology" | "relationships" | "predictive";
 
 type LandingPageProps = {
   onOpen: (page: LandingPageName, mode: DataMode) => void;
@@ -29,7 +29,8 @@ const tourSteps = [
   {
     eyebrow: "04 · RELATIONSHIPS",
     title: "Associations need aligned data and careful interpretation.",
-    text: "The current front end has no connected cross-variable result artifact or relationship chart. It does not invent correlations between soil water, rainfall, temperature, or crop outcomes. Shared model inputs and common trends would also limit causal interpretation.",
+    text: "Open the validated environmental-relationships artifact to inspect rainfall, evapotranspiration, temperature, and runoff associations by region and lead time. If the approved artifact is missing, the page reports that state without inventing correlations. Shared model inputs limit causal interpretation.",
+    action: { label: "Open environmental relationships", page: "relationships" as const, mode: "real" as const },
   },
   {
     eyebrow: "05 · THE MAP",
@@ -135,7 +136,7 @@ export function LandingPage({ onOpen }: LandingPageProps) {
               <span className="landing-capability-icon"><ChartNoAxesCombined size={18} /></span>
               <div className="eyebrow">03 / RESEARCH</div>
               <h3>Predictive model comparisons</h3>
-              <p>When a validated evaluation artifact is connected, compare chronological folds, holdout results, and baselines. Historical hindcasts are not live forecasts.</p>
+              <p>Compare chronological folds, holdout results, and baselines only when the validated evaluation artifact is included. Historical hindcasts are not live forecasts.</p>
               <span className="landing-capability-status">SEPARATE FROM OPERATIONAL FORECASTS</span>
             </article>
           </div>
