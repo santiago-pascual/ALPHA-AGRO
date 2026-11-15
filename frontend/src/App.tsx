@@ -35,6 +35,7 @@ import { PredictiveResearchPage } from "./components/PredictiveResearch";
 import { LandingPage } from "./components/LandingPage";
 import type { DashboardDataset, MonthlyObservation } from "./types";
 import { ForecastPage } from "./components/ForecastPage";
+import type { SelectedLocation } from "./data/location";
 
 type Page = "landing" | "overview" | "forecast" | "about" | "research";
 type ChartMeasure = "storage" | "anomaly";
@@ -68,6 +69,7 @@ function App() {
   const [rangeYears, setRangeYears] = useState(20);
   const [measure, setMeasure] = useState<ChartMeasure>("storage");
   const [region, setRegion] = useState<RegionSelection>("all");
+  const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -219,7 +221,7 @@ function App() {
                 <>
                   <OverviewMetrics dataset={dataset} />
                   <div className="dashboard-grid">
-                    <TrendMap dataset={dataset} region={region} onRegionChange={setRegion} />
+                    <TrendMap dataset={dataset} region={region} onRegionChange={setRegion} selectedLocation={selectedLocation} />
                     <TrendPanel dataset={dataset} />
                   </div>
                   <TimeSeries
@@ -241,7 +243,7 @@ function App() {
           ) : page === "about" ? (
             <MethodologyPage dataset={dataset} />
           ) : page === "forecast" ? (
-            <ForecastPage />
+            <ForecastPage dataset={dataset} selectedLocation={selectedLocation} onLocationChange={setSelectedLocation} />
           ) : (
             <PredictiveResearchPage />
           )}

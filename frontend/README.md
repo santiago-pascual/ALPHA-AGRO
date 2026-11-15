@@ -58,6 +58,12 @@ Component and adapter tests use fixtures explicitly marked **TEST ONLY — SYNTH
 
 The navigation is organized as **Observatory**, **Forecast**, **Research & Methods**, and **About & Data Sources**. No geographic selector is exposed: only the validated Argentine Pampas support is represented.
 
+### Field location selection
+
+Forecast location selection is a planning control only; forecasts stay unavailable. Browser geolocation is requested only after **Use my location** is pressed. Manual map and coordinate selections are accepted only when the point falls inside a cell footprint in the validated artifact's eligible trend-cell mask, using the artifact's declared grid spacing. Cells absent from that mask are not treated as supported. This is analysis-grid support, not an official Pampas polygon, field boundary, or field-level measurement; without the validated trend artifact, map selection is disabled and coverage is reported as unknown.
+
+The browser's GPS-reported horizontal accuracy (meters) describes device positioning. GLDAS Noah's 0.25° grid spacing describes model-grid support; neither value is interchangeable with the other or with a satellite soil-moisture observation resolution. A selected coordinate is held in in-memory app state so it survives Observatory/Forecast navigation, and is not written to local storage or sent to a forecast service.
+
 The map uses free OpenStreetMap tiles with visible attribution. It requires an internet connection for basemap tiles; the dashboard data itself does not call a paid API or require credentials. Regional GLDAS fields are modeled data and do not establish field conditions, crop yield, or damage.
 
 ## Demo and static hosting

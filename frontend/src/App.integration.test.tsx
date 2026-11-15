@@ -4,7 +4,17 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import { trendAnalysisFixture } from "./data/__fixtures__/trendAnalysis.fixture";
 
-vi.mock("./components/TrendMap", () => ({ TrendMap: () => null }));
+vi.mock("./components/TrendMap", async () => {
+  const React = await import("react");
+  return {
+    TrendMap: (props: { selectionMode?: boolean; onLocationSelect?: (point: { latitude: number; longitude: number }) => void; selectedLocation?: { latitude: number; longitude: number } | null }) => React.createElement(
+      "div",
+      null,
+      props.selectionMode ? React.createElement("button", { onClick: () => props.onLocationSelect?.({ latitude: -34, longitude: -60 }) }, "Select supported map cell") : null,
+      props.selectedLocation ? React.createElement("output", null, "Selected location marker persists") : null,
+    ),
+  };
+});
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -129,5 +139,21 @@ describe("dashboard real-data integration", () => {
     expect(container.textContent).toContain("NOT OPERATIONALLY ELIGIBLE");
     expect(container.textContent).toContain("not current forecasts");
     expect(container.textContent).not.toContain("999");
+  });
+
+  it("preserves a supported location while navigating between Forecast and Observatory", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => trendAnalysisFixture }));
+    const container = await openObservatory();
+    const forecastButton = Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Forecast"));
+    if (!forecastButton) throw new Error("Forecast navigation control not found.");
+    await act(async () => forecastButton.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    const mapSelect = Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Select supported map cell"));
+    if (!mapSelect) throw new Error("Forecast map selection control not found.");
+    await act(async () => mapSelect.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(container.textContent).toContain("SELECTED · MAP");
+    const observatoryButton = Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Observatory"));
+    if (!observatoryButton) throw new Error("Observatory navigation control not found.");
+    await act(async () => observatoryButton.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(container.textContent).toContain("Selected location marker persists");
   });
 });
