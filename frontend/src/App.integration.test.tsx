@@ -4,7 +4,17 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import { trendAnalysisFixture } from "./data/__fixtures__/trendAnalysis.fixture";
 
-vi.mock("./components/TrendMap", () => ({ TrendMap: () => null }));
+vi.mock("./components/TrendMap", async () => {
+  const React = await import("react");
+  return {
+    TrendMap: (props: { selectionMode?: boolean; onLocationSelect?: (point: { latitude: number; longitude: number }) => void; selectedLocation?: { latitude: number; longitude: number } | null }) => React.createElement(
+      "div",
+      null,
+      props.selectionMode ? React.createElement("button", { onClick: () => props.onLocationSelect?.({ latitude: -34, longitude: -60 }) }, "Select supported map cell") : null,
+      props.selectedLocation ? React.createElement("output", null, "Selected location marker persists") : null,
+    ),
+  };
+});
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -19,7 +29,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-async function openRealDataMode() {
+async function openObservatory() {
   const container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
@@ -27,18 +37,13 @@ async function openRealDataMode() {
     root?.render(<App />);
   });
   const dashboardButton = Array.from(container.querySelectorAll("button")).find((button) =>
-    button.textContent?.includes("Explore dashboard"),
+    button.textContent?.includes("Explore Observatory"),
   );
-  if (!dashboardButton) throw new Error("Explore dashboard control not found.");
+  if (!dashboardButton) throw new Error("Explore Observatory control not found.");
   await act(async () => {
     dashboardButton.dispatchEvent(new MouseEvent("click", { bubbles: true }));
   });
-  const realDataButton = Array.from(container.querySelectorAll("button")).find((button) =>
-    button.textContent?.includes("REAL DATA"),
-  );
-  if (!realDataButton) throw new Error("REAL DATA control not found.");
   await act(async () => {
-    realDataButton.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     await new Promise((resolve) => setTimeout(resolve, 0));
   });
   return container;
@@ -58,8 +63,21 @@ describe("dashboard real-data integration", () => {
     expect(container.textContent).toContain("Alpha Agro");
     expect(container.textContent).toContain("From Earth data");
     expect(container.textContent).toContain("to agricultural insight.");
+    expect(container.querySelector("#landing-title")?.textContent).toContain("Inteligencia de la Tierra");
+    expect(container.textContent).toContain("Marcos Paz");
+    expect(container.textContent).toContain("productor de soja");
+    expect(container.textContent).toContain("no llegó a completar la secundaria");
+    expect(container.textContent).toContain("no hay pronósticos operativos disponibles");
+    expect(container.textContent).toContain("El futuro del agro no debería depender del tamaño del campo.");
+    expect(container.querySelector('[lang="en"]')?.textContent).toContain("Advanced Earth intelligence");
     expect(container.textContent?.toLowerCase()).toContain("quant alpha");
     expect(container.textContent).toContain("Be An Earth System Trend Detective!");
+    expect(container.textContent).toContain("validated scientific artifacts only");
+    expect(container.textContent).not.toContain("Fictitious demonstration values.");
+    const missionCta = container.querySelector<HTMLButtonElement>(".landing-mission-cta button");
+    expect(missionCta?.textContent).toContain("Explore Observatory");
+    await act(async () => missionCta?.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(container.querySelector("h1")?.textContent).toContain("Earth System Observatory");
   });
 
   it("guides visitors through the seven scientific demo steps without inventing relationships", async () => {
@@ -88,8 +106,10 @@ describe("dashboard real-data integration", () => {
       json: async () => trendAnalysisFixture,
     }));
 
-    const container = await openRealDataMode();
+    const container = await openObservatory();
 
+    expect(container.querySelector("h1")?.textContent).toContain("Earth System Observatory");
+    expect(container.textContent).toContain("STUDY REGION: ARGENTINE PAMPAS");
     expect(container.textContent).toContain("TEST FIXTURE");
     expect(container.textContent).toContain("REGIONAL STORAGE TREND");
     expect(container.textContent).toContain("HISTORICAL ANALYSIS · NO OPERATIONAL FORECAST");
@@ -98,9 +118,9 @@ describe("dashboard real-data integration", () => {
     expect(container.textContent).not.toContain("Fictitious demonstration values.");
 
     const methodsButton = Array.from(container.querySelectorAll("button")).find((button) =>
-      button.textContent?.includes("Methods & data"),
+      button.textContent?.includes("About & data sources"),
     );
-    if (!methodsButton) throw new Error("Methods & data navigation control not found.");
+    if (!methodsButton) throw new Error("About & data sources navigation control not found.");
     await act(async () => {
       methodsButton.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
@@ -112,10 +132,39 @@ describe("dashboard real-data integration", () => {
   it("keeps the dashboard empty when validated JSON is absent", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 404 }));
 
-    const container = await openRealDataMode();
+    const container = await openObservatory();
 
     expect(container.textContent).toContain("No validated trend_analysis.json was found");
-    expect(container.textContent).toContain("DEMO values are hidden");
+    expect(container.textContent).toContain("Scientific values remain hidden until a validated artifact is available.");
+    expect(container.textContent).not.toContain("REGIONAL STORAGE TREND");
     expect(container.textContent).not.toContain("Fictitious demonstration values.");
+  });
+
+  it("navigates to the distinct Forecast workspace without exposing retrospective scores as forecasts", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 404 }));
+    const container = await openObservatory();
+    const forecastButton = Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Forecast"));
+    if (!forecastButton) throw new Error("Forecast navigation control not found.");
+    await act(async () => forecastButton.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(container.querySelector("h1")?.textContent).toContain("Forecast availability");
+    expect(container.textContent).toContain("NOT OPERATIONALLY ELIGIBLE");
+    expect(container.textContent).toContain("Historical evaluations are never substituted.");
+    expect(container.textContent).not.toContain("999");
+  });
+
+  it("preserves a supported location while navigating between Forecast and Observatory", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => trendAnalysisFixture }));
+    const container = await openObservatory();
+    const forecastButton = Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Forecast"));
+    if (!forecastButton) throw new Error("Forecast navigation control not found.");
+    await act(async () => forecastButton.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    const mapSelect = Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Select supported map cell"));
+    if (!mapSelect) throw new Error("Forecast map selection control not found.");
+    await act(async () => mapSelect.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(container.textContent).toContain("SELECTED · MAP");
+    const observatoryButton = Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Observatory"));
+    if (!observatoryButton) throw new Error("Observatory navigation control not found.");
+    await act(async () => observatoryButton.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(container.textContent).toContain("Selected location marker persists");
   });
 });

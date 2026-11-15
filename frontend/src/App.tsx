@@ -15,6 +15,7 @@ import {
   LoaderCircle,
   Map,
   Menu,
+  Telescope,
   Sprout,
   Wheat,
 } from "lucide-react";
@@ -28,14 +29,15 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { demoDataset } from "./data/demo";
 import { loadValidatedTrend } from "./data/loadTrend";
 import { TrendMap, type RegionSelection } from "./components/TrendMap";
 import { PredictiveResearchPage } from "./components/PredictiveResearch";
 import { LandingPage } from "./components/LandingPage";
-import type { DashboardDataset, DataMode, MonthlyObservation } from "./types";
+import type { DashboardDataset, MonthlyObservation } from "./types";
+import { ForecastPage } from "./components/ForecastPage";
+import type { SelectedLocation } from "./data/location";
 
-type Page = "landing" | "overview" | "methodology" | "predictive";
+type Page = "landing" | "overview" | "forecast" | "about" | "research";
 type ChartMeasure = "storage" | "anomaly";
 type LoadState =
   | { status: "idle" }
@@ -62,19 +64,15 @@ function shortDate(value: string) {
 
 function App() {
   const [page, setPage] = useState<Page>("landing");
-  const [mode, setMode] = useState<DataMode>("demo");
   const [loadState, setLoadState] = useState<LoadState>({ status: "idle" });
   const [reloadKey, setReloadKey] = useState(0);
   const [rangeYears, setRangeYears] = useState(20);
   const [measure, setMeasure] = useState<ChartMeasure>("storage");
   const [region, setRegion] = useState<RegionSelection>("all");
+  const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    if (mode !== "real") {
-      setLoadState({ status: "idle" });
-      return;
-    }
     let active = true;
     setLoadState({ status: "loading" });
     loadValidatedTrend().then(
@@ -89,14 +87,9 @@ function App() {
     return () => {
       active = false;
     };
-  }, [mode, reloadKey]);
+  }, [reloadKey]);
 
-  const dataset =
-    mode === "demo"
-      ? demoDataset
-      : loadState.status === "ready"
-        ? loadState.data
-        : null;
+  const dataset = loadState.status === "ready" ? loadState.data : null;
 
   const visibleSeries = useMemo(() => {
     if (!dataset) return [];
@@ -104,14 +97,8 @@ function App() {
     return dataset.series.filter((item) => Number(item.month.slice(0, 4)) > lastYear - rangeYears);
   }, [dataset, rangeYears]);
 
-  const chooseMode = (next: DataMode) => {
-    setMode(next);
-    setPage("overview");
-  };
-
   if (page === "landing") {
-    return <LandingPage onOpen={(nextPage, nextMode) => {
-      setMode(nextMode);
+    return <LandingPage onOpen={(nextPage) => {
       setPage(nextPage);
       setMenuOpen(false);
     }} />;
@@ -128,7 +115,7 @@ function App() {
           </span>
         </a>
 
-        <div className="side-kicker">WORKSPACE</div>
+        <div className="side-kicker">EXPLORE</div>
         <nav className="side-nav" aria-label="Alpha Agro main navigation">
           <button
             className={"nav-item" + (page === "overview" ? " active" : "")}
@@ -138,29 +125,32 @@ function App() {
             }}
             aria-current={page === "overview" ? "page" : undefined}
           >
-            <Map size={17} /><span>Overview</span><span className="nav-index">01</span>
+            <Map size={17} /><span>Observatory</span><span className="nav-index">01</span>
+          </button>
+          <button className={"nav-item" + (page === "forecast" ? " active" : "")} onClick={() => { setPage("forecast"); setMenuOpen(false); }} aria-current={page === "forecast" ? "page" : undefined}>
+            <Telescope size={17} /><span>Forecast</span><span className="nav-index">UNAVAILABLE</span>
           </button>
           <button
-            className={"nav-item" + (page === "methodology" ? " active" : "")}
+            className={"nav-item" + (page === "about" ? " active" : "")}
             onClick={() => {
-              setPage("methodology");
+              setPage("about");
               setMenuOpen(false);
             }}
-            aria-current={page === "methodology" ? "page" : undefined}
+            aria-current={page === "about" ? "page" : undefined}
           >
-            <BookOpen size={17} /><span>Methods & data</span>
+            <BookOpen size={17} /><span>About & data sources</span>
           </button>
           <button
-            className={"nav-item" + (page === "predictive" ? " active" : "")}
-            aria-label="Predictive research"
-            title="Predictive research"
+            className={"nav-item" + (page === "research" ? " active" : "")}
+            aria-label="Research and methods"
+            title="Research and methods"
             onClick={() => {
-              setPage("predictive");
+              setPage("research");
               setMenuOpen(false);
             }}
-            aria-current={page === "predictive" ? "page" : undefined}
+            aria-current={page === "research" ? "page" : undefined}
           >
-            <ChartNoAxesCombined size={17} /><span>Predictive research</span><span className="nav-index">R&amp;D</span>
+            <ChartNoAxesCombined size={17} /><span>Research & methods</span><span className="nav-index">R&amp;D</span>
           </button>
         </nav>
 
@@ -192,26 +182,11 @@ function App() {
           </button>
           <div className="breadcrumb">
             <span>ALPHA AGRO</span><span className="crumb-slash">/</span>
-            <b>{page === "overview" ? "PAMPAS OVERVIEW" : page === "methodology" ? "METHODS & DATA" : "PREDICTIVE RESEARCH"}</b>
+            <b>{page === "overview" ? "EARTH SYSTEM OBSERVATORY" : page === "forecast" ? "FORECAST" : page === "about" ? "ABOUT & DATA SOURCES" : "RESEARCH & METHODS"}</b>
           </div>
           <div className="topbar-right">
-            <div className="source-switch" aria-label="Data source mode">
-              <button
-                className={mode === "demo" ? "selected" : ""}
-                onClick={() => chooseMode("demo")}
-                aria-pressed={mode === "demo"}
-              >
-                <span className="source-dot demo-dot" /> DEMO
-              </button>
-              <button
-                className={mode === "real" ? "selected" : ""}
-                onClick={() => chooseMode("real")}
-                aria-pressed={mode === "real"}
-              >
-                <span className="source-dot real-dot" /> REAL DATA
-              </button>
-            </div>
-            <div className="top-date"><span>PERIOD</span><b>{dataset ? dataset.start.slice(0, 4) + " — " + dataset.end.slice(0, 4) : mode === "demo" ? "2006 — 2025" : "NOT LOADED"}</b></div>
+            <div className="source-switch source-status" role="status"><span className="source-dot real-dot" />{loadState.status === "loading" ? "LOADING VALIDATED DATA" : loadState.status === "error" ? "VALIDATED DATA UNAVAILABLE" : dataset ? "VALIDATED HISTORICAL DATA" : "REAL DATA ONLY"}</div>
+            <div className="top-date"><span>PERIOD</span><b>{dataset ? dataset.start.slice(0, 4) + " — " + dataset.end.slice(0, 4) : "NOT LOADED"}</b></div>
           </div>
         </header>
 
@@ -221,24 +196,23 @@ function App() {
               <section className="page-intro">
                 <div>
                   <div className="eyebrow"><span className="eyebrow-line" /> EARTH SYSTEMS / SOIL WATER</div>
-                  <h1>Alpha Agro <em>· Pampas</em></h1>
+                  <h1>Earth System <em>Observatory</em></h1>
+                  <div className="study-region-label"><Map size={13} /> STUDY REGION: ARGENTINE PAMPAS</div>
                   <p><strong>From Earth data to agricultural insight.</strong> NASA-powered Earth system intelligence for agriculture. Historical GLDAS analysis, read with uncertainty in view; no operational forecasts are provided.</p>
                 </div>
                 <div className="intro-meta">
                   <span className="period-label">ANALYSIS WINDOW</span>
-                  <b>{dataset ? formatDate(dataset.start, { month: "short", year: "numeric" }).toUpperCase() : mode === "demo" ? "JAN 2006" : "PERIOD NOT LOADED"} {dataset && <i>→</i>} {dataset ? formatDate(dataset.end, { month: "short", year: "numeric" }).toUpperCase() : ""}</b>
-                  <span>{dataset ? `${dataset.months} monthly records · ${dataset.source}` : mode === "demo" ? "240 synthetic monthly records · DEMO" : "Validated historical analysis not loaded"}</span>
+                  <b>{dataset ? formatDate(dataset.start, { month: "short", year: "numeric" }).toUpperCase() : "PERIOD NOT LOADED"} {dataset && <i>→</i>} {dataset ? formatDate(dataset.end, { month: "short", year: "numeric" }).toUpperCase() : ""}</b>
+                  <span>{dataset ? `${dataset.months} monthly records · ${dataset.source}` : "Validated historical analysis not loaded"}</span>
                 </div>
               </section>
 
-              {mode === "demo" && <DemoNotice />}
-
-              {mode === "real" && loadState.status === "loading" ? (
+              {loadState.status === "loading" ? (
                 <section className="state-card" aria-live="polite">
                   <LoaderCircle className="spin" size={22} />
                   <div><b>Reading validated historical analysis</b><span>Loading /data/trend_analysis.json · no forecast is included</span></div>
                 </section>
-              ) : mode === "real" && loadState.status === "error" ? (
+              ) : loadState.status === "error" ? (
                 <EmptyState
                   message={loadState.message}
                   onRetry={() => setReloadKey((key) => key + 1)}
@@ -247,11 +221,10 @@ function App() {
                 <>
                   <OverviewMetrics dataset={dataset} />
                   <div className="dashboard-grid">
-                    <TrendMap dataset={dataset} region={region} onRegionChange={setRegion} />
+                    <TrendMap dataset={dataset} region={region} onRegionChange={setRegion} selectedLocation={selectedLocation} />
                     <TrendPanel dataset={dataset} />
                   </div>
                   <TimeSeries
-                    dataset={dataset}
                     observations={visibleSeries}
                     rangeYears={rangeYears}
                     onRangeChange={setRangeYears}
@@ -260,30 +233,22 @@ function App() {
                   />
                   <AgricultureContext />
                   <footer className="page-footer">
-                    <span><Database size={13} /> SOURCE: {mode === "demo" ? "SYNTHETIC DEMONSTRATION" : dataset.source.toUpperCase()}</span>
+                    <span><Database size={13} /> SOURCE: {dataset.source.toUpperCase()}</span>
                     <span>HISTORICAL ANALYSIS · NO OPERATIONAL FORECAST · NOT FIELD MEASUREMENTS</span>
                     <span>ALPHA AGRO · DEVELOPED BY QUANT ALPHA</span>
                   </footer>
                 </>
               ) : null}
             </>
-          ) : page === "methodology" ? (
-            <MethodologyPage dataset={dataset} mode={mode} />
+          ) : page === "about" ? (
+            <MethodologyPage dataset={dataset} />
+          ) : page === "forecast" ? (
+            <ForecastPage dataset={dataset} selectedLocation={selectedLocation} onLocationChange={setSelectedLocation} />
           ) : (
             <PredictiveResearchPage />
           )}
         </main>
       </div>
-    </div>
-  );
-}
-
-function DemoNotice() {
-  return (
-    <div className="demo-notice" role="note">
-      <div className="demo-badge"><span /> DEMO</div>
-      <p><b>Fictitious demonstration values.</b> These charts, trends and map cells are synthetic and are not NASA findings.</p>
-      <span className="demo-notice-right">VALIDATED FILE NOT CONNECTED</span>
     </div>
   );
 }
@@ -404,14 +369,12 @@ function TrendPanel({ dataset }: { dataset: DashboardDataset }) {
 }
 
 function TimeSeries({
-  dataset,
   observations,
   rangeYears,
   onRangeChange,
   measure,
   onMeasureChange,
 }: {
-  dataset: DashboardDataset;
   observations: MonthlyObservation[];
   rangeYears: number;
   onRangeChange: (years: number) => void;
@@ -506,7 +469,7 @@ function TimeSeries({
       </div>
       <div className="chart-caption">
         <span>{measure === "storage" ? "Layer sum: 0–10 + 10–40 + 40–100 cm" : "Anomaly baseline uses calendar-month climatology"}</span>
-        <span>{dataset.mode === "demo" ? "Illustrative synthetic series" : "Full-period descriptive baseline"}</span>
+        <span>Full-period descriptive baseline</span>
       </div>
     </section>
   );
@@ -563,24 +526,23 @@ function EmptyState({ message, onRetry }: { message: string; onRetry: () => void
       <p>{message}</p>
       <code>frontend/public/data/trend_analysis.json</code>
       <button className="button-secondary" onClick={onRetry}>Retry file check</button>
-      <span className="empty-footnote">DEMO values are hidden while REAL DATA mode is selected.</span>
+      <span className="empty-footnote">Scientific values remain hidden until a validated artifact is available.</span>
     </section>
   );
 }
 
-function MethodologyPage({ dataset, mode }: { dataset: DashboardDataset | null; mode: DataMode }) {
+function MethodologyPage({ dataset }: { dataset: DashboardDataset | null }) {
   return (
     <>
       <section className="page-intro methods-intro">
         <div>
           <div className="eyebrow"><span className="eyebrow-line" /> DOCUMENTATION / PROVENANCE</div>
-          <h1>Methods & <em>data</em></h1>
+          <h1>About & <em>data sources</em></h1>
           <p>What is measured, how the trend is estimated, and where interpretation stops.</p>
         </div>
         <div className="methods-source-mark"><Database size={18} /><span>NASA EARTH SCIENCE</span><b>GLDAS · NOAH v2.1</b></div>
       </section>
-      {mode === "demo" && <DemoNotice />}
-      {mode === "real" && loadUnavailableMessage(dataset)}
+      {loadUnavailableMessage(dataset)}
       <section className="methods-grid">
         <article className="panel method-card method-wide">
           <div className="eyebrow">01 / INPUT</div>
@@ -619,16 +581,16 @@ function MethodologyPage({ dataset, mode }: { dataset: DashboardDataset | null; 
           <div className="eyebrow">05 / PROVENANCE</div>
           <h2>Source, period & status</h2>
           <div className="provenance-list">
-            <div><span>Data source</span><b>{dataset?.source ?? (mode === "demo" ? "Synthetic demonstration dataset" : "Not loaded")}</b></div>
-            <div><span>Period</span><b>{dataset ? formatDate(dataset.start, { month: "short", year: "numeric" }) + " — " + formatDate(dataset.end, { month: "short", year: "numeric" }) : mode === "demo" ? "Jan 2006 — Dec 2025 · synthetic" : "Not loaded"}</b></div>
-            <div><span>Records</span><b>{dataset ? `${dataset.months} monthly` : mode === "demo" ? "240 monthly · synthetic" : "Not loaded"}</b></div>
+            <div><span>Data source</span><b>{dataset?.source ?? "Not loaded"}</b></div>
+            <div><span>Period</span><b>{dataset ? formatDate(dataset.start, { month: "short", year: "numeric" }) + " — " + formatDate(dataset.end, { month: "short", year: "numeric" }) : "Not loaded"}</b></div>
+            <div><span>Records</span><b>{dataset ? `${dataset.months} monthly` : "Not loaded"}</b></div>
             <div><span>Geographic coverage</span><b>{dataset ? `${dataset.latitudeCount} × ${dataset.longitudeCount} cells · ${dataset.eligibleCells} trend estimates · ${dataset.resolutionDegrees}°` : "Not loaded"}</b></div>
-            <div><span>Study-grid rule</span><b>{dataset && dataset.mode === "real" ? dataset.boundaryRule : dataset ? "Synthetic demo grid · not validated" : "Not loaded"}</b></div>
-            <div><span>Area weighting</span><b>{dataset && dataset.mode === "real" ? dataset.areaWeighting : dataset ? "Synthetic demo metadata" : "Not loaded"}</b></div>
-            <div><span>Input files</span><b>{dataset && dataset.mode === "real" ? `${dataset.inputFiles.length} files with SHA-256 provenance` : dataset ? "No source files · synthetic demo" : "Not loaded"}</b></div>
-            <div><span>Analysis status</span><b>{mode === "demo" ? "DEMO · synthetic only" : dataset ? "Historical retrospective · no forecast" : "Validated output not loaded"}</b></div>
+            <div><span>Study-grid rule</span><b>{dataset?.boundaryRule ?? "Not loaded"}</b></div>
+            <div><span>Area weighting</span><b>{dataset?.areaWeighting ?? "Not loaded"}</b></div>
+            <div><span>Input files</span><b>{dataset ? `${dataset.inputFiles.length} files with SHA-256 provenance` : "Not loaded"}</b></div>
+            <div><span>Analysis status</span><b>{dataset ? "Historical retrospective · no forecast" : "Validated output not loaded"}</b></div>
           </div>
-          {dataset && dataset.mode === "real" && (
+          {dataset && (
             <details className="provenance-files">
               <summary>Inspect source-file checksums ({dataset.inputFiles.length})</summary>
               <ul>
@@ -670,7 +632,7 @@ function loadUnavailableMessage(dataset: DashboardDataset | null) {
   }
   return (
     <div className="inline-source-status pending-status">
-      <span className="source-dot real-dot" /> Real data selected. Overview remains empty until a validated JSON file is available.
+      <span className="source-dot real-dot" /> Real-data-only view. No scientific values are displayed until a validated JSON file is available.
     </div>
   );
 }
