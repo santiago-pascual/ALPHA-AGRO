@@ -106,6 +106,19 @@ def test_future_record_mutation_cannot_change_earlier_features():
     np.testing.assert_allclose(left[feature_columns], right[feature_columns], equal_nan=True)
 
 
+def test_shared_release_features_match_general_release_path(monkeypatch):
+    from gldas.predictive import features
+
+    panel = synthetic_panel(months=36, cells=3, release_lag=5)
+    panel.loc[0, "precipitation_valid"] = False
+    panel.loc[0, "precipitation_mm_month"] = np.nan
+    fast, columns = features.make_supervised(panel, horizon=3, n_lags=6)
+    monkeypatch.setattr(features, "_shared_release_panel", lambda *_: None)
+    slow, slow_columns = features.make_supervised(panel, horizon=3, n_lags=6)
+    assert columns == slow_columns
+    pd.testing.assert_frame_equal(fast[slow.columns], slow, check_dtype=False)
+
+
 def test_expanding_folds_keep_each_calendar_month_together_and_reserve_holdout():
     panel = synthetic_panel(months=96, cells=3, release_lag=1)
     frame, _ = make_supervised(panel, horizon=1)
@@ -174,6 +187,18 @@ def test_regression_and_probability_metrics_are_finite():
     classifier = classification_metrics(test, np.arange(len(test)) % 2, np.full(len(test), 0.5))
     assert classifier["brier"] == pytest.approx(0.25)
     assert len(classifier["calibration_bins"]) == 1
+
+
+def test_paired_loss_comparison_uses_same_spatial_month_blocks():
+    from gldas.predictive.evaluation import _paired_comparisons
+
+    frame, _ = make_supervised(synthetic_panel(months=36, cells=3), horizon=1)
+    y = frame["target_soil_water_mm"].to_numpy()
+    predictions = {"xgboost": y + 3, "xgboost_hmm": y + 2, "persistence": y + 5}
+    paired = _paired_comparisons(frame, y, predictions, "storage")["xgboost_hmm"]
+    assert paired["xgboost"]["difference"] == pytest.approx(-1)
+    assert paired["xgboost"]["interval_95"] == pytest.approx([-1, -1])
+    assert paired["persistence"]["difference"] == pytest.approx(-3)
 
 
 def test_end_to_end_walk_forward_and_untouched_holdout_on_fixture():

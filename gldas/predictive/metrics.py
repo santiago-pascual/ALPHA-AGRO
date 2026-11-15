@@ -9,51 +9,33 @@ from scipy.special import expit
 from sklearn.metrics import log_loss
 
 
-def _block_differences(frame: pd.DataFrame, values: np.ndarray, *, block_months: int = 12,
-                       draws: int = 1000, seed: int = 1729,
-                       weights: np.ndarray | None = None) -> list[float]:
-    months = np.array(sorted(pd.to_datetime(frame["target_month"], utc=True).unique()))
-    by_month = {month: np.flatnonzero(pd.to_datetime(frame["target_month"], utc=True).to_numpy() == month)
-                for month in months}
-    if not len(months):
-        return []
+def month_block_scores(frame, errors, *, block_months=12, draws=1000, seed=1729):
+    """Area-weighted loss for the observed sample and each joint month resample."""
+    codes, months = pd.factorize(frame["target_month"], sort=True)
+    weights = frame["area_weight"].to_numpy(dtype=float)
+    per_month = np.bincount(codes, weights=weights)
+    losses = np.column_stack([np.bincount(codes, weights=weights * error) for error in errors])
+    if len(months) < 2:
+        return losses.sum(axis=0) / per_month.sum(), None
     rng = np.random.default_rng(seed)
-    row_weights = np.ones(len(frame)) if weights is None else np.asarray(weights, dtype=float)
-    results = []
-    block_count = max(1, int(np.ceil(len(months) / block_months)))
-    for _ in range(draws):
-        starts = rng.integers(0, len(months), size=block_count)
-        selected_months = [months[(start + offset) % len(months)]
-                           for start in starts for offset in range(block_months)][:len(months)]
-        indices = np.concatenate([by_month[month] for month in selected_months])
-        local_weights = row_weights[indices]
-        results.append(float(np.average(values[indices], weights=local_weights)))
-    return results
+    shape = (draws, int(np.ceil(len(months) / block_months)), 1)
+    starts = rng.integers(0, len(months), size=shape)
+    sampled = ((starts + np.arange(block_months)) % len(months)).reshape(draws, -1)[:, :len(months)]
+    return losses.sum(axis=0) / per_month.sum(), (
+        losses[sampled].sum(axis=1) / per_month[sampled].sum(axis=1)[:, None])
+
+
+def _block_differences(frame: pd.DataFrame, values: np.ndarray, *, seed: int = 1729) -> list[float]:
+    observed, draws = month_block_scores(frame, [values], seed=seed)
+    return draws[:, 0].tolist() if draws is not None else [float(observed[0])]
 
 
 def _paired_rmse_interval(frame: pd.DataFrame, actual: np.ndarray, predicted: np.ndarray,
-                          baseline: np.ndarray, *, block_months: int = 12,
-                          draws: int = 1000, seed: int = 1729) -> list[float | None]:
-    month_values = pd.to_datetime(frame["target_month"], utc=True).to_numpy()
-    months = np.array(sorted(pd.to_datetime(frame["target_month"], utc=True).unique()))
-    grouped = {month: np.flatnonzero(month_values == month) for month in months}
-    if len(months) < 2:
+                          baseline: np.ndarray, *, seed: int = 1729) -> list[float | None]:
+    _, draws = month_block_scores(frame, [(predicted - actual) ** 2, (baseline - actual) ** 2], seed=seed)
+    if draws is None:
         return [None, None]
-    rng = np.random.default_rng(seed)
-    block_count = max(1, int(np.ceil(len(months) / block_months)))
-    differences = []
-    weights = frame["area_weight"].to_numpy(dtype=float)
-    for _ in range(draws):
-        starts = rng.integers(0, len(months), size=block_count)
-        selected = [months[(start + offset) % len(months)]
-                    for start in starts for offset in range(block_months)][:len(months)]
-        indices = np.concatenate([grouped[month] for month in selected])
-        sampled_weights = weights[indices]
-        sampled_weights = sampled_weights / sampled_weights.sum()
-        model_rmse = np.sqrt(np.sum(sampled_weights * (predicted[indices] - actual[indices]) ** 2))
-        baseline_rmse = np.sqrt(np.sum(sampled_weights * (baseline[indices] - actual[indices]) ** 2))
-        differences.append(float(model_rmse - baseline_rmse))
-    return [float(np.quantile(differences, q)) for q in (0.025, 0.975)]
+    return np.quantile(np.sqrt(draws[:, 0]) - np.sqrt(draws[:, 1]), [0.025, 0.975]).tolist()
 
 
 def regression_metrics(frame: pd.DataFrame, actual: np.ndarray, predicted: np.ndarray,
@@ -105,7 +87,7 @@ def classification_metrics(frame: pd.DataFrame, actual: np.ndarray, probability:
                          "event_rate": bin_rate,
                          "n": int(mask.sum())})
     brier_diff = (p - y) ** 2 - (climate - y) ** 2
-    bootstrap = _block_differences(frame, brier_diff, seed=seed, weights=weights)
+    bootstrap = _block_differences(frame, brier_diff, seed=seed)
     interval = [float(np.quantile(bootstrap, q)) for q in (0.025, 0.975)] if bootstrap else [None, None]
     persistence_brier = None
     persistence_skill = None
@@ -115,7 +97,7 @@ def classification_metrics(frame: pd.DataFrame, actual: np.ndarray, probability:
         persistence_brier = float(np.sum(weights * (baseline - y) ** 2))
         persistence_skill = float(1 - brier / persistence_brier) if persistence_brier else None
         paired = (p - y) ** 2 - (baseline - y) ** 2
-        paired_draws = _block_differences(frame, paired, seed=seed, weights=weights)
+        paired_draws = _block_differences(frame, paired, seed=seed)
         persistence_interval = ([float(np.quantile(paired_draws, q)) for q in (0.025, 0.975)]
                                 if paired_draws else [None, None])
     calibration_fit = {"intercept": None, "slope": None}

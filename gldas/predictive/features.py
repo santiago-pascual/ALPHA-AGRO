@@ -8,6 +8,48 @@ import pandas as pd
 from .contract import VALUE_COLUMNS, validate_frame
 
 
+def _shared_release_panel(data, horizon, n_lags):
+    """Vectorized path for a balanced grid with common, ordered monthly releases."""
+    axes = data.groupby("month", sort=True)["available_at"]
+    releases = axes.first()
+    if not releases.is_monotonic_increasing or axes.nunique().ne(1).any():
+        return None
+    months = pd.DatetimeIndex(releases.index)
+    cells = data["cell_id"].nunique()
+    origin = months[:-horizon]
+    next_month = origin + pd.offsets.MonthBegin(1)
+    issue = next_month - pd.Timedelta(nanoseconds=1)
+    newest = np.minimum(pd.DatetimeIndex(releases).as_unit("ns").searchsorted(next_month.as_unit("ns"), side="left") - 1,
+                        np.arange(len(origin)))
+    rows = data.sort_values(["month", "cell_id"], kind="stable").reset_index(drop=True)
+    data_values = rows[list(VALUE_COLUMNS)].to_numpy().reshape(len(months), cells, -1)
+    targets = rows.iloc[horizon * cells:].reset_index(drop=True)
+    result = targets[["cell_id", "latitude", "longitude", "area_weight",
+                      "month", "available_at", "soil_water_mm", "soil_water_valid"]].rename(columns={
+                          "month": "target_month", "available_at": "target_available_at",
+                          "soil_water_mm": "target_soil_water_mm", "soil_water_valid": "target_valid"})
+    result["origin_month"] = origin.repeat(cells)
+    result["issue_time"] = issue.repeat(cells)
+    result["horizon_months"] = horizon
+    features = {}
+    for lag in range(n_lags):
+        selected = newest - lag
+        keep = selected >= 0
+        safe = np.maximum(selected, 0)
+        values = np.where(keep[:, None, None], data_values[safe], np.nan)
+        for i, name in enumerate(VALUE_COLUMNS):
+            features[f"{name}_lag_{lag}"] = values[:, :, i].ravel()
+        features[f"available_age_months_lag_{lag}"] = np.repeat(
+            np.where(keep, np.arange(len(origin)) - selected, np.nan), cells)
+        features[f"soil_water_source_month_lag_{lag}"] = np.repeat(
+            np.where(keep, months.month.to_numpy()[safe], np.nan), cells)
+    angle = 2 * np.pi * (months[horizon:].month.to_numpy() - 1) / 12
+    features["target_month_sin"] = np.repeat(np.sin(angle), cells)
+    features["target_month_cos"] = np.repeat(np.cos(angle), cells)
+    result = pd.concat([result, pd.DataFrame(features)], axis=1)
+    return result.loc[np.repeat(newest >= 0, cells)].reset_index(drop=True), list(features)
+
+
 def make_supervised(panel: pd.DataFrame, *, horizon: int, n_lags: int = 6) -> tuple[pd.DataFrame, list[str]]:
     """Create one row per cell and issue month; features use only released records.
 
@@ -24,6 +66,13 @@ def make_supervised(panel: pd.DataFrame, *, horizon: int, n_lags: int = 6) -> tu
     data = panel.copy()
     data["month"] = pd.to_datetime(data["month"], utc=True)
     data["available_at"] = pd.to_datetime(data["available_at"], utc=True)
+    fast = _shared_release_panel(data, horizon, n_lags)
+    if fast is not None:
+        result, columns = fast
+        result = result.loc[result["target_valid"] & result["target_soil_water_mm"].notna()].reset_index(drop=True)
+        if result.empty:
+            raise ValueError("No valid soil-water targets remain after applying release times and masks.")
+        return result, columns
     data = data.sort_values(["cell_id", "month"], kind="stable")
     by_cell = {cell: group.reset_index(drop=True) for cell, group in data.groupby("cell_id", sort=True)}
     rows: list[dict] = []
