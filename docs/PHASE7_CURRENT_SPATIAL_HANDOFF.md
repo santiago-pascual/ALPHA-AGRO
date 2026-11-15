@@ -54,3 +54,8 @@ This handoff package must be shown only in an explicitly labeled **historical de
 - Ran the complete Python suite: **121 passed, 4 subtests passed**.
 - No recent GLDAS granule bytes were retrieved; no current operational forecast was generated.
 - Frontend files were not modified. The generated 2.2 MB JSON remains in ignored `data/analysis/phase7/`; a deterministic gzip copy is provided in `artifacts/phase7/` for transfer.
+
+
+## Phase 8 2026 integration
+
+The bounded 2026 extension, current experimental bundle and validation limitations are documented in [Phase 8 integration handoff](PHASE8_2026_GLDA_INTEGRATION.md).

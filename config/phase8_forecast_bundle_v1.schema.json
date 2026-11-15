@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://alpha-agro.example/schemas/phase8_forecast_bundle_v1.schema.json",
+  "title": "Alpha Agro Phase 8 current experimental forecast bundle v1",
+  "type": "object",
+  "required": [
+    "schema_version", "status", "classification", "operationally_eligible", "issue_time",
+    "source_dataset", "model", "target", "latest_available_observation_month", "input_observation_cutoff",
+    "availability", "temporal_convention", "regional_forecasts", "spatial_forecasts", "validation", "limitations"
+  ],
+  "properties": {
+    "schema_version": {"const": "phase8_forecast_bundle_v1"},
+    "status": {"const": "experimental"},
+    "classification": {"type": "string", "minLength": 1},
+    "operationally_eligible": {"const": false},
+    "issue_time": {"type": "string", "format": "date-time"},
+    "source_dataset": {"type": "object", "required": ["product", "collection", "doi", "historical_panel_sha256", "extended_spatial_panel_sha256", "extended_regional_panel_sha256", "extension_manifest_sha256", "phase5b_evaluation_sha256"]},
+    "model": {"type": "object", "required": ["name", "version", "selection_evidence"], "properties": {"name": {"const": "seasonal_climatology"}}},
+    "target": {"type": "object", "required": ["name", "variable", "units", "definition"], "properties": {"variable": {"const": "soil_water_mm"}, "units": {"const": "mm"}}},
+    "latest_available_observation_month": {"type": "string", "pattern": "^2026-(0[1-9]|1[0-2])$"},
+    "input_observation_cutoff": {"type": "string", "format": "date-time"},
+    "availability": {"type": "object", "required": ["policy", "local_verified_at", "provider_first_publication_time_verified", "latency_days", "near_real_time"], "properties": {"provider_first_publication_time_verified": {"const": false}, "near_real_time": {"const": false}, "latency_days": {"type": "integer", "minimum": 0}}},
+    "temporal_convention": {"type": "object", "required": ["issue_month", "horizon_semantics", "target_months"], "properties": {"issue_month": {"const": "2026-11"}, "target_months": {"const": ["2026-12", "2027-01", "2027-02"]}}},
+    "regional_forecasts": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"type": "object", "required": ["schema_version", "status", "issue_time", "target_month", "horizon_months", "scope", "target", "model", "value", "units", "predictive_interval", "availability", "calibration", "out_of_sample", "source"], "properties": {"schema_version": {"const": "forecast_v1"}, "status": {"const": "experimental"}, "target": {"const": "storage"}, "horizon_months": {"enum": [1, 2, 3]}, "units": {"const": "mm"}, "predictive_interval": {"properties": {"lower": {"minimum": 0}, "upper": {"maximum": 1000}}}, "availability": {"properties": {"operationally_eligible": {"const": false}}}}}},
+    "spatial_forecasts": {"type": "object", "required": ["grid_cells", "eligible_cells", "masked_cells", "spatial_resolution_degrees", "uncertainty_note", "forecasts"], "properties": {"grid_cells": {"const": 896}, "eligible_cells": {"type": "integer", "minimum": 1, "maximum": 896}, "masked_cells": {"type": "integer", "minimum": 0, "maximum": 895}, "spatial_resolution_degrees": {"const": 0.25}, "forecasts": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"$ref": "#/$defs/spatialForecast"}}}},
+    "validation": {"type": "object", "required": ["status", "chronological_holdout", "training_target_cutoffs_by_horizon", "calibration_cutoffs_by_horizon", "no_future_target_data_used", "regional_spatial_consistency"], "properties": {"no_future_target_data_used": {"const": true}}},
+    "limitations": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+  },
+  "$defs": {
+    "spatialForecast": {
+      "type": "object",
+      "required": ["horizon_months", "target_month", "target", "units", "model", "calibration", "holdout", "regional_spatial_weighted_mean_mm", "cells"],
+      "properties": {
+        "horizon_months": {"enum": [1, 2, 3]},
+        "target_month": {"type": "string", "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"},
+        "target": {"const": "storage"},
+        "units": {"const": "mm"},
+        "model": {"const": "seasonal_climatology"},
+        "calibration": {"type": "object", "required": ["weighted_abs_residual_radius_mm", "nominal_level", "per_cell_guarantee"], "properties": {"nominal_level": {"const": 0.9}, "per_cell_guarantee": {"const": false}}},
+        "holdout": {"type": "object", "required": ["period", "metrics"]},
+        "regional_spatial_weighted_mean_mm": {"type": "number"},
+        "cells": {"type": "array", "minItems": 896, "maxItems": 896, "items": {"$ref": "#/$defs/cell"}}
+      }
+    },
+    "cell": {
+      "type": "object",
+      "required": ["cell_id", "latitude", "longitude", "area_m2", "valid", "value", "units", "predictive_interval", "climatological_reference_mm", "anomaly_mm"],
+      "properties": {
+        "cell_id": {"type": "string", "minLength": 1},
+        "latitude": {"type": "number", "minimum": -38, "maximum": -30},
+        "longitude": {"type": "number", "minimum": -64, "maximum": -57},
+        "area_m2": {"type": "number", "exclusiveMinimum": 0},
+        "valid": {"type": "boolean"},
+        "value": {"type": ["number", "null"]},
+        "units": {"enum": ["mm", null]},
+        "predictive_interval": {"type": ["object", "null"], "required": ["level", "lower", "upper", "method"], "properties": {"level": {"const": 0.9}, "lower": {"type": "number", "minimum": 0}, "upper": {"type": "number", "maximum": 1000}, "method": {"type": "string"}}},
+        "climatological_reference_mm": {"type": ["number", "null"]},
+        "anomaly_mm": {"type": ["number", "null"]}
+      },
+      "allOf": [
+        {"if": {"properties": {"valid": {"const": true}}, "required": ["valid"]}, "then": {"properties": {"value": {"type": "number"}, "units": {"const": "mm"}, "predictive_interval": {"type": "object"}, "climatological_reference_mm": {"type": "number"}, "anomaly_mm": {"type": "number"}}}, "else": {"properties": {"value": {"type": "null"}, "units": {"type": "null"}, "predictive_interval": {"type": "null"}, "climatological_reference_mm": {"type": "null"}, "anomaly_mm": {"type": "null"}}}}
+      ]
+    }
+  }
+}
