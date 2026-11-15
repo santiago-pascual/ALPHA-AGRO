@@ -37,5 +37,14 @@ Automated tests use a schema-valid synthetic fixture under `src/data/__fixtures_
 
 - Overview: regional trend, HAC interval and p-value, coverage, cell-level map, date-filtered monthly storage/anomalies, and cautious crop context.
 - Methods & data: GLDAS variables and units, coverage rules, trend methods, provenance, and limits.
+- Predictive research: versioned historical evaluation artifact loader, regional/spatial, horizon and target filters, walk-forward/holdout comparison, baseline skill, score-difference intervals, and explicit separation from future forecasts. The screen remains empty when the evaluation JSON is absent.
+
+## Predictive evaluation integration
+
+The data-holding PC must provide `predictive_evaluation_v1.json` at `frontend/public/data/predictive_evaluation_v1.json`. Use the exact contract and engine mapping notes in [docs/PREDICTIVE_EVALUATION_V1.md](docs/PREDICTIVE_EVALUATION_V1.md). The current Python evaluator produces spatial fold records only; the artifact must also contain separately evaluated regional mean results, provenance hashes and pre-holdout model selection derived only from walk-forward data. Do not fill missing fields with synthetic values. This JSON is ignored by Git.
+
+The page labels the best candidate on the untouched holdout as descriptive only. Its 95% intervals describe score differences against a baseline, not uncertainty intervals for a future prediction. The separate Forecast Explorer is disabled until a validated, operationally defined `forecast_v1.json` exists. `forecast_v1.json` and the evaluation artifact are both ignored by Git.
+
+Component and adapter tests use a fixture explicitly marked **TEST ONLY — SYNTHETIC**. It is never imported into application runtime code.
 
 The map uses free OpenStreetMap tiles with visible attribution. It requires an internet connection for basemap tiles; the dashboard data itself does not call a paid API or require credentials. Regional GLDAS fields are modeled data and do not establish field conditions, crop yield, or damage.
