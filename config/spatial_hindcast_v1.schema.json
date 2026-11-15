@@ -1,0 +1,348 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GLDAS spatial hindcast v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "status",
+    "operationally_eligible",
+    "issue_time",
+    "source",
+    "model",
+    "results"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "spatial_hindcast_v1"
+    },
+    "status": {
+      "const": "retrospective_simulation"
+    },
+    "operationally_eligible": {
+      "const": false
+    },
+    "issue_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "parquet_sha256",
+        "grid_count",
+        "pilot_subset",
+        "release_lag_months"
+      ],
+      "properties": {
+        "parquet_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "grid_count": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 896
+        },
+        "pilot_subset": {
+          "type": "boolean"
+        },
+        "release_lag_months": {
+          "const": 5
+        }
+      }
+    },
+    "model": {
+      "type": "object",
+      "required": [
+        "id",
+        "version"
+      ],
+      "properties": {
+        "id": {
+          "const": "seasonal_climatology"
+        },
+        "version": {
+          "const": "spatial-research-v1"
+        }
+      }
+    },
+    "results": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "$ref": "#/$defs/series"
+      }
+    }
+  },
+  "$defs": {
+    "series": {
+      "type": "object",
+      "required": [
+        "horizon_months",
+        "target",
+        "target_month",
+        "units",
+        "availability",
+        "calibration",
+        "holdout",
+        "cells"
+      ],
+      "properties": {
+        "horizon_months": {
+          "enum": [
+            1,
+            2,
+            3
+          ]
+        },
+        "target": {
+          "enum": [
+            "storage",
+            "anomaly",
+            "low_moisture"
+          ]
+        },
+        "target_month": {
+          "type": "string",
+          "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+        },
+        "availability": {
+          "type": "object",
+          "required": [
+            "assumed",
+            "provider_publication_at",
+            "available_at",
+            "observation_end"
+          ],
+          "properties": {
+            "assumed": {
+              "const": true
+            },
+            "provider_publication_at": {
+              "type": "null"
+            },
+            "available_at": {
+              "format": "date-time"
+            },
+            "observation_end": {
+              "format": "date-time"
+            }
+          }
+        },
+        "calibration": {
+          "type": "object",
+          "required": [
+            "kind",
+            "months",
+            "labels_available_by"
+          ]
+        },
+        "holdout": {
+          "type": "object",
+          "required": [
+            "start",
+            "end",
+            "metrics"
+          ]
+        },
+        "cells": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 896,
+          "items": {
+            "$ref": "#/$defs/cell"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "target": {
+                "const": "low_moisture"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "units": {
+                "const": "probability"
+              },
+              "calibration": {
+                "properties": {
+                  "kind": {
+                    "const": "raw_probability"
+                  },
+                  "calibrated": {
+                    "const": false
+                  }
+                },
+                "required": [
+                  "calibrated"
+                ]
+              },
+              "cells": {
+                "items": {
+                  "properties": {
+                    "value": {
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "interval": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "units": {
+                "const": "mm"
+              },
+              "calibration": {
+                "properties": {
+                  "kind": {
+                    "const": "pooled_spatial_residual_interval"
+                  },
+                  "per_cell_guarantee": {
+                    "const": false
+                  }
+                },
+                "required": [
+                  "per_cell_guarantee"
+                ]
+              },
+              "cells": {
+                "items": {
+                  "if": {
+                    "properties": {
+                      "valid": {
+                        "const": true
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "interval": {
+                        "type": "array"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "cell": {
+      "type": "object",
+      "required": [
+        "cell_id",
+        "latitude",
+        "longitude",
+        "area_m2",
+        "valid",
+        "value",
+        "interval",
+        "indicators"
+      ],
+      "properties": {
+        "cell_id": {
+          "type": "string"
+        },
+        "latitude": {
+          "type": "number",
+          "minimum": -38,
+          "maximum": -30
+        },
+        "longitude": {
+          "type": "number",
+          "minimum": -64,
+          "maximum": -57
+        },
+        "area_m2": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "valid": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": [
+            "null",
+            "number"
+          ]
+        },
+        "interval": {
+          "type": [
+            "null",
+            "array"
+          ],
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "indicators": {
+          "type": "object",
+          "required": [
+            "anomaly_mm",
+            "below_normal",
+            "consecutive_below_normal_months"
+          ],
+          "properties": {
+            "anomaly_mm": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "below_normal": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "consecutive_below_normal_months": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 12
+            }
+          }
+        }
+      },
+      "if": {
+        "properties": {
+          "valid": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "value": {
+            "type": "null"
+          },
+          "interval": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "value": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}
