@@ -1,5 +1,6 @@
 import type { DashboardDataset, TrendCell } from "../types";
 import { coordinateError, findEligibleCell, gridCellId, type CoordinatePoint } from "./location";
+import { readCropConfiguration, type CropConfiguration } from "./agronomy";
 
 export const SAVED_FIELDS_KEY = "alpha-agro.saved-fields.v1";
 const STORAGE_VERSION = 1;
@@ -10,6 +11,7 @@ export type SavedField = CoordinatePoint & {
   gridCellId: string | null;
   createdAt: string;
   description?: string;
+  cropConfiguration?: CropConfiguration;
 };
 export type SavedFieldStore = { fields: SavedField[]; activeFieldId: string | null; warning: string | null };
 type StorageLike = Pick<Storage, "getItem" | "setItem">;
@@ -32,6 +34,7 @@ function parseField(value: unknown): SavedField | null {
     id: row.id, name: row.name.trim(), latitude: point.latitude, longitude: point.longitude,
     gridCellId: row.gridCellId as string | null, createdAt: new Date(row.createdAt).toISOString(),
     ...(typeof row.description === "string" && row.description.trim() ? { description: row.description.trim() } : {}),
+    ...(readCropConfiguration(row.cropConfiguration) ? { cropConfiguration: readCropConfiguration(row.cropConfiguration)! } : {}),
   };
 }
 
@@ -67,7 +70,7 @@ export function writeSavedFieldStore(store: SavedFieldStore, storage: StorageLik
 }
 
 export function createSavedField(input: {
-  name: string; point: CoordinatePoint; dataset: DashboardDataset | null; description?: string; now?: Date; id?: string;
+  name: string; point: CoordinatePoint; dataset: DashboardDataset | null; description?: string; cropConfiguration?: CropConfiguration; now?: Date; id?: string;
 }): SavedField {
   const name = input.name.trim();
   if (!name || name.length > 80) throw new Error("Ingresá un nombre de hasta 80 caracteres. / Enter a name up to 80 characters.");
@@ -75,13 +78,15 @@ export function createSavedField(input: {
   if (issue) throw new Error(issue);
   if (input.description && input.description.length > 400) throw new Error("La descripción debe tener 400 caracteres o menos. / Description must be 400 characters or fewer.");
   const eligibleCell: TrendCell | null = input.dataset ? findEligibleCell(input.point, input.dataset.cells, input.dataset.resolutionDegrees) : null;
-  if (input.dataset && !eligibleCell) throw new Error("Este punto no está dentro de una celda histórica elegible. / This point is outside the eligible historical grid.");
   const id = input.id ?? (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `field-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
   return {
     id, name, latitude: input.point.latitude, longitude: input.point.longitude,
+    // Keep the farmer's reference point even when the scientific grid does not cover it.
+    // A null cell ID is an explicit unsupported state, never an extrapolated forecast.
     gridCellId: eligibleCell && input.dataset ? gridCellId(eligibleCell) : null,
     createdAt: (input.now ?? new Date()).toISOString(),
     ...(input.description?.trim() ? { description: input.description.trim() } : {}),
+    ...(input.cropConfiguration ? { cropConfiguration: input.cropConfiguration } : {}),
   };
 }
 
@@ -95,6 +100,11 @@ export function renameSavedField(store: SavedFieldStore, id: string, name: strin
   if (!cleanName || cleanName.length > 80) throw new Error("Ingresá un nombre de hasta 80 caracteres. / Enter a name up to 80 characters.");
   if (!store.fields.some((field) => field.id === id)) return store;
   return { ...store, fields: store.fields.map((field) => field.id === id ? { ...field, name: cleanName } : field), warning: null };
+}
+
+export function updateSavedFieldConfiguration(store: SavedFieldStore, id: string, cropConfiguration: CropConfiguration): SavedFieldStore {
+  if (!store.fields.some((field) => field.id === id)) return store;
+  return { ...store, fields: store.fields.map((field) => field.id === id ? { ...field, cropConfiguration } : field), warning: null };
 }
 
 export function selectSavedField(store: SavedFieldStore, id: string | null): SavedFieldStore {

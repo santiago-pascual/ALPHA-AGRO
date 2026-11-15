@@ -3,6 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PredictiveResearchPage } from "./PredictiveResearch";
 import { predictiveEvaluationFixture } from "../data/__fixtures__/predictiveEvaluation.fixture";
+import { I18nProvider } from "../i18n";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 let root: Root | undefined;
@@ -19,7 +20,7 @@ describe("PredictiveResearchPage", () => {
     const container = document.createElement("div");
     document.body.append(container);
     root = createRoot(container);
-    await act(async () => { root?.render(<PredictiveResearchPage />); await new Promise((resolve) => setTimeout(resolve, 0)); });
+    await act(async () => { root?.render(<I18nProvider><PredictiveResearchPage /></I18nProvider>); await new Promise((resolve) => setTimeout(resolve, 0)); });
     expect(container.textContent).toContain("TEST ONLY — SYNTHETIC FIXTURE");
     expect(container.textContent).toContain("Predictive research");
     expect(container.textContent).toContain("Pre-holdout selection");
@@ -38,7 +39,7 @@ describe("PredictiveResearchPage", () => {
     const container = document.createElement("div");
     document.body.append(container);
     root = createRoot(container);
-    await act(async () => { root?.render(<PredictiveResearchPage />); await new Promise((resolve) => setTimeout(resolve, 0)); });
+    await act(async () => { root?.render(<I18nProvider><PredictiveResearchPage /></I18nProvider>); await new Promise((resolve) => setTimeout(resolve, 0)); });
     expect(container.textContent).toContain("Historical evaluation unavailable");
     expect(container.textContent).toContain("predictive_evaluation_v1.json");
     expect(container.textContent).not.toContain("999");

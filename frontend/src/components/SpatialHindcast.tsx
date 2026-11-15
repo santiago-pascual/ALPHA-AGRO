@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useI18n } from "../i18n";
 
 type Indicator = { anomaly_mm: number | null; below_normal: boolean | null; consecutive_below_normal_months: number | null };
 type Cell = { cell_id: string; latitude: number; longitude: number; area_m2: number; valid: boolean;
@@ -86,8 +87,9 @@ function display(value: number | null | undefined, probability: boolean) {
 }
 
 export function SpatialHindcast() {
+  const { language } = useI18n();
   const [artifact, setArtifact] = useState<Artifact>();
-  const [message, setMessage] = useState("Loading historical spatial hindcasts…");
+  const [status, setStatus] = useState<"loading" | "error">("loading");
   const [horizon, setHorizon] = useState(1);
   const [target, setTarget] = useState("storage");
   const [cell, setCell] = useState("");
@@ -99,7 +101,7 @@ export function SpatialHindcast() {
         return readSpatialHindcast(await response.json());
       })
       .then((value) => { if (active) setArtifact(value); },
-            () => { if (active) setMessage("No validated spatial hindcast is available."); });
+            () => { if (active) setStatus("error"); });
     return () => { active = false; };
   }, []);
   const series = artifact?.results.find((item) => item.horizon_months === horizon && item.target === target);
@@ -112,8 +114,8 @@ export function SpatialHindcast() {
   const mean = area ? valid.reduce((sum, item) => sum + (item.value ?? 0) * item.area_m2, 0) / area : null;
   const probability = target === "low_moisture";
   return <section className="panel phase7-hindcast" aria-labelledby="hindcast-title">
-    <h2 id="hindcast-title">Historical Spatial Hindcast — Experimental</h2>
-    {!artifact || !series ? <p role="status">{message}</p> : <>
+    <h2 id="hindcast-title">{language === "es" ? "Hindcast espacial histórico · experimental" : "Historical Spatial Hindcast — Experimental"}</h2>
+    {!artifact || !series ? <p role="status">{status === "loading" ? (language === "es" ? "Cargando hindcasts espaciales históricos…" : "Loading historical spatial hindcasts…") : (language === "es" ? "No hay un hindcast espacial validado disponible." : "No validated spatial hindcast is available.")}</p> : <>
       <div className="phase7-controls">
         <label>Target <select value={target} onChange={(event) => setTarget(event.target.value)}>
           {Object.entries(targets).map(([id, name]) => <option key={id} value={id}>{name}</option>)}

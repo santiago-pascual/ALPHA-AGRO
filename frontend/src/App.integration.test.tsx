@@ -42,7 +42,7 @@ async function openObservatory() {
     root?.render(<App />);
   });
   const dashboardButton = Array.from(container.querySelectorAll("button")).find((button) =>
-    button.textContent?.includes("Explore Observatory"),
+    button.textContent?.includes("Open Observatory"),
   );
   if (!dashboardButton) throw new Error("Explore Observatory control not found.");
   await act(async () => {
@@ -68,21 +68,37 @@ describe("dashboard real-data integration", () => {
     expect(container.textContent).toContain("Alpha Agro");
     expect(container.textContent).toContain("From Earth data");
     expect(container.textContent).toContain("to agricultural insight.");
-    expect(container.querySelector("#landing-title")?.textContent).toContain("Inteligencia de la Tierra");
+    expect(container.querySelector("#landing-title")?.textContent).toContain("Advanced Earth intelligence");
     expect(container.textContent).toContain("Marcos Paz");
-    expect(container.textContent).toContain("productor de soja");
-    expect(container.textContent).toContain("no llegó a completar la secundaria");
-    expect(container.textContent).toContain("no hay pronósticos operativos disponibles");
-    expect(container.textContent).toContain("El futuro del agro no debería depender del tamaño del campo.");
-    expect(container.querySelector('[lang="en"]')?.textContent).toContain("Advanced Earth intelligence");
+    expect(container.textContent).toContain("soybean farmer in Marcos Paz");
+    expect(container.textContent).toContain("did not complete secondary school");
+    expect(container.textContent).toContain("does not yet offer operational forecasts");
+    expect(container.textContent).toContain("The future of agriculture should not depend on the size of your farm.");
     expect(container.textContent?.toLowerCase()).toContain("quant alpha");
     expect(container.textContent).toContain("Be An Earth System Trend Detective!");
     expect(container.textContent).toContain("validated scientific artifacts only");
     expect(container.textContent).not.toContain("Fictitious demonstration values.");
     const missionCta = container.querySelector<HTMLButtonElement>(".landing-mission-cta button");
-    expect(missionCta?.textContent).toContain("Explore Observatory");
+    expect(missionCta?.textContent).toContain("Open Observatory");
     await act(async () => missionCta?.dispatchEvent(new MouseEvent("click", { bubbles: true })));
     expect(container.querySelector("h1")?.textContent).toContain("Earth System Observatory");
+  });
+
+  it("defaults to English and switches the primary application navigation into Spanish", async () => {
+    const container = document.createElement("div"); document.body.append(container); root = createRoot(container);
+    await act(async () => { root?.render(<App />); });
+    expect(document.documentElement.lang).toBe("en");
+    expect(container.querySelector(".landing-nav-cta")?.textContent).toContain("Open Observatory");
+    const spanish = container.querySelector<HTMLButtonElement>("button[aria-label='Spanish']");
+    await act(async () => { spanish?.dispatchEvent(new MouseEvent("click", { bubbles: true })); });
+    expect(document.documentElement.lang).toBe("es");
+    expect(container.querySelector(".landing-nav-cta")?.textContent).toContain("Abrir el Observatorio");
+    expect(window.localStorage.getItem("alpha-agro.language.v1")).toBe("es");
+    const openObservatory = Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Abrir el Observatorio"));
+    await act(async () => { openObservatory?.dispatchEvent(new MouseEvent("click", { bubbles: true })); await new Promise((resolve) => setTimeout(resolve, 0)); });
+    expect(container.querySelector("h1")?.textContent).toContain("Observatorio del sistema terrestre");
+    expect(container.textContent).toContain("PERÍODO DE ANÁLISIS");
+    expect(container.textContent).toContain("DATOS REALES NO DISPONIBLES");
   });
 
   it("guides visitors through the seven scientific demo steps without inventing relationships", async () => {
@@ -151,9 +167,12 @@ describe("dashboard real-data integration", () => {
     const forecastButton = Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Forecast"));
     if (!forecastButton) throw new Error("Forecast navigation control not found.");
     await act(async () => forecastButton.dispatchEvent(new MouseEvent("click", { bubbles: true })));
-    expect(container.querySelector("h1")?.textContent).toContain("Pronóstico y disponibilidad");
-    expect(container.textContent).toContain("NOT OPERATIONALLY ELIGIBLE");
-    expect(container.textContent).toContain("Historical evaluations are never substituted.");
+    expect(container.querySelector("h1")?.textContent).toContain("Forecast availability");
+    expect(container.querySelector(".forecast-results")).toBeNull();
+    const generate = Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Generate forecast"));
+    if (!generate) throw new Error("Generate forecast action not found.");
+    await act(async () => generate.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(container.textContent).toContain("Select a supported field location first.");
     expect(container.textContent).not.toContain("999");
   });
 
@@ -177,8 +196,8 @@ describe("dashboard real-data integration", () => {
     const data = adaptTrendAnalysis(trendAnalysisFixture);
     const cell = data.cells[0];
     const fields = [
-      { id: "field-a", name: "Campo A", latitude: cell.latitude, longitude: cell.longitude, gridCellId: gridCellId(cell), createdAt: "2026-11-15T12:00:00.000Z" },
-      { id: "field-b", name: "Campo B", latitude: cell.latitude, longitude: cell.longitude, gridCellId: gridCellId(cell), createdAt: "2026-11-15T12:01:00.000Z" },
+      { id: "field-a", name: "Campo A", latitude: cell.latitude, longitude: cell.longitude, gridCellId: gridCellId(cell), cropConfiguration: { crop: "wheat", growthStage: "vegetative", waterManagement: "irrigated" }, createdAt: "2026-11-15T12:00:00.000Z" },
+      { id: "field-b", name: "Campo B", latitude: cell.latitude, longitude: cell.longitude, gridCellId: gridCellId(cell), cropConfiguration: { crop: "maize", growthStage: "reproductive", waterManagement: "rainfed" }, createdAt: "2026-11-15T12:01:00.000Z" },
     ];
     window.localStorage.setItem(SAVED_FIELDS_KEY, JSON.stringify({ version: 1, fields, activeFieldId: "field-a" }));
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => trendAnalysisFixture }));
@@ -188,11 +207,14 @@ describe("dashboard real-data integration", () => {
     if (!forecastButton) throw new Error("Forecast navigation control not found.");
     await act(async () => forecastButton.dispatchEvent(new MouseEvent("click", { bubbles: true })));
     expect(container.textContent).toContain("Campo A");
-    expect(container.textContent).toContain("These fields share the same satellite-model grid cell");
+    expect(container.querySelector<HTMLSelectElement>("select[aria-label='Crop']")?.value).toBe("wheat");
+    expect(container.textContent).toContain("These points share one GLDAS model grid cell");
     const second = Array.from(container.querySelectorAll(".saved-field-select")).find((button) => button.textContent?.includes("Campo B"));
     if (!second) throw new Error("Second saved field not found.");
     await act(async () => second.dispatchEvent(new MouseEvent("click", { bubbles: true })));
     expect(JSON.parse(window.localStorage.getItem(SAVED_FIELDS_KEY) ?? "{}").activeFieldId).toBe("field-b");
+    expect(container.querySelector<HTMLSelectElement>("select[aria-label='Crop']")?.value).toBe("maize");
+    expect(container.querySelector<HTMLSelectElement>("select[aria-label='Growth stage']")?.value).toBe("reproductive");
     expect(container.textContent).toContain("Saved map marker: Campo B");
   });
 });

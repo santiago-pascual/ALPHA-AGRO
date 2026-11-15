@@ -1,12 +1,15 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CircleHelp, Layers3, MapPin } from "lucide-react";
 import { divIcon } from "leaflet";
-import { Circle, MapContainer, Marker, Popup, Rectangle, ScaleControl, TileLayer, Tooltip, useMapEvents } from "react-leaflet";
+import { Circle, MapContainer, Marker, Popup, Rectangle, ScaleControl, TileLayer, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import type { CoordinatePoint, SelectedLocation } from "../data/location";
 import type { DashboardDataset, TrendCell } from "../types";
 import type { SavedField } from "../data/fields";
+import { useI18n } from "../i18n";
 
 export type RegionSelection = "all" | "north" | "south" | "west" | "east";
+export type FieldMapMode = "road" | "satellite" | "hybrid";
+export const FIELD_SELECTION_GRID_DEFAULT_VISIBLE = false;
 
 type TrendMapProps = {
   dataset: DashboardDataset;
@@ -35,13 +38,15 @@ export function MapClickHandler({ onSelect }: { onSelect?: (point: CoordinatePoi
   return null;
 }
 
-const regionLabels: Record<RegionSelection, string> = {
-  all: "Study area",
-  north: "Northern Pampas",
-  south: "Southern Pampas",
-  west: "Western Pampas",
-  east: "Eastern Pampas",
-};
+export function SelectedLocationMapSync({ location, enabled }: { location: SelectedLocation | null; enabled: boolean }) {
+  const map = useMap();
+  useEffect(() => {
+    if (enabled && location && location.source !== "map") {
+      map.flyTo([location.latitude, location.longitude], Math.max(map.getZoom(), 8), { animate: false });
+    }
+  }, [enabled, location?.latitude, location?.longitude, location?.source, map]);
+  return null;
+}
 
 function trendColor(value: number | null) {
   if (value === null) return "#596366";
@@ -77,18 +82,22 @@ function isInRegion(cell: TrendCell, region: RegionSelection) {
 }
 
 export function TrendMap({ dataset, region, onRegionChange, selectedLocation = null, onLocationSelect, selectionMode = false, savedFields = [], activeSavedFieldId = null }: TrendMapProps) {
+  const { t, formatNumber } = useI18n();
+  const regionLabels: Record<RegionSelection, string> = { all: t("regionStudy"), north: t("regionNorth"), south: t("regionSouth"), west: t("regionWest"), east: t("regionEast") };
   const [selectedCell, setSelectedCell] = useState<TrendCell | null>(null);
-  const visibleCells = useMemo(() => dataset.cells, [dataset.cells]);
+  const [showScientificGrid, setShowScientificGrid] = useState(FIELD_SELECTION_GRID_DEFAULT_VISIBLE);
+  const [fieldMapMode, setFieldMapMode] = useState<FieldMapMode>("road");
+  const visibleCells = useMemo(() => selectionMode && !showScientificGrid ? [] : dataset.cells, [dataset.cells, selectionMode, showScientificGrid]);
 
   return (
     <section className="panel map-panel" aria-labelledby="map-title">
       <div className="panel-heading map-heading">
         <div>
-            <div className="eyebrow">{selectionMode ? "COBERTURA HISTÓRICA VALIDADA · VALIDATED SUPPORT" : "Spatial pattern"}</div>
-            <h2 id="map-title">{selectionMode ? "Elegí un punto · Select a reference point" : "Cell-level trend"}</h2>
+            <div className="eyebrow">{selectionMode ? t("fieldMapEyebrow") : t("mapSpatial")}</div>
+            <h2 id="map-title">{selectionMode ? t("selectFieldLocationMap") : t("cellTrend")}</h2>
         </div>
         {!selectionMode && <label className="select-wrap compact-select">
-          <span className="sr-only">Select Pampas subregion</span>
+          <span className="sr-only">{t("selectSubregion")}</span>
           <MapPin size={14} aria-hidden="true" />
           <select
             value={region}
@@ -97,34 +106,44 @@ export function TrendMap({ dataset, region, onRegionChange, selectedLocation = n
               setSelectedCell(null);
             }}
           >
-            <option value="all">Study area</option>
-            <option value="north">Northern Pampas</option>
-            <option value="south">Southern Pampas</option>
-            <option value="west">Western Pampas</option>
-            <option value="east">Eastern Pampas</option>
+            <option value="all">{t("regionStudy")}</option>
+            <option value="north">{t("regionNorth")}</option>
+            <option value="south">{t("regionSouth")}</option>
+            <option value="west">{t("regionWest")}</option>
+            <option value="east">{t("regionEast")}</option>
           </select>
         </label>}
       </div>
+      {selectionMode && <div className="field-map-toolbar">
+        <div className="field-map-mode" role="group" aria-label={t("mapLayerSelector")}>
+          <button type="button" aria-pressed={fieldMapMode === "road"} onClick={() => setFieldMapMode("road")}>{t("mapRoad")}</button>
+          <button type="button" disabled title={t("satelliteUnavailable")}>{t("mapSatellite")}</button>
+          <button type="button" disabled title={t("satelliteUnavailable")}>{t("mapHybrid")}</button>
+        </div>
+        <span className="field-map-provider-note" role="status">{t("satelliteUnavailable")}</span>
+        <label className="scientific-grid-toggle"><input type="checkbox" checked={showScientificGrid} onChange={(event) => setShowScientificGrid(event.target.checked)} />{t("showScientificGrid")}</label>
+      </div>}
       <div className="map-meta">
-        <span><span className="live-dot" /> {dataset.eligibleCells} / {dataset.gridCells} cells with trend estimates · {dataset.resolutionDegrees}° grid</span>
-        <span>{selectionMode ? "Elegí una celda elegible para ubicar el marcador. / Click an eligible cell to place a marker." : "Argentine Pampas · analysis grid"}</span>
+        <span><span className="live-dot" /> {selectionMode ? `${dataset.eligibleCells} ${t("trendCells")}` : `${dataset.eligibleCells} / ${dataset.gridCells} ${t("trendCells")}`} · {dataset.resolutionDegrees}° grid</span>
+        <span>{selectionMode ? t("selectAnyArgentinaPoint") : t("regionName") + " · " + t("regionResolution")}</span>
       </div>
-      <div className="map-frame">
+      <div className={selectionMode ? "map-frame field-selection-frame" : "map-frame"}>
         <MapContainer
-          center={[-34.2, -60.5]}
-          zoom={6}
-          minZoom={5}
-          maxZoom={10}
+          center={selectionMode ? [-38.4161, -63.6167] : [-34.2, -60.5]}
+          zoom={selectionMode ? 4 : 6}
+          minZoom={selectionMode ? 3 : 5}
+          maxZoom={selectionMode ? 17 : 10}
           scrollWheelZoom
           zoomControl
-          className="pampas-map"
-          aria-label={selectionMode ? "Select a location on eligible Argentine Pampas analysis cells" : "Interactive map of soil-water trends across the Pampas"}
+          className={selectionMode ? "pampas-map field-selection-map" : "pampas-map"}
+          aria-label={selectionMode ? t("selectFieldLocationMap") : t("mapSpatial") + " · " + t("regionName")}
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <ScaleControl position="bottomright" imperial={false} />
+          <SelectedLocationMapSync location={selectedLocation} enabled={selectionMode} />
           <MapClickHandler onSelect={onLocationSelect} />
           {visibleCells.map((cell) => {
             const selectedRegion = isInRegion(cell, region);
@@ -147,16 +166,16 @@ export function TrendMap({ dataset, region, onRegionChange, selectedLocation = n
                 eventHandlers={{ click: () => setSelectedCell(cell) }}
               >
                 <Tooltip sticky>
-                  <strong>{cell.latitude.toFixed(2)}° · {cell.longitude.toFixed(2)}°</strong>
+                  <strong>{formatNumber(cell.latitude, { maximumFractionDigits: 2 })}° · {formatNumber(cell.longitude, { maximumFractionDigits: 2 })}°</strong>
                   <br />
                   {cell.slopePerDecade === null
-                    ? "No trend estimate"
+                    ? t("noTrendEstimate")
                     : (cell.slopePerDecade > 0 ? "+" : "") +
-                      cell.slopePerDecade.toFixed(1) + " mm / decade"}
+                      formatNumber(cell.slopePerDecade, { maximumFractionDigits: 1 }) + " mm / decade"}
                   <br />
                   {dataset.mode === "demo"
-                    ? "DEMO significance flag · synthetic"
-                    : cell.significant ? "FDR-adjusted: significant" : "FDR-adjusted: not significant"}
+                    ? t("demoSignificance")
+                    : cell.significant ? t("fdrSignificant") : t("fdrNotSignificant")}
                 </Tooltip>
               </Rectangle>
             );
@@ -166,61 +185,61 @@ export function TrendMap({ dataset, region, onRegionChange, selectedLocation = n
             radius={selectedLocation.accuracyMeters}
             pathOptions={{ color: "#f2d99d", weight: 1, fillColor: "#f2d99d", fillOpacity: 0.12 }}
           />}
-          {savedFields.map((field) => <Marker key={`saved:${field.id}`} position={[field.latitude, field.longitude]} icon={locationIcon} title={`Saved field: ${field.name}`} alt={`Saved field ${field.name}`}>
-            <Popup>{field.name} · punto de referencia, no perímetro ni medición del lote. / Reference point, not a farm boundary or field measurement.</Popup>
-            <Tooltip>{field.name}{field.id === activeSavedFieldId ? " · activo / active" : ""}</Tooltip>
+          {savedFields.map((field) => <Marker key={`saved:${field.id}`} position={[field.latitude, field.longitude]} icon={locationIcon} title={`${t("savedField")}: ${field.name}`} alt={`${t("savedField")} ${field.name}`}>
+            <Popup>{field.name} · {t("referencePoint")}</Popup>
+            <Tooltip>{field.name}{field.id === activeSavedFieldId ? " · " + t("activeField") : ""}</Tooltip>
           </Marker>)}
           {selectedLocation && !savedFields.some((field) => field.id === activeSavedFieldId) && <Marker
             position={[selectedLocation.latitude, selectedLocation.longitude]}
             icon={locationIcon}
-            title="Selected field location"
-            alt="Selected field location"
+            title={t("selectedLocation")}
+            alt={t("selectedLocation")}
           >
-            <Popup>Selected location · {selectedLocation.source === "gps" ? "browser GPS" : selectedLocation.source === "map" ? "map" : "manual entry"}</Popup>
+            <Popup>{t("selectedLocation")} · {selectedLocation.source === "gps" ? t("browserGps") : selectedLocation.source === "map" ? t("mapSource") : t("manualEntry")}</Popup>
           </Marker>}
         </MapContainer>
-        <div className="map-overlay map-overlay-top">
+        {(!selectionMode || showScientificGrid) && <div className="map-overlay map-overlay-top">
           <Layers3 size={14} aria-hidden="true" />
-          <span>Linear trend</span>
-        </div>
+          <span>{selectionMode ? t("scientificGrid") : t("linearTrend")}</span>
+        </div>}
         <div className="map-overlay map-overlay-bottom" aria-hidden="true">N ↑</div>
       </div>
-      <div className="map-legend" role="list" aria-label="Cell-level trend, millimeters per decade">
+      {(!selectionMode || showScientificGrid) && <div className="map-legend" role="list" aria-label={t("legendLabel")}>
         {trendLegend.map((item) => <span className="map-legend-item" role="listitem" key={item.label}>
           <i aria-hidden="true" style={{ backgroundColor: item.color }} />
-          <span>{item.label}</span>
+          <span>{item.label === "No estimate" ? t("noEstimate") : item.label}</span>
         </span>)}
-        <span className="legend-unit">mm / decade · dry ← → wet</span>
-      </div>
+        <span className="legend-unit">{t("dryWet")}</span>
+      </div>}
       <div className="map-footnote">
         <CircleHelp size={14} aria-hidden="true" />
         <span>
           {selectionMode
-            ? `Selectable footprints are cells with eligible historical trend estimates from this artifact. ${dataset.gridCells - dataset.eligibleCells} grid cells lack eligible estimates; uncovered areas are not treated as supported.`
+          ? `${showScientificGrid ? t("mapSelectionFoot") : t("fieldMapGridHidden")} ${dataset.gridCells - dataset.eligibleCells} ${t("noEstimateCoverage")}`
             : dataset.mode === "demo"
-              ? "Synthetic cell values · fictitious, for interface demonstration only."
-              : `Cell-level seasonal anomaly trends; significance uses BH-adjusted HAC p-values. ${dataset.gridCells - dataset.eligibleCells} cells have no eligible trend estimate.`}
+              ? t("mapDemoFoot")
+              : `${t("mapRealFoot")} ${dataset.gridCells - dataset.eligibleCells} ${t("noEstimateCoverage")}`}
         </span>
       </div>
-      {selectionMode && <p className="location-grid-note">GLDAS Noah es un modelo terrestre. Su grilla de {dataset.resolutionDegrees}° no es precisión GPS, una observación satelital de humedad ni el perímetro de un lote. / GLDAS Noah is a land-surface model. Its grid spacing is not GPS precision, a satellite soil-moisture observation, or a field boundary.</p>}
-      {selectedCell && (
+      {selectionMode && <p className="location-grid-note">{t("gridResolutionNote")}</p>}
+      {showScientificGrid && selectedCell && (
         <div className="selected-cell" aria-live="polite">
           <div>
-            <span className="eyebrow">Selected grid cell</span>
-            <strong>{selectedCell.latitude.toFixed(2)}° S, {Math.abs(selectedCell.longitude).toFixed(2)}° W</strong>
+            <span className="eyebrow">{t("selectedGridCell")}</span>
+            <strong>{formatNumber(Math.abs(selectedCell.latitude), { maximumFractionDigits: 2 })}° S, {formatNumber(Math.abs(selectedCell.longitude), { maximumFractionDigits: 2 })}° W</strong>
           </div>
           <div className="selected-cell-value">
             <b>
               {selectedCell.slopePerDecade === null
                 ? "—"
                 : (selectedCell.slopePerDecade > 0 ? "+" : "") +
-                  selectedCell.slopePerDecade.toFixed(1)}
+                  formatNumber(selectedCell.slopePerDecade, { maximumFractionDigits: 1 })}
             </b>
             <span>mm / decade</span>
           </div>
         </div>
       )}
-      <p className="map-region-caption">Viewing: {regionLabels[region]}</p>
+      <p className="map-region-caption">{t("viewing")}: {regionLabels[region]}</p>
     </section>
   );
 }
