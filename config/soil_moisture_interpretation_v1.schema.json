@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "soil_moisture_interpretation_v1.schema.json",
+  "title": "Alpha Agro soil moisture interpretation v1",
+  "type": "object",
+  "required": ["schema_version", "status", "provenance", "reference", "cells", "monthly_reference_statistics", "latest_observed_context", "forecast_context", "interpretation_glossary", "forecast_interpretation", "probability_summary", "agricultural_interpretation", "methodology", "limitations"],
+  "properties": {
+    "schema_version": {"const": "soil_moisture_interpretation_v1"},
+    "status": {"const": "historical_context_and_experimental_outlook"},
+    "provenance": {"type": "object", "required": ["product", "doi", "target", "units", "panel_sha256", "forecast_bundle_sha256", "mask_policy"], "properties": {"units": {"const": "mm"}, "panel_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}, "forecast_bundle_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}},
+    "reference": {"type": "object", "required": ["start", "end", "sample_size", "quantile_method", "low_moisture_definition", "historical_low_moisture_frequency"], "properties": {"start": {"const": "2006-01"}, "end": {"const": "2025-12"}}},
+    "cells": {"$ref": "#/$defs/columnarTable"},
+    "monthly_reference_statistics": {"$ref": "#/$defs/columnarTable"},
+    "latest_observed_context": {"type": "object", "required": ["observation_month", "reference_period", "anomaly_definition", "columns", "records"], "properties": {"records": {"type": "array"}, "columns": {"type": "array", "items": {"type": "string"}}}},
+    "forecast_context": {"type": "object", "required": ["columns", "records"], "properties": {"records": {"type": "array"}, "columns": {"type": "array", "items": {"type": "string"}}}},
+    "interpretation_glossary": {"type": "object", "required": ["en", "es"]},
+    "forecast_interpretation": {"type": "object", "required": ["en", "es", "probability_reason"]},
+    "probability_summary": {"type": "object", "required": ["status", "reason"], "properties": {"status": {"const": "unavailable"}}},
+    "agricultural_interpretation": {"type": "object", "required": ["scope", "en", "es", "prohibited_inferences"]},
+    "methodology": {"type": "array", "items": {"type": "string"}},
+    "limitations": {"type": "array", "items": {"type": "string"}}
+  },
+  "$defs": {"columnarTable": {"type": "object", "required": ["columns", "rows"], "properties": {"columns": {"type": "array", "items": {"type": "string"}}, "rows": {"type": "array", "items": {"type": "array"}}}}}
+}
