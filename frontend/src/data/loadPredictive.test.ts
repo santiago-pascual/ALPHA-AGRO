@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { adaptPredictiveEvaluation, loadPredictiveEvaluation } from "./loadPredictive";
 import { predictiveEvaluationFixture } from "./__fixtures__/predictiveEvaluation.fixture";
@@ -49,5 +51,16 @@ describe("loadPredictiveEvaluation", () => {
   it("keeps a missing artifact as an explicit error", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 404 }));
     await expect(loadPredictiveEvaluation()).rejects.toThrow("no model scores to display");
+  });
+});
+
+const localEvaluationArtifact = resolve(process.cwd(), "public/data/predictive_evaluation_v1.json");
+describe("optional local real evaluation artifact", () => {
+  it.skipIf(!existsSync(localEvaluationArtifact))("validates the local artifact without using holdout results for selection", () => {
+    const payload = JSON.parse(readFileSync(localEvaluationArtifact, "utf8")) as unknown;
+    const evaluation = adaptPredictiveEvaluation(payload);
+    expect(evaluation.results).toHaveLength(18);
+    expect(evaluation.results.every((result) => result.selected_model === "seasonal_climatology")).toBe(true);
+    expect(evaluation.results.every((result) => result.descriptive_holdout_model !== undefined)).toBe(true);
   });
 });
