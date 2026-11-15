@@ -1,0 +1,210 @@
+{
+  "schema_version": "smap_phase11_design_v1",
+  "collection": "C3480440870-NSIDC_CPRD",
+  "version": "008",
+  "layer": "Geophysical_Data_sm_rootzone",
+  "units": "m3 m-3",
+  "sites": [
+    {
+      "id": "san_justo",
+      "latitude": -30.761167526245117,
+      "longitude": -60.54460906982422,
+      "y_m": -3742847.1284179688,
+      "x_m": -5841724.098144531,
+      "region": "north_west"
+    },
+    {
+      "id": "rafaela",
+      "latitude": -31.253713607788086,
+      "longitude": -61.47821807861328,
+      "y_m": -3796895.4624023438,
+      "x_m": -5931804.654785156,
+      "region": "north_west"
+    },
+    {
+      "id": "san_francisco",
+      "latitude": -31.418455123901367,
+      "longitude": -62.03838348388672,
+      "y_m": -3814911.5737304688,
+      "x_m": -5985852.988769531,
+      "region": "north_west"
+    },
+    {
+      "id": "villa_maria",
+      "latitude": -32.41297149658203,
+      "longitude": -63.2520751953125,
+      "y_m": -3923008.2416992188,
+      "x_m": -6102957.712402344,
+      "region": "north_west"
+    },
+    {
+      "id": "marcos_juarez",
+      "latitude": -32.663272857666016,
+      "longitude": -62.131744384765625,
+      "y_m": -3950032.4086914062,
+      "x_m": -5994861.044433594,
+      "region": "north_west"
+    },
+    {
+      "id": "arroyo_seco",
+      "latitude": -33.165958404541016,
+      "longitude": -60.54460906982422,
+      "y_m": -4004080.7426757812,
+      "x_m": -5841724.098144531,
+      "region": "north_west"
+    },
+    {
+      "id": "venado_tuerto",
+      "latitude": -33.75602340698242,
+      "longitude": -61.94502258300781,
+      "y_m": -4067137.1323242188,
+      "x_m": -5976844.933105469,
+      "region": "north_west"
+    },
+    {
+      "id": "pergamino",
+      "latitude": -33.92534255981445,
+      "longitude": -60.54460906982422,
+      "y_m": -4085153.2436523438,
+      "x_m": -5841724.098144531,
+      "region": "north_west"
+    },
+    {
+      "id": "junin",
+      "latitude": -34.60597229003906,
+      "longitude": -60.918052673339844,
+      "y_m": -4157217.6889648438,
+      "x_m": -5877756.320800781,
+      "region": "south_west"
+    },
+    {
+      "id": "chivilcoy",
+      "latitude": -34.86261749267578,
+      "longitude": -59.984439849853516,
+      "y_m": -4184241.8559570312,
+      "x_m": -5787675.764160156,
+      "region": "south_east"
+    },
+    {
+      "id": "general_villegas",
+      "latitude": -35.03415298461914,
+      "longitude": -62.97199249267578,
+      "y_m": -4202257.967285156,
+      "x_m": -6075933.545410156,
+      "region": "south_west"
+    },
+    {
+      "id": "nueve_de_julio",
+      "latitude": -35.46455001831055,
+      "longitude": -60.918052673339844,
+      "y_m": -4247298.245605469,
+      "x_m": -5877756.320800781,
+      "region": "south_west"
+    },
+    {
+      "id": "pehuajo",
+      "latitude": -35.81050109863281,
+      "longitude": -61.94502258300781,
+      "y_m": -4283330.468261719,
+      "x_m": -5976844.933105469,
+      "region": "south_west"
+    },
+    {
+      "id": "trenque_lauquen",
+      "latitude": -35.984031677246094,
+      "longitude": -62.78527069091797,
+      "y_m": -4301346.579589844,
+      "x_m": -6057917.434082031,
+      "region": "south_west"
+    },
+    {
+      "id": "general_pico",
+      "latitude": -35.6373405456543,
+      "longitude": -63.7188835144043,
+      "y_m": -4265314.356933594,
+      "x_m": -6147997.990722656,
+      "region": "south_west"
+    },
+    {
+      "id": "bolivar",
+      "latitude": -36.245033264160156,
+      "longitude": -61.104774475097656,
+      "y_m": -4328370.746582031,
+      "x_m": -5895772.432128906,
+      "region": "south_west"
+    },
+    {
+      "id": "olavarria",
+      "latitude": -36.85740661621094,
+      "longitude": -60.357887268066406,
+      "y_m": -4391427.136230469,
+      "x_m": -5823707.986816406,
+      "region": "south_east"
+    },
+    {
+      "id": "tandil",
+      "latitude": -37.29777908325195,
+      "longitude": -59.14419174194336,
+      "y_m": -4436467.414550781,
+      "x_m": -5706603.263183594,
+      "region": "south_east"
+    },
+    {
+      "id": "balcarce",
+      "latitude": -37.8296012878418,
+      "longitude": -58.2105827331543,
+      "y_m": -4490515.748535156,
+      "x_m": -5616522.706542969,
+      "region": "south_east"
+    },
+    {
+      "id": "benito_juarez",
+      "latitude": -37.651912689208984,
+      "longitude": -59.7977180480957,
+      "y_m": -4472499.637207031,
+      "x_m": -5769659.652832031,
+      "region": "south_east"
+    },
+    {
+      "id": "crespo",
+      "latitude": -31.99730682373047,
+      "longitude": -60.2645263671875,
+      "y_m": -3877967.9633789062,
+      "x_m": -5814699.931152344,
+      "region": "north_east"
+    },
+    {
+      "id": "nogoya",
+      "latitude": -32.41297149658203,
+      "longitude": -59.7977180480957,
+      "y_m": -3923008.2416992188,
+      "x_m": -5769659.652832031,
+      "region": "north_east"
+    },
+    {
+      "id": "rosario_del_tala",
+      "latitude": -32.329689025878906,
+      "longitude": -59.14419174194336,
+      "y_m": -3914000.1860351562,
+      "x_m": -5706603.263183594,
+      "region": "north_east"
+    },
+    {
+      "id": "gualeguay",
+      "latitude": -33.165958404541016,
+      "longitude": -59.33091354370117,
+      "y_m": -4004080.7426757812,
+      "x_m": -5724619.374511719,
+      "region": "north_east"
+    }
+  ],
+  "archive_start": "2016-01-01",
+  "archive_end": "2025-01-27",
+  "reference_start": "2016-01-01",
+  "reference_end": "2018-12-31",
+  "validation_start": "2021-01-01",
+  "calibration_start": "2022-01-01",
+  "holdout_start": "2024-01-01",
+  "holdout_end": "2024-12-31",
+  "retrospective_lag_days": 7
+}
