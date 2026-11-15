@@ -15,6 +15,8 @@ import { CropComparisonPanel, CropDecisionPanel } from "./CropDecisionPanel";
 import { buildFarmerAnalysisRequest, CROP_CATALOG, DEFAULT_CROP_CONFIGURATION, type CropConfiguration, type FarmerAnalysisRequest } from "../data/agronomy";
 import { historicalContextForForecast } from "../data/farmerAnalysis";
 import { ForecastIntervalVisual } from "./ForecastIntervalVisual";
+import { loadPhase8ForecastBundle, type Phase8BundleLoad } from "../data/phase8Forecast";
+import { Phase8Outlook } from "./Phase8Outlook";
 
 const forecastFile = "frontend/public/data/forecast_v1.json";
 
@@ -49,6 +51,7 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
   const [evaluation, setEvaluation] = useState<PredictiveEvaluation | null>(null);
   const [evaluationState, setEvaluationState] = useState<"loading" | "ready" | "error">("loading");
   const [forecastState, setForecastState] = useState<ForecastLoad>({ status: "loading" });
+  const [phase8State, setPhase8State] = useState<Phase8BundleLoad>({ status: "loading" });
   const [submittedRequest, setSubmittedRequest] = useState<ForecastIssueRequest | null>(null);
   const [submittedAnalysis, setSubmittedAnalysis] = useState<FarmerAnalysisRequest | null>(null);
   const [submissionAttempted, setSubmissionAttempted] = useState(false);
@@ -63,8 +66,14 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
       if (active) setEvaluationState("error");
     });
     loadForecastArtifact().then((loadedForecast) => { if (active) setForecastState(loadedForecast); });
+    loadPhase8ForecastBundle().then((loadedBundle) => { if (active) setPhase8State(loadedBundle); });
     return () => { active = false; };
   }, []);
+
+  const retryPhase8Bundle = () => {
+    setPhase8State({ status: "loading" });
+    loadPhase8ForecastBundle().then(setPhase8State);
+  };
 
   useEffect(() => { if (forecastState.status !== "loading") setIsGenerating(false); }, [forecastState.status]);
 
@@ -263,12 +272,13 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
       </div>
       <p className="forecast-controls-note"><CircleHelp size={14} /> {evaluationState === "error" ? (language === "es" ? "No se pudo cargar el artefacto de evaluación predictiva." : "The predictive evaluation artifact could not be loaded.") : localizedRequestError ?? (language === "es" ? `La solicitud comprueba el artefacto al generarla. La selección usa resultados walk-forward previos al holdout, nunca los rankings del holdout. ${selectedModel ? `Modelo: ${selectedModel}.` : "Se necesita el artefacto de evaluación para identificar el modelo."}` : `The request checks the artifact when submitted. Model selection uses pre-holdout walk-forward results, never holdout rankings. ${selectedModel ? `Model: ${selectedModel}.` : "The evaluation artifact is required to identify the model."}`)}</p>
       <div className="research-status-ladder" aria-label={language === "es" ? "Niveles de preparación científica" : "Scientific readiness levels"}>
-        <div><b>1 · {language === "es" ? "Investigación histórica" : "Historical research"}</b><span>{language === "es" ? "Disponible en el Observatorio" : "Available in Observatory"}</span></div><div><b>2 · {language === "es" ? "Evaluación retrospectiva" : "Retrospective evaluation"}</b><span>{evaluationState === "ready" ? (language === "es" ? "Artefacto de evaluación cargado" : "Evaluation artifact loaded") : (language === "es" ? "Cargando o no disponible" : "Loading or unavailable")}</span></div><div><b>3 · {language === "es" ? "Investigación prospectiva experimental" : "Experimental prospective"}</b><span>{language === "es" ? "Sin conectar" : "Not connected"}</span></div><div><b>4 · {language === "es" ? "Elegibilidad operativa" : "Operational eligibility"}</b><span>{requestedResolution?.status === "available" ? (language === "es" ? "Evidencia verificada" : "Evidence matched") : (language === "es" ? "No establecida" : "Not established")}</span></div>
+        <div><b>1 · {language === "es" ? "Investigación histórica" : "Historical research"}</b><span>{language === "es" ? "Disponible en el Observatorio" : "Available in Observatory"}</span></div><div><b>2 · {language === "es" ? "Evaluación retrospectiva" : "Retrospective evaluation"}</b><span>{evaluationState === "ready" ? (language === "es" ? "Artefacto de evaluación cargado" : "Evaluation artifact loaded") : (language === "es" ? "Cargando o no disponible" : "Loading or unavailable")}</span></div><div><b>3 · {language === "es" ? "Investigación prospectiva experimental" : "Experimental prospective"}</b><span>{phase8State.status === "ready" ? (language === "es" ? "Bundle experimental validado · no operativo" : "Experimental bundle validated · not operational") : phase8State.status === "loading" ? t("loading") : (language === "es" ? "Artefacto no disponible" : "Artifact unavailable")}</span></div><div><b>4 · {language === "es" ? "Elegibilidad operativa" : "Operational eligibility"}</b><span>{requestedResolution?.status === "available" ? (language === "es" ? "Evidencia verificada" : "Evidence matched") : (language === "es" ? "No establecida" : "Not established")}</span></div>
       </div>
       <button type="button" className="button-primary forecast-generate" onClick={() => { setIsGenerating(!!requestResult.request && forecastState.status === "loading"); generateForecast(); }} disabled={isGenerating} aria-describedby="forecast-generation-note" aria-busy={isGenerating}>{isGenerating ? <LoaderCircle className="forecast-generate-spinner" size={17} aria-hidden="true" /> : <BarChart3 size={17} aria-hidden="true" />}{isGenerating ? t("generating") : t("generateForecast")}<ArrowRight size={16} aria-hidden="true" /></button>
       <p className="forecast-generation-note" id="forecast-generation-note">{language === "es" ? "La solicitud solo consulta un artefacto validado; no calcula predicciones en el navegador." : "The request checks a validated artifact; the browser does not calculate predictions."}</p>
     </section>
 
+    <Phase8Outlook state={phase8State} horizon={horizon} onHorizonChange={setHorizon} selectedLocation={selectedLocation} onRetry={retryPhase8Bundle} language={language} formatDate={formatDate} formatNumber={formatNumber} />
 
     {submissionAttempted && <section className="forecast-unavailable panel forecast-results" aria-labelledby="forecast-unavailable-title" aria-live="polite">
       <div className="forecast-unavailable-icon"><LockKeyhole size={19} /></div>
