@@ -38,6 +38,22 @@ async function openRealDataMode() {
 }
 
 describe("dashboard real-data integration", () => {
+  it("presents the Alpha Agro product identity and credits its team", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    root = createRoot(container);
+    await act(async () => {
+      root?.render(<App />);
+    });
+
+    expect(container.querySelector(".brand")?.getAttribute("aria-label")).toBe("Alpha Agro home");
+    expect(container.querySelector("nav")?.getAttribute("aria-label")).toBe("Alpha Agro main navigation");
+    expect(container.textContent).toContain("Alpha Agro");
+    expect(container.textContent).toContain("From Earth data to agricultural insight.");
+    expect(container.textContent?.toLowerCase()).toContain("quant alpha");
+    expect(container.textContent).toContain("Be An Earth System Trend Detective!");
+  });
+
   it("renders schema fixture values, source provenance, and historical-only status", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
       ok: true,

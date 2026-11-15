@@ -111,16 +111,16 @@ function App() {
   return (
     <div className="app-shell">
       <aside className={"sidebar" + (menuOpen ? " sidebar-open" : "")}>
-        <a className="brand" href="#overview" onClick={() => setPage("overview")}>
+        <a className="brand" href="#overview" aria-label="Alpha Agro home" onClick={() => setPage("overview")}>
           <span className="brand-mark"><Activity size={20} strokeWidth={2.2} /></span>
           <span className="brand-wordmark">
-            <b>QUANT ALPHA</b>
-            <small>AGRO · EARTH OBSERVATORY</small>
+            <b>ALPHA AGRO</b>
+            <small>BY QUANT ALPHA</small>
           </span>
         </a>
 
         <div className="side-kicker">WORKSPACE</div>
-        <nav className="side-nav" aria-label="Main navigation">
+        <nav className="side-nav" aria-label="Alpha Agro main navigation">
           <button
             className={"nav-item" + (page === "overview" ? " active" : "")}
             onClick={() => {
@@ -166,8 +166,9 @@ function App() {
           <p>Regional model data offers context. It does not resolve conditions at an individual field.</p>
         </div>
         <div className="sidebar-bottom">
-          <span className="sidebar-bottom-mark">NASA SPACE APPS 2026</span>
-          <span>BE AN EARTH SYSTEM TREND DETECTIVE</span>
+          <span className="sidebar-bottom-mark">QUANT ALPHA</span>
+          <span>NASA SPACE APPS CHALLENGE 2026</span>
+          <span>Be An Earth System Trend Detective!</span>
         </div>
       </aside>
 
@@ -181,7 +182,7 @@ function App() {
             <Menu size={19} />
           </button>
           <div className="breadcrumb">
-            <span>OBSERVATORY</span><span className="crumb-slash">/</span>
+            <span>ALPHA AGRO</span><span className="crumb-slash">/</span>
             <b>{page === "overview" ? "PAMPAS OVERVIEW" : page === "methodology" ? "METHODS & DATA" : "PREDICTIVE RESEARCH"}</b>
           </div>
           <div className="topbar-right">
@@ -211,8 +212,8 @@ function App() {
               <section className="page-intro">
                 <div>
                   <div className="eyebrow"><span className="eyebrow-line" /> EARTH SYSTEMS / SOIL WATER</div>
-                  <h1>Pampas <em>observatory</em></h1>
-                  <p>Historical GLDAS analysis, read with uncertainty in view. No operational forecasts are provided.</p>
+                  <h1>Alpha Agro <em>· Pampas</em></h1>
+                  <p><strong>From Earth data to agricultural insight.</strong> NASA-powered Earth system intelligence for agriculture. Historical GLDAS analysis, read with uncertainty in view; no operational forecasts are provided.</p>
                 </div>
                 <div className="intro-meta">
                   <span className="period-label">ANALYSIS WINDOW</span>
@@ -252,6 +253,7 @@ function App() {
                   <footer className="page-footer">
                     <span><Database size={13} /> SOURCE: {mode === "demo" ? "SYNTHETIC DEMONSTRATION" : dataset.source.toUpperCase()}</span>
                     <span>HISTORICAL ANALYSIS · NO OPERATIONAL FORECAST · NOT FIELD MEASUREMENTS</span>
+                    <span>ALPHA AGRO · DEVELOPED BY QUANT ALPHA</span>
                   </footer>
                 </>
               ) : null}
@@ -644,7 +646,7 @@ function MethodologyPage({ dataset, mode }: { dataset: DashboardDataset | null; 
         <div><b>NASA Global Land Data Assimilation System</b><span>GLDAS Noah Land Surface Model · Version 2.1 · Historical analysis only</span></div>
         <a href="https://doi.org/10.5067/SXAVCZFAQLNO" target="_blank" rel="noreferrer">DATASET DOI <ArrowUpRight size={14} /></a>
       </section>
-      <footer className="page-footer"><span><Database size={13} /> PROVENANCE IS PART OF THE RESULT</span><span>METHOD NOTES REFLECT THE ANALYSIS OUTPUT CONTRACT</span></footer>
+      <footer className="page-footer"><span><Database size={13} /> PROVENANCE IS PART OF THE RESULT</span><span>METHOD NOTES REFLECT THE ANALYSIS OUTPUT CONTRACT</span><span>ALPHA AGRO · DEVELOPED BY QUANT ALPHA</span></footer>
     </>
   );
 }

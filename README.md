@@ -1,6 +1,6 @@
-# Quant Alpha Agro
+# Alpha Agro
 
-Quant Alpha is preparing a virtual entry for the 2026 NASA Space Apps Challenge, [Be An Earth System Trend Detective!](https://www.spaceappschallenge.org/2026/challenges/earth-system-trend-detective/). The planned web application will help agricultural producers in Argentina interpret Earth observation trends and hydrological conditions relevant to soybean, maize, and wheat.
+**Alpha Agro** is NASA-powered Earth system intelligence for agriculture, developed by team **Quant Alpha** for the 2026 NASA Space Apps Challenge, [Be An Earth System Trend Detective!](https://www.spaceappschallenge.org/2026/challenges/earth-system-trend-detective/). **From Earth data to agricultural insight.** The application helps users explore historical Earth observation trends and hydrological context for the Argentine Pampas, with cautious context for soybean, maize, and wheat.
 
 The initial scope is one region and one crop. Historical trend analysis is the core deliverable. The statistical engine is documented in [Trend engine](docs/TREND_ENGINE.md); it does not establish crop effects. Any hydrological prediction shown will require historical validation.
 
@@ -34,7 +34,7 @@ For the current research checkpoint, start with [project status](docs/PROJECT_ST
 
 ## Reproduce the validated research
 
-Quant Alpha Agro studies changes in modelled soil-water storage in a provisional Pampas region of Argentina, with soybean as the initial use case. The validated acquisition covers all **240 months from January 2006 through December 2025**. Each monthly export contains three soil-water layers for a 0.25° grid. The same 867 of 896 cells have all three layers throughout the record.
+Alpha Agro studies changes in modelled soil-water storage in a provisional Pampas region of Argentina, with soybean as the initial use case. The validated acquisition covers all **240 months from January 2006 through December 2025**. Each monthly export contains three soil-water layers for a 0.25° grid. The same 867 of 896 cells have all three layers throughout the record.
 
 | NASA dataset | Role |
 | --- | --- |

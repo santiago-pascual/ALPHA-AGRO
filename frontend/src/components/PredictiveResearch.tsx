@@ -107,7 +107,7 @@ export function PredictiveResearchPage() {
     </>}
 
     <section className="forecast-explorer panel" aria-labelledby="forecast-heading"><div className="forecast-icon"><LockKeyhole size={18} /></div><div className="forecast-copy"><div className="eyebrow">SEPARATE WORKSPACE / DISABLED</div><h2 id="forecast-heading">Forecast Explorer</h2><p>Reserved for a separately validated <code>forecast_v1.json</code> with an explicit issue time, data-availability cutoff, forecast horizon, and predictive intervals.</p><small>Historical holdout predictions shown above are not live forecasts.</small></div><button disabled aria-disabled="true">Forecast unavailable</button></section>
-    <footer className="page-footer"><span><Database size={13} /> MODEL EVALUATION ARTIFACT · {state.status === "ready" ? "VALIDATED" : "NOT AVAILABLE"}</span><span>RETROSPECTIVE OUT-OF-SAMPLE SCORES · NO LIVE FORECASTS</span></footer>
+    <footer className="page-footer"><span><Database size={13} /> MODEL EVALUATION ARTIFACT · {state.status === "ready" ? "VALIDATED" : "NOT AVAILABLE"}</span><span>RETROSPECTIVE OUT-OF-SAMPLE SCORES · NO LIVE FORECASTS</span><span>ALPHA AGRO · DEVELOPED BY QUANT ALPHA</span></footer>
   </>;
 }
 

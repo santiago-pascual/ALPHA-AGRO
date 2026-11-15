@@ -1,6 +1,6 @@
-# Quant Alpha Agro frontend
+# Alpha Agro frontend
 
-A responsive dark-mode dashboard for historical GLDAS Noah v2.1 soil-water trends across the Argentine Pampas. The default view is DEMO: every displayed value and grid cell is generated locally, fictional, and clearly labeled. It is not a NASA finding.
+**Alpha Agro** is NASA-powered Earth system intelligence for agriculture, developed by team **Quant Alpha** for NASA Space Apps Challenge 2026: **Be An Earth System Trend Detective!** Its tagline is **From Earth data to agricultural insight.** The dashboard presents historical GLDAS Noah v2.1 soil-water trends across the Argentine Pampas. The default view is DEMO: every displayed value and grid cell is generated locally, fictional, and clearly labeled. It is not a NASA finding.
 
 ## Run locally
 
