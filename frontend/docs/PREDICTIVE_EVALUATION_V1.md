@@ -16,7 +16,7 @@ Each item in `results` is unique by `scope + horizon_months + target` and contai
 - `horizon_months`: 1, 2, or 3; `target`: `storage`, `anomaly`, or `low_moisture`.
 - `target_definition`: the training-only method, units, and (when applicable) threshold definition. Low-moisture must be identified as the training-only cell/calendar-month weighted 20th percentile, not an agricultural drought label.
 - `primary_metric`: `rmse` or `mae` for storage/anomaly; `brier` for low-moisture probability. Units are mm for storage/anomaly and dimensionless for Brier.
-- `models`: unique model rows including at least one baseline (`seasonal_climatology` and/or `persistence`) and candidate models. Exactly one candidate must have `selected_before_holdout: true`; that selection must use walk-forward data only. The frontend separately calculates the descriptive lowest-score candidate on holdout and labels it as a descriptive winner, never a selected model.
+- `models`: unique model rows including at least one baseline (`seasonal_climatology` and/or `persistence`) and candidate models. Exactly one model, including a baseline, must have `selected_before_holdout: true`; that selection must use walk-forward data only. The frontend separately calculates the descriptive lowest-score model on holdout and labels it as a descriptive winner, never a selected model.
 
 Model rows contain `role`, `selected_before_holdout`, `walk_forward.folds`, `holdout`, `skill_scores`, and `uncertainty`. Every fold and holdout block has an `id`, `{start,end}` YYYY-MM period, positive integer `n_rows` and `n_months`, and a `metrics` object. Regression metrics may contain `rmse`, `mae`, `skill_vs_persistence`, and `skill_vs_climatology`; classification may contain `brier` and corresponding skills. Supply only calculated finite values; use null/omit when unavailable. Scores are area-weighted consistently with the evaluated support.
 
@@ -74,8 +74,6 @@ Example shape (deliberately not populated with scores):
 
 The example shows one row for readability; a usable artifact must include regional and spatial records for each evaluated horizon/target, with matching baseline/candidate coverage. Use JSON numbers/nulls, not the explanatory placeholder strings above. All values must come from the validated evaluation, never from this example or the test fixture.
 
-## Current engine mapping and remaining main-PC work
+## Export and installation
 
-`gldas.predictive.evaluate` currently emits `schema_version: "1.0.0"` fold records with `horizon_months`, `target`, `model`, `fold`, `metrics`, target definitions, and selected parameters. It describes cell-panel evaluation grouped by target month. That output does not yet contain a regional-mean evaluation, an artifact provenance wrapper with input hashes, or a consolidated per-series selection flag. The main PC must export/adapt genuine regional and spatial scores into this contract (without using final holdout to choose models) and provide the file for frontend installation. No `predictive_evaluation_v1.json` scores are bundled with this frontend.
-
-The app ignores `predictive_evaluation_v1.json` and `forecast_v1.json` under `public/data/`. A separate future `forecast_v1.json` must be generated from an explicit operational data availability policy and validated forecast issue metadata; retrospective test predictions do not qualify.
+Generate this artifact with `python -m gldas.predictive.export_evaluation` using both validated Phase 5B JSON files and the Phase 5A panel directory. See the [forecast pipeline runbook](../../docs/PHASE6_FORECAST_PIPELINE.md). Each series includes both `selected_model` and `descriptive_holdout_model` plus the selection-eligible training/test windows. The frontend ignores the artifact under `public/data/`. Archived forecast artifacts do not qualify for a live forecast display.

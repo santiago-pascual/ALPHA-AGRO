@@ -1,0 +1,54 @@
+{
+  "schema_version": "prospective_pilot_v1",
+  "verified_receipt_public_key": null,
+  "pilot_id": "pampas-regional-storage-m1-v1",
+  "status": "experimental",
+  "scope": "pampas-study-box",
+  "collection": "C1342986036-GES_DISC",
+  "version": "2.1",
+  "target": "storage",
+  "units": "mm",
+  "horizon_months": 1,
+  "model_selection": "Lowest eligible pre-holdout non-climatology RMSE; reserved holdout excluded.",
+  "training": {
+    "target_cutoff": "2025-12",
+    "fit_before_first_issue": true,
+    "minimum_rows": 24,
+    "source_policy": "full_content_vintages_only"
+  },
+  "preprocessing": {
+    "lags": 6,
+    "cell_support": 867,
+    "scaling": "none",
+    "calendar_terms": [
+      "target_month_sin",
+      "target_month_cos"
+    ],
+    "area_weights": "spherical full-profile common mask"
+  },
+  "models": {
+    "baseline": "seasonal_climatology",
+    "challenger": "xgboost",
+    "challenger_params": {
+      "learning_rate": 0.03,
+      "max_depth": 1,
+      "n_estimators": 80
+    },
+    "challenger_dependency": "3.4.1",
+    "random_seed": 1729
+  },
+  "calibration": {
+    "method": "none_in_feasibility_pilot",
+    "predictive_intervals": false
+  },
+  "evaluation": {
+    "scored_pairs": 6,
+    "scheduled_issue_limit": 12,
+    "metrics": [
+      "rmse",
+      "mae",
+      "bias"
+    ],
+    "target_vintage": "first verified main-production vintage"
+  }
+}
