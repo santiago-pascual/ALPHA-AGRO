@@ -6,8 +6,8 @@ import pandas as pd
 import pytest
 
 from gldas import smap_benchmark
-from gldas.acquisition import checksum
-from gldas.smap_appeears import task
+from gldas.acquisition import AcquisitionError, checksum
+from gldas.smap_appeears import signed_download, task
 from gldas.smap_benchmark import evaluate_sites, split_masks
 from gldas.smap_panel import SLOTS
 from gldas.smap_sites import appeears_slots, daily, load_design, verify_overlap
@@ -23,6 +23,18 @@ def test_task_fixes_native_variable_and_locations():
     assert len(request["params"]["coordinates"]) == 3
     with pytest.raises(ValueError, match="one year"):
         task(design, start, date(2024, 1, 1))
+
+
+@pytest.mark.parametrize("destination", [
+    "https://s3.us-west-2.amazonaws.com/bucket/file?X-Amz-Signature=fixture",
+    "https://bucket.s3.us-west-2.amazonaws.com/file?AWSAccessKeyId=fixture&Signature=fixture&Expires=1",
+    "https://cdn.cloudfront.net/file?Signature=fixture&Key-Pair-Id=fixture&Expires=1",
+])
+def test_signed_appeears_aws_destinations(destination):
+    assert signed_download(destination) == destination
+    with pytest.raises(AcquisitionError) as error:
+        signed_download("https://s3.us-west-2.amazonaws.com.example.com/file?X-Amz-Signature=fixture")
+    assert "fixture" not in str(error.value)
 
 
 def test_missing_slots_or_sites_stay_missing_and_overlap_is_required():

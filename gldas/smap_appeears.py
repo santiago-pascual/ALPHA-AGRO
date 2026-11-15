@@ -68,17 +68,27 @@ def service_json(session, method, route, headers, **kwargs):
         return r.json()
 
 
+def signed_download(url):
+    parsed = urlsplit(url)
+    host = parsed.hostname or ""
+    query = {key.lower() for key in parse_qs(parsed.query)}
+    aws_signature = "x-amz-signature" in query or {"awsaccesskeyid", "signature", "expires"} <= query
+    cloudfront_signature = {"key-pair-id", "signature"} <= query and bool({"policy", "expires"} & query)
+    s3 = re.fullmatch(r"(?:[a-z0-9.-]+\.)?s3(?:[.-][a-z0-9.-]+)?\.amazonaws\.com", host)
+    cloudfront = re.fullmatch(r"[a-z0-9-]+\.cloudfront\.net", host)
+    if (parsed.scheme != "https" or parsed.netloc != host or parsed.fragment
+            or not ((s3 and aws_signature) or (cloudfront and (cloudfront_signature or aws_signature)))):
+        raise AcquisitionError(f"AppEEARS redirect is not a recognized signed AWS download (host: {host or 'none'}).")
+    return url
+
+
 def save_file(session, url, headers, path, size):
     with session.get(url, headers=headers, stream=True, allow_redirects=False, timeout=(8, 30)) as r:
         if r.status_code == 200:
             return stream_file(r, path, size)
-        destination = r.headers.get("Location", "")
-        parsed = urlsplit(destination)
-        host = parsed.hostname or ""
-        if (r.status_code not in (302, 303, 307) or parsed.scheme != "https" or parsed.netloc != host
-                or not (host == "s3.amazonaws.com" or re.fullmatch(r"[\w.-]+\.s3[.\w-]*\.amazonaws\.com", host))
-                or "X-Amz-Signature" not in parse_qs(parsed.query)):
+        if r.status_code not in (302, 303, 307):
             raise AcquisitionError(f"Unsupported AppEEARS bundle download response (HTTP {r.status_code}).")
+        destination = signed_download(r.headers.get("Location", ""))
     with session.get(destination, stream=True, allow_redirects=False, timeout=(8, 30)) as r:
         if r.status_code != 200:
             raise AcquisitionError(f"Signed AppEEARS download returned HTTP {r.status_code}.")
