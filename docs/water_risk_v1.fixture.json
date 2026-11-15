@@ -1,0 +1,43 @@
+{
+  "schema_version": "water_risk_v1",
+  "status": "insufficient_evidence",
+  "data_kind": "fixture",
+  "generated_at_utc": "2020-01-05T00:00:00Z",
+  "source": {
+    "collection": "C1342986035-GES_DISC",
+    "version": "2.1",
+    "doi": "10.5067/E7TYRXPJKWOQ",
+    "product": "GLDAS_NOAH025_3H",
+    "scope": "provisional_pampas_study_box"
+  },
+  "bounds": [
+    -64,
+    -38,
+    -57,
+    -30
+  ],
+  "cells": [],
+  "complete_observation_days": 0,
+  "source_sha256": [],
+  "reason_codes": [
+    "current_availability_unverified",
+    "forecast_skill_unverified",
+    "crop_rule_unvalidated"
+  ],
+  "products": [
+    {
+      "horizon_days": 14,
+      "expected_change_mm": null,
+      "prediction_interval_mm": null,
+      "below_normal_probability": null,
+      "current_storage_mm": null
+    },
+    {
+      "horizon_days": 28,
+      "expected_change_mm": null,
+      "prediction_interval_mm": null,
+      "below_normal_probability": null,
+      "current_storage_mm": null
+    }
+  ]
+}

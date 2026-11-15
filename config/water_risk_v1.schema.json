@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Alpha Agro water risk v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "data_kind",
+    "status",
+    "generated_at_utc",
+    "source",
+    "bounds",
+    "cells",
+    "products",
+    "complete_observation_days",
+    "source_sha256",
+    "reason_codes"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "water_risk_v1"
+    },
+    "data_kind": {
+      "enum": [
+        "nasa_archive",
+        "fixture"
+      ]
+    },
+    "status": {
+      "const": "insufficient_evidence"
+    },
+    "generated_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "collection",
+        "version",
+        "doi",
+        "product",
+        "scope"
+      ],
+      "properties": {
+        "collection": {
+          "const": "C1342986035-GES_DISC"
+        },
+        "version": {
+          "const": "2.1"
+        },
+        "doi": {
+          "const": "10.5067/E7TYRXPJKWOQ"
+        },
+        "product": {
+          "const": "GLDAS_NOAH025_3H"
+        },
+        "scope": {
+          "const": "provisional_pampas_study_box"
+        }
+      }
+    },
+    "bounds": {
+      "const": [
+        -64,
+        -38,
+        -57,
+        -30
+      ]
+    },
+    "cells": {
+      "type": "array",
+      "maxItems": 896,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "latitude",
+          "longitude",
+          "observation_day_utc",
+          "days_since_window_end",
+          "historical_storage_mm"
+        ],
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "minimum": -37.875,
+            "maximum": -30.125,
+            "multipleOf": 0.125,
+            "not": { "multipleOf": 0.25 }
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -63.875,
+            "maximum": -57.125,
+            "multipleOf": 0.125,
+            "not": { "multipleOf": 0.25 }
+          },
+          "observation_day_utc": {
+            "type": "string",
+            "format": "date"
+          },
+          "days_since_window_end": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "historical_storage_mm": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000.01
+          }
+        }
+      }
+    },
+    "complete_observation_days": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "source_sha256": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$"
+      }
+    },
+    "reason_codes": {
+      "const": [
+        "current_availability_unverified",
+        "forecast_skill_unverified",
+        "crop_rule_unvalidated"
+      ]
+    },
+    "products": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/product"
+            },
+            {
+              "properties": {
+                "horizon_days": {
+                  "const": 14
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/product"
+            },
+            {
+              "properties": {
+                "horizon_days": {
+                  "const": 28
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "product": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "horizon_days",
+        "expected_change_mm",
+        "prediction_interval_mm",
+        "below_normal_probability",
+        "current_storage_mm"
+      ],
+      "properties": {
+        "horizon_days": {
+          "enum": [
+            14,
+            28
+          ]
+        },
+        "expected_change_mm": {
+          "type": "null"
+        },
+        "prediction_interval_mm": {
+          "type": "null"
+        },
+        "below_normal_probability": {
+          "type": "null"
+        },
+        "current_storage_mm": {
+          "type": "null"
+        }
+      }
+    }
+  }
+}

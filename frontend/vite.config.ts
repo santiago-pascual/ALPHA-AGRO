@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [react()],
   build: {
     rollupOptions: {
+      input: { dashboard: "index.html", waterRisk: "water-risk.html" },
       output: {
         manualChunks(id) {
           if (/\/node_modules\/(recharts|d3-[^/]+)\//.test(id)) return "charts";
