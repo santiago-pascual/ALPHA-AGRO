@@ -12,6 +12,21 @@ describe("adaptPredictiveEvaluation", () => {
     expect(result.provenance.input_panel_sha256).toHaveLength(64);
   });
 
+  it("accepts a selected baseline independently of the descriptive holdout winner", () => {
+    const baselineSelected = structuredClone(predictiveEvaluationFixture);
+    const series = baselineSelected.results[0];
+    series.models[0].selected_before_holdout = true;
+    series.models[1].selected_before_holdout = false;
+    series.models[1].holdout.metrics.rmse = 900;
+    const declared = { ...series, selected_model: "persistence", descriptive_holdout_model: "xgboost" };
+    const artifact = { ...baselineSelected, results: [declared, ...baselineSelected.results.slice(1)] };
+    expect(adaptPredictiveEvaluation(artifact).results[0]).toMatchObject({
+      selected_model: "persistence", descriptive_holdout_model: "xgboost",
+    });
+    declared.selected_model = "xgboost";
+    expect(() => adaptPredictiveEvaluation(artifact)).toThrow("pre-holdout selection mismatch");
+  });
+
   it("rejects unsupported versions, missing spatial/regional results, nonfinite values and wrong classification metrics", () => {
     expect(() => adaptPredictiveEvaluation({ ...predictiveEvaluationFixture, schema_version: "0.9" })).toThrow("Unsupported predictive evaluation schema");
     expect(() => adaptPredictiveEvaluation({ ...predictiveEvaluationFixture, results: [predictiveEvaluationFixture.results[0]] })).toThrow("regional and spatial evaluations");

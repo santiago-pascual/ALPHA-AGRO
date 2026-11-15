@@ -51,6 +51,8 @@ export interface PredictiveEvaluationSeries {
   target_definition: { method: string; units: string; threshold?: string };
   primary_metric: ScoreName;
   models: EvaluationModelResult[];
+  selected_model?: string;
+  descriptive_holdout_model?: string;
 }
 
 export interface PredictiveEvaluation {
