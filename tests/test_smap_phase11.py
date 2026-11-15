@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from gldas import smap_benchmark
+from gldas import smap_appeears, smap_benchmark, smap_sites
 from gldas.acquisition import AcquisitionError, checksum
 from gldas.smap_appeears import signed_download, task
 from gldas.smap_benchmark import evaluate_sites, split_masks
@@ -37,6 +37,33 @@ def test_signed_appeears_aws_destinations(destination):
     assert "fixture" not in str(error.value)
 
 
+def test_yearly_queue_honors_submission_limit_and_resumes(tmp_path, monkeypatch):
+    design = load_design()
+    state, archive = tmp_path / "state", tmp_path / "archive"
+    posted = []
+
+    def pretend_post(session, method, route, headers, **kwargs):
+        posted.append(kwargs["json"]["params"]["dates"][0]["startDate"])
+        return {"task_id": f"00000000-0000-0000-0000-{len(posted):012}"}
+
+    def pretend_collect(session, headers, task_id, root):
+        folder = root / task_id
+        folder.mkdir(parents=True)
+        (folder / "capture.json").write_text("{}")
+
+    monkeypatch.setattr(smap_appeears, "service_json", pretend_post)
+    monkeypatch.setattr(smap_appeears, "collect", pretend_collect)
+    monkeypatch.setattr(smap_appeears, "wait_for_task", lambda *args: None)
+    monkeypatch.setattr(smap_sites, "appeears_slots", lambda *args, **kwargs: ({}, []))
+    monkeypatch.setattr(smap_sites, "harmony_slots", lambda *args: ({}, []))
+    monkeypatch.setattr(smap_sites, "verify_overlap", lambda *args: (3, 48))
+    monkeypatch.setattr(smap_sites, "daily", lambda *args: ([], np.ones((366, 24))))
+    smap_appeears.historical_batches(None, {}, design, state, archive, tmp_path, 1, 1)
+    assert posted == ["01-01-2016"]
+    smap_appeears.historical_batches(None, {}, design, state, archive, tmp_path, 1, 1)
+    assert posted == ["01-01-2016", "01-01-2017"]
+
+
 def test_missing_slots_or_sites_stay_missing_and_overlap_is_required():
     day = date(2020, 1, 2)
     observations = {(day, slot): np.array([.3, .4, .2]) for slot in SLOTS[1:]}
@@ -56,8 +83,9 @@ def test_date_only_appeears_cannot_be_confused_with_three_hourly(tmp_path):
     archive = tmp_path / "probe"
     archive.mkdir()
     csv = archive / "sample.csv"
-    csv.write_text("ID,Latitude,Longitude,Date,SPL4SMGP.008_Geophysical_Data_sm_rootzone\n"
-                   f"{site['id']},{site['latitude']},{site['longitude']},2020-01-02,0.30\n")
+    csv.write_text("ID,Latitude,Longitude,Date,SPL4SMGP_008_Line_Y_9.00805km,"
+                   "SPL4SMGP_008_Sample_X_9.00805km,SPL4SMGP_008_Geophysical_Data_sm_rootzone\n"
+                   f"{site['id']},{site['latitude']},{site['longitude']},2020-01-02,1227,1279,0.30\n")
     record = {"schema": "smap_appeears_capture_v1", "task_id": "probe",
               "request": {"layers": [{"product": "SPL4SMGP.008", "layer": design["layer"]}]},
               "files": [{"name": csv.name, "bytes": csv.stat().st_size, "sha256": checksum(csv)}]}

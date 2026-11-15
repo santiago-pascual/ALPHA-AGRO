@@ -3,11 +3,13 @@ import argparse
 from datetime import date, datetime, timedelta, timezone
 import json
 from pathlib import Path
+import re
 
 import numpy as np
 import pandas as pd
 
 from .acquisition import checksum, write_json
+from .smap import official_asset
 from .smap_appeears import DESIGN, PRODUCT
 from .smap_harmony import read_manifest
 from .smap_panel import SLOTS, subset
@@ -52,17 +54,43 @@ def harmony_slots(archive, design, start, end):
     return observations, captures
 
 
-def appeears_slots(archive, design, start, end):
+def appeears_slots(archive, design, start, end, *, probe=None):
     sites = design["sites"]
     indices = {site["id"]: index for index, site in enumerate(sites)}
     observations, seen, captures = {}, set(), []
-    field = f"{PRODUCT}_{design['layer']}"
+    field = f"{PRODUCT.replace('.', '_')}_{design['layer']}"
+    line_field = "SPL4SMGP_008_Line_Y_9.00805km"
+    sample_field = "SPL4SMGP_008_Sample_X_9.00805km"
     for bundle in sorted(p for p in archive.iterdir() if p.is_dir()):
         path = bundle / "capture.json"
         record = json.loads(path.read_text(encoding="utf-8"))
         if (record["schema"] != "smap_appeears_capture_v1" or record["task_id"] != bundle.name or
                 record["request"]["layers"] != [{"product": PRODUCT, "layer": design["layer"]}]):
             raise ValueError("Bundle does not match the frozen SMAP variable.")
+        if probe is not None:
+            requested = {point["id"] for point in record["request"]["coordinates"]}
+            expected = {site["id"] for site in (sites[:3] if probe else sites)}
+            if requested != expected:
+                continue
+        granules = {}
+        for evidence in record["files"]:
+            name = evidence["name"]
+            if not name.endswith("-granule-list.txt"):
+                continue
+            if Path(name).name != name:
+                raise ValueError("Unexpected granule-list path.")
+            data = bundle / name
+            if data.stat().st_size != evidence["bytes"] or checksum(data) != evidence["sha256"]:
+                raise ValueError("AppEEARS granule-list checksum mismatch.")
+            for url in data.read_text(encoding="utf-8").splitlines():
+                if not url.strip():
+                    continue
+                if not official_asset(url):
+                    raise ValueError("Unexpected SMAP granule in AppEEARS provider evidence.")
+                stamp = re.search(r"_gph_(\d{8}T\d{6})_", url)[1]
+                if stamp in granules and granules[stamp] != url:
+                    raise ValueError("Competing SMAP granule versions for the same interval.")
+                granules[stamp] = url
         used = False
         for evidence in record["files"]:
             name = evidence["name"]
@@ -76,9 +104,11 @@ def appeears_slots(archive, design, start, end):
             header = set(pd.read_csv(data, nrows=0).columns)
             if field not in header:
                 continue
-            if not {"ID", "Latitude", "Longitude", "Date"} <= header:
+            if not {"ID", "Latitude", "Longitude", "Date", line_field, sample_field} <= header:
                 raise ValueError("Unrecognized AppEEARS point CSV columns.")
-            cols = ["ID", "Latitude", "Longitude", "Date", field] + (["Time"] if "Time" in header else [])
+            cols = ["ID", "Latitude", "Longitude", "Date", line_field, sample_field, field]
+            if "Time" in header:
+                cols.append("Time")
             for row in pd.read_csv(data, usecols=cols).to_dict("records"):
                 i = indices[row["ID"]]
                 site = sites[i]
@@ -86,6 +116,8 @@ def appeears_slots(archive, design, start, end):
                         abs(row["Longitude"] - site["longitude"]) > 1e-4):
                     raise ValueError("AppEEARS changed a requested point coordinate.")
                 stamp = str(row["Date"])
+                if stamp.endswith(" UTC"):
+                    stamp = stamp[:-4] + "+00:00"
                 if len(stamp) == 10 and "Time" in row:
                     stamp += "T" + str(row["Time"])
                 if len(stamp) <= 10:
@@ -103,6 +135,11 @@ def appeears_slots(archive, design, start, end):
                 v = float(row[field])
                 if np.isnan(v) or v == -9999:
                     continue
+                if t.strftime("%Y%m%dT%H%M%S") not in granules:
+                    raise ValueError("Point value has no matching SMAP V008 granule lineage.")
+                if (row[line_field] != round(811.5 - site["y_m"] / 9008.05)
+                        or row[sample_field] != round(1927.5 + site["x_m"] / 9008.05)):
+                    raise ValueError("AppEEARS sampled a different native EASE cell.")
                 if not 0 <= v <= .9:
                     raise ValueError("AppEEARS root-zone moisture value outside valid range.")
                 values[i] = v
@@ -144,6 +181,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--harmony", type=Path, required=True)
     p.add_argument("--appeears", type=Path)
+    p.add_argument("--probe-only", action="store_true", help="Export only the three-site AppEEARS verification probe.")
     p.add_argument("--start", type=date.fromisoformat, required=True)
     p.add_argument("--end", type=date.fromisoformat, required=True)
     p.add_argument("--output", type=Path, required=True)
@@ -152,11 +190,11 @@ def main():
     captures = {}
     if a.appeears:
         compare_start, compare_end = date(2020, 1, 2), date(2020, 1, 3)
-        points, _ = appeears_slots(a.appeears, design, compare_start, compare_end)
+        points, _ = appeears_slots(a.appeears, design, compare_start, compare_end, probe=True)
         harmony, audit_captures = harmony_slots(a.harmony, design, compare_start, compare_end)
         count, overlaps = verify_overlap(points, harmony, len(design["sites"]))
         print(f"Native overlap passed for {count} sites and {overlaps} intervals.")
-        observations, captures["appeears"] = appeears_slots(a.appeears, design, a.start, a.end)
+        observations, captures["appeears"] = appeears_slots(a.appeears, design, a.start, a.end, probe=a.probe_only)
         captures["harmony_overlap"] = audit_captures
     else:
         observations, captures["harmony"] = harmony_slots(a.harmony, design, a.start, a.end)

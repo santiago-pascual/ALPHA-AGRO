@@ -12,6 +12,7 @@ from time import monotonic, sleep
 from urllib.parse import parse_qs, urlsplit
 import warnings
 
+import numpy as np
 import requests
 
 from .acquisition import AcquisitionError, checksum, write_json
@@ -161,6 +162,46 @@ def wait_for_task(session, headers, task_id, minutes):
     raise AcquisitionError("Waiting interval ended. Resume with the preserved task ID.")
 
 
+def historical_batches(session, headers, design, state, archive, harmony, new_limit, wait_minutes):
+    from .smap_sites import appeears_slots, daily, harmony_slots, verify_overlap
+
+    start, end = date(2020, 1, 2), date(2020, 1, 3)
+    observed, _ = appeears_slots(archive, design, start, end, probe=True)
+    native, _ = harmony_slots(harmony, design, start, end)
+    sites = len(design["sites"])
+    verify_overlap(observed, native, sites)
+    state.mkdir(parents=True, exist_ok=True)
+    low, high = map(date.fromisoformat, (design["archive_start"], design["archive_end"]))
+    started = 0
+    for year in range(low.year, high.year + 1):
+        start, end = max(low, date(year, 1, 1)), min(high, date(year, 12, 31))
+        record_path = state / f"appeears-{year}.json"
+        payload = task(design, start, end)
+        if record_path.exists():
+            record = json.loads(record_path.read_text(encoding="utf-8"))
+            if record["request"] != payload or not re.fullmatch(UUID, record["task_id"]):
+                raise AcquisitionError(f"Saved AppEEARS request for {year} differs from the frozen design.")
+            task_id = record["task_id"]
+        else:
+            if started >= new_limit:
+                return
+            task_id = service_json(session, "POST", "task", headers, json=payload)["task_id"]
+            if not re.fullmatch(UUID, task_id):
+                raise AcquisitionError("Unexpected AppEEARS task ID.")
+            write_json(record_path, {"task_id": task_id, "request": payload})
+            started += 1
+        print(f"{year}: {task_id}", flush=True)
+        if not (archive / task_id / "capture.json").exists():
+            wait_for_task(session, headers, task_id, wait_minutes)
+            collect(session, headers, task_id, archive)
+        observed, _ = appeears_slots(archive, design, start, end, probe=False)
+        _, values = daily(observed, start, end, sites)
+        supported = int((np.isfinite(values).sum(axis=0) >= .8 * len(values)).sum())
+        if supported < 12:
+            raise AcquisitionError(f"{year}: fewer than 12 sites have 80% of expected daily means.")
+        print(f"{year}: verified {supported}/{sites} sites with at least 80% daily coverage.", flush=True)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     actions = parser.add_subparsers(dest="action", required=True)
@@ -179,15 +220,24 @@ def main():
     get.add_argument("--archive", type=Path, required=True)
     get.add_argument("--prompt-login", action="store_true")
     get.add_argument("--wait-minutes", type=int, choices=range(1, 61), metavar="1..60")
+    history = actions.add_parser("history")
+    history.add_argument("--archive", type=Path, required=True)
+    history.add_argument("--harmony", type=Path, required=True)
+    history.add_argument("--state", type=Path, required=True)
+    history.add_argument("--max-new-jobs", type=int, choices=range(1, 11), default=1, metavar="1..10")
+    history.add_argument("--wait-minutes", type=int, choices=range(1, 61), default=30, metavar="1..60")
+    history.add_argument("--prompt-login", action="store_true")
     a = parser.parse_args()
     try:
+        design = json.loads(DESIGN.read_text(encoding="utf-8"))
         if a.action in ("request", "submit"):
-            payload = task(json.loads(DESIGN.read_text(encoding="utf-8")), a.start, a.end, pilot=a.pilot)
+            payload = task(design, a.start, a.end, pilot=a.pilot)
             if a.action == "request":
                 print(json.dumps(payload, indent=2))
                 return
             if a.output.exists():
                 raise ValueError("Submission record already exists. Reuse its task ID.")
+            a.output.parent.mkdir(parents=True, exist_ok=True)
         with requests.Session() as session:
             session.trust_env = False
             headers = service_token(session, a.prompt_login)
@@ -201,12 +251,15 @@ def main():
                 if a.archive:
                     wait_for_task(session, headers, task_id, a.wait_minutes)
                     print(collect(session, headers, task_id, a.archive))
-            else:
+            elif a.action == "collect":
                 if a.wait_minutes:
                     if not re.fullmatch(UUID, a.task_id):
                         raise ValueError("Expected an AppEEARS task ID.")
                     wait_for_task(session, headers, a.task_id, a.wait_minutes)
                 print(collect(session, headers, a.task_id, a.archive))
+            else:
+                historical_batches(session, headers, design, a.state, a.archive, a.harmony,
+                                   a.max_new_jobs, a.wait_minutes)
     except (requests.RequestException, GetPassWarning, EOFError, KeyboardInterrupt):
         parser.exit(2, "AppEEARS network request or hidden login failed.\n")
     except (AcquisitionError, ValueError, OSError, KeyError) as error:
