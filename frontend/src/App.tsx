@@ -358,7 +358,7 @@ function TrendPanel({ dataset }: { dataset: DashboardDataset }) {
       <div className="ci-axis"><span>{formatNumber(low, 0)}</span><span>0</span><span>{formatNumber(high, 0)}</span></div>
       <div className="trend-detail-grid">
         <div><span>HAC p-value</span><b>{formatNumber(trend.pValue, 3)}</b></div>
-        <div><span>Seasonal Sen slope</span><b>{trend.seasonalSenSlopePerDecade === null ? "—" : formatNumber(trend.seasonalSenSlopePerDecade) + " <small>mm/dec</small>"}</b></div>
+        <div><span>Seasonal Sen slope</span><b>{trend.seasonalSenSlopePerDecade === null ? "—" : <>{formatNumber(trend.seasonalSenSlopePerDecade)} <small>mm/dec</small></>}</b></div>
         <div><span>Seasonal Kendall τ</span><b>{formatNumber(trend.seasonalKendallTau, 3)}</b></div>
         <div><span>Confidence level</span><b>95%</b></div>
       </div>
