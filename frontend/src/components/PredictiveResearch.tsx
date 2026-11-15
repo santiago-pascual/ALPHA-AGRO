@@ -1,3 +1,4 @@
+import { SpatialHindcast } from './SpatialHindcast';
 import { useEffect, useMemo, useState } from "react";
 import { Activity, AlertTriangle, Database, LoaderCircle, LockKeyhole, RefreshCw } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -106,6 +107,7 @@ export function PredictiveResearchPage() {
       <section className="panel research-info-card research-provenance"><div className="eyebrow">SOURCE MANIFEST / REPRODUCIBILITY</div><h2>Provenance fingerprints</h2><div><span>Input panel SHA-256</span><code>{state.data.provenance.input_panel_sha256}</code></div><div><span>Source manifest SHA-256</span><code>{state.data.provenance.source_manifest_sha256}</code></div><p>Source: {state.data.provenance.source_doi}</p></section>
     </>}
 
+    <SpatialHindcast />
     <section className="forecast-explorer panel" aria-labelledby="forecast-heading"><div className="forecast-icon"><LockKeyhole size={18} /></div><div className="forecast-copy"><div className="eyebrow">SEPARATE WORKSPACE / DISABLED</div><h2 id="forecast-heading">Forecast Explorer</h2><p>Reserved for a separately validated <code>forecast_v1.json</code> with an explicit issue time, data-availability cutoff, forecast horizon, and predictive intervals.</p><small>Historical holdout predictions shown above are not live forecasts.</small></div><button disabled aria-disabled="true">Forecast unavailable</button></section>
     <footer className="page-footer"><span><Database size={13} /> MODEL EVALUATION ARTIFACT · {state.status === "ready" ? "VALIDATED" : "NOT AVAILABLE"}</span><span>RETROSPECTIVE OUT-OF-SAMPLE SCORES · NO LIVE FORECASTS</span></footer>
   </>;
