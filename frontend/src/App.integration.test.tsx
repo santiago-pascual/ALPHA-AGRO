@@ -26,6 +26,13 @@ async function openRealDataMode() {
   await act(async () => {
     root?.render(<App />);
   });
+  const dashboardButton = Array.from(container.querySelectorAll("button")).find((button) =>
+    button.textContent?.includes("Explore dashboard"),
+  );
+  if (!dashboardButton) throw new Error("Explore dashboard control not found.");
+  await act(async () => {
+    dashboardButton.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  });
   const realDataButton = Array.from(container.querySelectorAll("button")).find((button) =>
     button.textContent?.includes("REAL DATA"),
   );
@@ -46,12 +53,33 @@ describe("dashboard real-data integration", () => {
       root?.render(<App />);
     });
 
-    expect(container.querySelector(".brand")?.getAttribute("aria-label")).toBe("Alpha Agro home");
-    expect(container.querySelector("nav")?.getAttribute("aria-label")).toBe("Alpha Agro main navigation");
+    expect(container.querySelector(".landing-brand")?.getAttribute("aria-label")).toBe("Alpha Agro home");
+    expect(container.querySelector("nav")?.getAttribute("aria-label")).toBe("Alpha Agro landing navigation");
     expect(container.textContent).toContain("Alpha Agro");
-    expect(container.textContent).toContain("From Earth data to agricultural insight.");
+    expect(container.textContent).toContain("From Earth data");
+    expect(container.textContent).toContain("to agricultural insight.");
     expect(container.textContent?.toLowerCase()).toContain("quant alpha");
     expect(container.textContent).toContain("Be An Earth System Trend Detective!");
+  });
+
+  it("guides visitors through the seven scientific demo steps without inventing relationships", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    root = createRoot(container);
+    await act(async () => {
+      root?.render(<App />);
+    });
+    const start = Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Start guided demo"));
+    if (!start) throw new Error("Guided demo control not found.");
+    await act(async () => start.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(container.textContent).toContain("STEP 1 OF 7");
+    for (let index = 0; index < 3; index += 1) {
+      const next = Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Next step"));
+      if (!next) throw new Error("Next guided demo step not found.");
+      await act(async () => next.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    }
+    expect(container.textContent).toContain("STEP 4 OF 7");
+    expect(container.textContent).toContain("no connected cross-variable result artifact");
   });
 
   it("renders schema fixture values, source provenance, and historical-only status", async () => {

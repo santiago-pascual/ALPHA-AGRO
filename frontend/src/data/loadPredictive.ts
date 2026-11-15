@@ -129,7 +129,7 @@ export function adaptPredictiveEvaluation(input: unknown): PredictiveEvaluation 
   };
 }
 
-export async function loadPredictiveEvaluation(path = "/data/predictive_evaluation_v1.json"): Promise<PredictiveEvaluation> {
+export async function loadPredictiveEvaluation(path = `${import.meta.env.BASE_URL}data/predictive_evaluation_v1.json`): Promise<PredictiveEvaluation> {
   const response = await fetch(path, { headers: { Accept: "application/json" } });
   if (!response.ok) throw new Error(response.status === 404 ? "No predictive_evaluation_v1.json is available. The dashboard has no model scores to display." : `Could not load predictive evaluation (HTTP ${response.status}).`);
   return adaptPredictiveEvaluation(await response.json() as unknown);

@@ -220,7 +220,7 @@ export function adaptTrendAnalysis(input: unknown): DashboardDataset {
   };
 }
 
-export async function loadValidatedTrend(path = "/data/trend_analysis.json") {
+export async function loadValidatedTrend(path = `${import.meta.env.BASE_URL}data/trend_analysis.json`) {
   const response = await fetch(path, { headers: { Accept: "application/json" } });
   if (!response.ok) {
     throw new Error(

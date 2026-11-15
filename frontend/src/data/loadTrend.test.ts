@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { adaptTrendAnalysis, loadValidatedTrend } from "./loadTrend";
 import { trendAnalysisFixture } from "./__fixtures__/trendAnalysis.fixture";
 
@@ -44,6 +46,17 @@ describe("adaptTrendAnalysis", () => {
         { ...trendAnalysisFixture.regional_monthly_series[1], month: "2006-03-01" },
       ],
     })).toThrow("month bounds/count");
+  });
+});
+
+const localRealArtifact = resolve(process.cwd(), "public/data/trend_analysis.json");
+describe("optional local real artifact", () => {
+  it.skipIf(!existsSync(localRealArtifact))("passes the unchanged adapter against the local validated NASA JSON when present", () => {
+    const payload = JSON.parse(readFileSync(localRealArtifact, "utf8")) as unknown;
+    const dataset = adaptTrendAnalysis(payload);
+    expect(dataset.mode).toBe("real");
+    expect(dataset.months).toBe(dataset.series.length);
+    expect(dataset.inputFiles.length).toBeGreaterThan(0);
   });
 });
 

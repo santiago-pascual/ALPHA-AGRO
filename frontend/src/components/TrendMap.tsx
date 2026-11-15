@@ -21,12 +21,21 @@ const regionLabels: Record<RegionSelection, string> = {
 
 function trendColor(value: number | null) {
   if (value === null) return "#596366";
-  if (value < -16) return "#cf8977";
-  if (value < -6) return "#a86d63";
-  if (value < 6) return "#75847c";
-  if (value < 16) return "#6c9f8b";
-  return "#96bd91";
+  if (value < -16) return "#b35806";
+  if (value < -6) return "#e08214";
+  if (value < 6) return "#b7b7b7";
+  if (value < 16) return "#67a9cf";
+  return "#2166ac";
 }
+
+const trendLegend = [
+  { label: "≤ −16", color: "#b35806" },
+  { label: "−16 to −6", color: "#e08214" },
+  { label: "−6 to +6", color: "#b7b7b7" },
+  { label: "+6 to +16", color: "#67a9cf" },
+  { label: "≥ +16", color: "#2166ac" },
+  { label: "No estimate", color: "#596366" },
+];
 
 function isInRegion(cell: TrendCell, region: RegionSelection) {
   switch (region) {
@@ -123,7 +132,9 @@ export function TrendMap({ dataset, region, onRegionChange }: TrendMapProps) {
                     : (cell.slopePerDecade > 0 ? "+" : "") +
                       cell.slopePerDecade.toFixed(1) + " mm / decade"}
                   <br />
-                  {cell.significant ? "FDR-adjusted: significant" : "FDR-adjusted: not significant"}
+                  {dataset.mode === "demo"
+                    ? "DEMO significance flag · synthetic"
+                    : cell.significant ? "FDR-adjusted: significant" : "FDR-adjusted: not significant"}
                 </Tooltip>
               </Rectangle>
             );
@@ -135,13 +146,12 @@ export function TrendMap({ dataset, region, onRegionChange }: TrendMapProps) {
         </div>
         <div className="map-overlay map-overlay-bottom" aria-hidden="true">N ↑</div>
       </div>
-      <div className="map-legend" aria-label="Trend color legend">
-        <span>Drier trend</span>
-        <div className="legend-ramp" aria-hidden="true">
-          <i /><i /><i /><i /><i />
-        </div>
-        <span>Wetter trend</span>
-        <span className="legend-unit">(mm / decade)</span>
+      <div className="map-legend" role="list" aria-label="Cell-level trend, millimeters per decade">
+        {trendLegend.map((item) => <span className="map-legend-item" role="listitem" key={item.label}>
+          <i aria-hidden="true" style={{ backgroundColor: item.color }} />
+          <span>{item.label}</span>
+        </span>)}
+        <span className="legend-unit">mm / decade · dry ← → wet</span>
       </div>
       <div className="map-footnote">
         <CircleHelp size={14} aria-hidden="true" />
