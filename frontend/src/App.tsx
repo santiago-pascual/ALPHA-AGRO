@@ -32,9 +32,10 @@ import { demoDataset } from "./data/demo";
 import { loadValidatedTrend } from "./data/loadTrend";
 import { TrendMap, type RegionSelection } from "./components/TrendMap";
 import { PredictiveResearchPage } from "./components/PredictiveResearch";
+import { LandingPage } from "./components/LandingPage";
 import type { DashboardDataset, DataMode, MonthlyObservation } from "./types";
 
-type Page = "overview" | "methodology" | "predictive";
+type Page = "landing" | "overview" | "methodology" | "predictive";
 type ChartMeasure = "storage" | "anomaly";
 type LoadState =
   | { status: "idle" }
@@ -60,7 +61,7 @@ function shortDate(value: string) {
 }
 
 function App() {
-  const [page, setPage] = useState<Page>("overview");
+  const [page, setPage] = useState<Page>("landing");
   const [mode, setMode] = useState<DataMode>("demo");
   const [loadState, setLoadState] = useState<LoadState>({ status: "idle" });
   const [reloadKey, setReloadKey] = useState(0);
@@ -108,10 +109,18 @@ function App() {
     setPage("overview");
   };
 
+  if (page === "landing") {
+    return <LandingPage onOpen={(nextPage, nextMode) => {
+      setMode(nextMode);
+      setPage(nextPage);
+      setMenuOpen(false);
+    }} />;
+  }
+
   return (
     <div className="app-shell">
       <aside className={"sidebar" + (menuOpen ? " sidebar-open" : "")}>
-        <a className="brand" href="#overview" aria-label="Alpha Agro home" onClick={() => setPage("overview")}>
+        <a className="brand" href="#home" aria-label="Alpha Agro home" onClick={() => setPage("landing")}>
           <span className="brand-mark"><Activity size={20} strokeWidth={2.2} /></span>
           <span className="brand-wordmark">
             <b>ALPHA AGRO</b>

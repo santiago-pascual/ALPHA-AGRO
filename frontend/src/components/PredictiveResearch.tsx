@@ -1,4 +1,4 @@
-import { SpatialHindcast } from './SpatialHindcast';
+import { SpatialHindcast } from "./SpatialHindcast";
 import { useEffect, useMemo, useState } from "react";
 import { Activity, AlertTriangle, Database, LoaderCircle, LockKeyhole, RefreshCw } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -43,6 +43,7 @@ export function PredictiveResearchPage() {
     id: item.model,
   })) ?? [], [selected, score]);
   const holdoutWinner = selected?.models.find((item) => item.model === selected.descriptive_holdout_model);
+  const preHoldoutSelection = selected?.models.find((item) => item.model === selected.selected_model);
 
   return <>
     <section className="page-intro predictive-intro">
@@ -54,6 +55,20 @@ export function PredictiveResearchPage() {
     </section>
 
     <div className="research-notice" role="note"><Activity size={16} /><span>Model scores will appear only after a schema-valid evaluation artifact is installed. No illustrative or DEMO scores are shown here.</span><code>predictive_evaluation_v1</code></div>
+
+    <section className="research-status-ladder" aria-label="Evaluation and forecast status">
+      <article><span>01 · HISTORICAL EVALUATION</span><b>{state.status === "ready" ? "Validated artifact loaded" : "No evaluation artifact loaded"}</b></article>
+      <article><span>02 · RETROSPECTIVE HINDCAST</span><b>Historical folds and holdout only</b></article>
+      <article><span>03 · EXPERIMENTAL PROSPECTIVE</span><b>Not connected in this mainline frontend</b></article>
+      <article><span>04 · OPERATIONALLY ELIGIBLE</span><b>Unavailable · no verified eligibility signal</b></article>
+    </section>
+
+    <section className="research-selection-context" aria-labelledby="selection-context-title">
+      <div className="eyebrow">MODEL SELECTION / HOLDOUT DISCIPLINE</div>
+      <h2 id="selection-context-title">Pre-holdout model selection</h2>
+      <p>{preHoldoutSelection ? `${modelNames[preHoldoutSelection.model] ?? preHoldoutSelection.model} is the ${preHoldoutSelection.role} selected using walk-forward results before the reserved holdout.` : "The artifact identifies the selected model using walk-forward results before the reserved holdout."} Holdout rankings are descriptive only and are never used to reselect a model.</p>
+      <span>The holdout measures historical generalization. It does not establish prospective or operational forecast skill.</span>
+    </section>
 
     <section className="research-controls panel" aria-label="Evaluation filters">
       <label><span>Evaluation support</span><select value={scope} onChange={(event) => setScope(event.target.value as EvaluationScope)}><option value="regional">Regional average</option><option value="spatial">Spatial cells</option></select></label>
@@ -84,14 +99,14 @@ export function PredictiveResearchPage() {
             <Bar dataKey="holdout" name="holdout" fill="#d3b883" radius={[3, 3, 0, 0]} maxBarSize={32} />
           </BarChart></ResponsiveContainer> : <div className="chart-empty">No finite scores are available for this selection.</div>}
         </div>
-        <div className="selection-labels"><span><b>Pre-holdout selection</b> Marked model selected using walk-forward results only.</span><span><b>Holdout winner</b> {holdoutWinner ? `${modelNames[holdoutWinner.model] ?? holdoutWinner.model} · descriptive lowest score` : "Not available"}; holdout is not used for model selection.</span></div>
+        <div className="selection-labels"><span><b>Pre-holdout selection</b> {preHoldoutSelection ? `${modelNames[preHoldoutSelection.model] ?? preHoldoutSelection.model} · ${preHoldoutSelection.role === "baseline" ? "selected baseline" : "selected candidate"}` : "Not available"}; chosen using walk-forward results only.</span><span><b>Descriptive holdout comparison</b> {holdoutWinner ? `${modelNames[holdoutWinner.model] ?? holdoutWinner.model} · descriptive lowest score on the reserved holdout` : "Not available"}; not used for model selection.</span></div>
       </section>
 
       <section className="panel research-table-panel">
         <div className="panel-heading"><div><div className="eyebrow">SCORES / BASELINES / UNCERTAINTY</div><h2>Evaluation details</h2></div><span className="panel-period">{scoreLabel[score]} · {selected.target_definition.units}</span></div>
         <div className="research-table-wrap"><table className="research-table"><thead><tr><th>Model</th><th>Role / selection</th><th>Walk-forward mean</th><th>Holdout score</th><th>Skill vs persistence</th><th>Skill vs climatology</th><th>95% score-difference interval</th></tr></thead><tbody>
           {selected.models.map((item) => <tr key={item.model}>
-            <th scope="row">{modelNames[item.model] ?? item.model}</th><td>{item.selected_before_holdout ? "Pre-holdout selected" : item.role === "baseline" ? "Baseline" : "Candidate"}</td>
+            <th scope="row">{modelNames[item.model] ?? item.model}</th><td>{item.role === "baseline" ? (item.selected_before_holdout ? "Selected baseline · pre-holdout" : "Baseline") : (item.selected_before_holdout ? "Pre-holdout selected candidate" : "Candidate")}</td>
             <td>{show(mean(item.walk_forward.folds.map((fold) => fold.metrics[score])))}</td><td>{show(item.holdout.metrics[score])}</td>
             <td>{show(item.skill_scores.vs_persistence)}</td><td>{show(item.skill_scores.vs_climatology)}</td>
             <td>{intervalText(item.uncertainty.metric_difference_interval_95)}<small>{item.uncertainty.method}</small></td>
@@ -108,7 +123,7 @@ export function PredictiveResearchPage() {
     </>}
 
     <SpatialHindcast />
-    <section className="forecast-explorer panel" aria-labelledby="forecast-heading"><div className="forecast-icon"><LockKeyhole size={18} /></div><div className="forecast-copy"><div className="eyebrow">SEPARATE WORKSPACE / DISABLED</div><h2 id="forecast-heading">Forecast Explorer</h2><p>Reserved for a separately validated <code>forecast_v1.json</code> with an explicit issue time, data-availability cutoff, forecast horizon, and predictive intervals.</p><small>Historical holdout predictions shown above are not live forecasts.</small></div><button disabled aria-disabled="true">Forecast unavailable</button></section>
+    <section className="forecast-explorer panel" aria-labelledby="forecast-heading"><div className="forecast-icon"><LockKeyhole size={18} /></div><div className="forecast-copy"><div className="eyebrow">SEPARATE WORKSPACE / DISABLED</div><h2 id="forecast-heading">Forecast Explorer</h2><p>Unavailable until a separately validated <code>forecast_v1.json</code> provides an explicit issue time, data-availability cutoff, forecast horizon, predictive uncertainty, and verified operational-eligibility decision.</p><small>Historical holdout predictions shown above are not live forecasts.</small></div><button disabled aria-disabled="true">Forecast unavailable</button></section>
     <footer className="page-footer"><span><Database size={13} /> MODEL EVALUATION ARTIFACT · {state.status === "ready" ? "VALIDATED" : "NOT AVAILABLE"}</span><span>RETROSPECTIVE OUT-OF-SAMPLE SCORES · NO LIVE FORECASTS</span><span>ALPHA AGRO · DEVELOPED BY QUANT ALPHA</span></footer>
   </>;
 }
