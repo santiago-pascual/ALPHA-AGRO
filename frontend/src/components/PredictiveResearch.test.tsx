@@ -24,9 +24,9 @@ describe("PredictiveResearchPage", () => {
     expect(container.textContent).toContain("Predictive research");
     expect(container.textContent).toContain("Pre-holdout selection");
     expect(container.textContent).toContain("descriptive lowest score");
-    expect(container.textContent).toContain("Historical holdout predictions shown above are not live forecasts.");
-    const forecastButton = Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Forecast unavailable"));
-    expect(forecastButton?.disabled).toBe(true);
+    expect(container.textContent).toContain("Historical holdout predictions are not live forecasts.");
+    expect(container.textContent).toContain("Forecast artifacts and operational eligibility are handled separately.");
+    expect(container.textContent).not.toContain("Forecast unavailable");
     expect(container.textContent).toContain("999");
     const target = container.querySelector("select[aria-label='Target']") ?? container.querySelectorAll("select")[2];
     await act(async () => { (target as HTMLSelectElement).value = "low_moisture"; target?.dispatchEvent(new Event("change", { bubbles: true })); });

@@ -19,7 +19,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-async function openRealDataMode() {
+async function openObservatory() {
   const container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
@@ -27,18 +27,13 @@ async function openRealDataMode() {
     root?.render(<App />);
   });
   const dashboardButton = Array.from(container.querySelectorAll("button")).find((button) =>
-    button.textContent?.includes("Explore dashboard"),
+    button.textContent?.includes("Explore Observatory"),
   );
-  if (!dashboardButton) throw new Error("Explore dashboard control not found.");
+  if (!dashboardButton) throw new Error("Explore Observatory control not found.");
   await act(async () => {
     dashboardButton.dispatchEvent(new MouseEvent("click", { bubbles: true }));
   });
-  const realDataButton = Array.from(container.querySelectorAll("button")).find((button) =>
-    button.textContent?.includes("REAL DATA"),
-  );
-  if (!realDataButton) throw new Error("REAL DATA control not found.");
   await act(async () => {
-    realDataButton.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     await new Promise((resolve) => setTimeout(resolve, 0));
   });
   return container;
@@ -60,6 +55,8 @@ describe("dashboard real-data integration", () => {
     expect(container.textContent).toContain("to agricultural insight.");
     expect(container.textContent?.toLowerCase()).toContain("quant alpha");
     expect(container.textContent).toContain("Be An Earth System Trend Detective!");
+    expect(container.textContent).toContain("validated scientific artifacts only");
+    expect(container.textContent).not.toContain("Fictitious demonstration values.");
   });
 
   it("guides visitors through the seven scientific demo steps without inventing relationships", async () => {
@@ -88,8 +85,10 @@ describe("dashboard real-data integration", () => {
       json: async () => trendAnalysisFixture,
     }));
 
-    const container = await openRealDataMode();
+    const container = await openObservatory();
 
+    expect(container.querySelector("h1")?.textContent).toContain("Earth System Observatory");
+    expect(container.textContent).toContain("STUDY REGION: ARGENTINE PAMPAS");
     expect(container.textContent).toContain("TEST FIXTURE");
     expect(container.textContent).toContain("REGIONAL STORAGE TREND");
     expect(container.textContent).toContain("HISTORICAL ANALYSIS · NO OPERATIONAL FORECAST");
@@ -98,9 +97,9 @@ describe("dashboard real-data integration", () => {
     expect(container.textContent).not.toContain("Fictitious demonstration values.");
 
     const methodsButton = Array.from(container.querySelectorAll("button")).find((button) =>
-      button.textContent?.includes("Methods & data"),
+      button.textContent?.includes("About & data sources"),
     );
-    if (!methodsButton) throw new Error("Methods & data navigation control not found.");
+    if (!methodsButton) throw new Error("About & data sources navigation control not found.");
     await act(async () => {
       methodsButton.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
@@ -112,10 +111,23 @@ describe("dashboard real-data integration", () => {
   it("keeps the dashboard empty when validated JSON is absent", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 404 }));
 
-    const container = await openRealDataMode();
+    const container = await openObservatory();
 
     expect(container.textContent).toContain("No validated trend_analysis.json was found");
-    expect(container.textContent).toContain("DEMO values are hidden");
+    expect(container.textContent).toContain("Scientific values remain hidden until a validated artifact is available.");
+    expect(container.textContent).not.toContain("REGIONAL STORAGE TREND");
     expect(container.textContent).not.toContain("Fictitious demonstration values.");
+  });
+
+  it("navigates to the distinct Forecast workspace without exposing retrospective scores as forecasts", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 404 }));
+    const container = await openObservatory();
+    const forecastButton = Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Forecast"));
+    if (!forecastButton) throw new Error("Forecast navigation control not found.");
+    await act(async () => forecastButton.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(container.querySelector("h1")?.textContent).toContain("Forecast availability");
+    expect(container.textContent).toContain("NOT OPERATIONALLY ELIGIBLE");
+    expect(container.textContent).toContain("not current forecasts");
+    expect(container.textContent).not.toContain("999");
   });
 });

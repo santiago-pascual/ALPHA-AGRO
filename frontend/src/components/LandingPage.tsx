@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { Activity, ArrowDown, ArrowRight, BookOpen, ChartNoAxesCombined, Database, MapPin, Sprout } from "lucide-react";
-import type { DataMode } from "../types";
 
-export type LandingPageName = "overview" | "methodology" | "predictive";
+export type LandingPageName = "overview" | "forecast" | "about" | "research";
 
 type LandingPageProps = {
-  onOpen: (page: LandingPageName, mode: DataMode) => void;
+  onOpen: (page: LandingPageName) => void;
 };
 
 const tourSteps = [
@@ -18,13 +17,13 @@ const tourSteps = [
     eyebrow: "02 · THE EVIDENCE",
     title: "Start with what NASA measured and modeled.",
     text: "The historical view uses GLDAS Noah v2.1 monthly soil-water layers. The product estimates land-surface conditions; it is not an in-situ probe. The methods screen explains units, grid support, coverage, and provenance.",
-    action: { label: "Open methods & data", page: "methodology" as const, mode: "demo" as const },
+    action: { label: "Open about & data sources", page: "about" as const },
   },
   {
     eyebrow: "03 · THE HISTORY",
     title: "Read the seasonal record with uncertainty in view.",
-    text: "The overview presents monthly storage and anomalies alongside trend estimates, confidence intervals, HAC significance, and data coverage. Select REAL DATA to load the validated JSON; if it is absent or invalid, the page stays empty and explains why.",
-    action: { label: "Open REAL DATA overview", page: "overview" as const, mode: "real" as const },
+    text: "The Observatory presents validated monthly storage and anomalies alongside trend estimates, confidence intervals, HAC significance, and data coverage. If the reviewed artifact is absent or invalid, the page stays empty and explains why.",
+    action: { label: "Open Observatory", page: "overview" as const },
   },
   {
     eyebrow: "04 · RELATIONSHIPS",
@@ -35,19 +34,19 @@ const tourSteps = [
     eyebrow: "05 · THE MAP",
     title: "Compare supported cells, then check what is missing.",
     text: "The spatial view uses cell estimates from the validated artifact, reports the study-grid coverage, and marks cells without eligible trends. Its selectable Pampas subregions are descriptive groupings, not farm boundaries.",
-    action: { label: "Open spatial overview", page: "overview" as const, mode: "real" as const },
+    action: { label: "Open spatial Observatory", page: "overview" as const },
   },
   {
     eyebrow: "06 · PREDICTIVE RESEARCH",
     title: "Walk-forward selection comes before holdout comparison.",
     text: "Seasonal climatology remains the selected model because selection uses pooled pre-holdout walk-forward results. A lower XGBoost or HMM score on some holdout comparisons is descriptive; choosing from the holdout would contaminate the evaluation. These are historical tests, not live forecasts.",
-    action: { label: "Open predictive research", page: "predictive" as const, mode: "demo" as const },
+    action: { label: "Open Research & Methods", page: "research" as const },
   },
   {
     eyebrow: "07 · LIMITS & NEXT STEPS",
     title: "Use the signal as context, not as a crop forecast.",
     text: "The current application does not predict yield, damage, or field-level moisture. Prospective forecasts remain unavailable until a future backend provides a versioned artifact and verified eligibility. Missing data and uncertainty stay visible.",
-    action: { label: "Review methods & limitations", page: "methodology" as const, mode: "demo" as const },
+    action: { label: "Review data sources & limitations", page: "about" as const },
   },
 ];
 
@@ -67,7 +66,7 @@ export function LandingPage({ onOpen }: LandingPageProps) {
           <a href="#capabilities">What it shows</a>
           <a href="#guided-demo">Guided demo</a>
         </nav>
-        <button className="landing-nav-cta" onClick={() => onOpen("overview", "demo")}>Open dashboard <ArrowRight size={14} /></button>
+        <button className="landing-nav-cta" onClick={() => onOpen("overview")}>Open Observatory <ArrowRight size={14} /></button>
       </header>
 
       <main>
@@ -77,11 +76,11 @@ export function LandingPage({ onOpen }: LandingPageProps) {
             <h1 id="landing-title">From Earth data<br /><em>to agricultural insight.</em></h1>
             <p className="landing-description">NASA-powered Earth system intelligence for agriculture. Explore historical soil-water conditions across the Argentine Pampas, with uncertainty and data provenance in view.</p>
             <div className="landing-actions">
-              <button className="landing-primary" onClick={() => onOpen("overview", "demo")}>Explore dashboard <ArrowRight size={16} /></button>
-              <button className="landing-secondary" onClick={() => onOpen("overview", "real")}><Database size={15} /> Load validated GLDAS data</button>
+              <button className="landing-primary" onClick={() => onOpen("overview")}>Explore Observatory <ArrowRight size={16} /></button>
+              <button className="landing-secondary" onClick={() => onOpen("forecast")}><Database size={15} /> Forecast availability</button>
             </div>
             <a className="landing-tour-link" href="#guided-demo" onClick={() => setActiveStep(0)}>Start the guided demo <ArrowDown size={13} /></a>
-            <p className="landing-mode-note">DEMO values are synthetic and labeled. REAL DATA requires a valid <code>trend_analysis.json</code>; it never falls back to DEMO.</p>
+            <p className="landing-mode-note">The public interface displays validated scientific artifacts only. Missing or invalid files produce an explicit unavailable state; there is no synthetic-data fallback.</p>
           </div>
           <div className="landing-hero-aside" aria-label="Study summary">
             <div className="landing-aside-top"><span className="landing-status-mark" /><span>STUDY REGION · SCHEMATIC LOCATOR</span></div>
@@ -157,10 +156,10 @@ export function LandingPage({ onOpen }: LandingPageProps) {
               <p>{step.text}</p>
               <div className="guided-demo-controls">
                 <button className="landing-secondary" onClick={() => setActiveStep((value) => Math.max(0, (value ?? 0) - 1))} disabled={activeStep === 0}>Previous</button>
-                {step.action && <button className="landing-secondary" onClick={() => onOpen(step.action!.page, step.action!.mode)}>{step.action.label} <ArrowRight size={14} /></button>}
+                {step.action && <button className="landing-secondary" onClick={() => onOpen(step.action!.page)}>{step.action.label} <ArrowRight size={14} /></button>}
                 {activeStep! < tourSteps.length - 1
                   ? <button className="landing-primary" onClick={() => setActiveStep((value) => Math.min(tourSteps.length - 1, (value ?? 0) + 1))}>Next step <ArrowRight size={14} /></button>
-                  : <button className="landing-primary" onClick={() => { setActiveStep(null); onOpen("overview", "demo"); }}>Open dashboard in DEMO <ArrowRight size={14} /></button>}
+                  : <button className="landing-primary" onClick={() => { setActiveStep(null); onOpen("overview"); }}>Open Observatory <ArrowRight size={14} /></button>}
                 <button className="guided-demo-close" onClick={() => setActiveStep(null)}>Close guide</button>
               </div>
             </div>

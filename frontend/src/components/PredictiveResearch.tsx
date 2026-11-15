@@ -1,6 +1,6 @@
 import { SpatialHindcast } from "./SpatialHindcast";
 import { useEffect, useMemo, useState } from "react";
-import { Activity, AlertTriangle, Database, LoaderCircle, LockKeyhole, RefreshCw } from "lucide-react";
+import { Activity, AlertTriangle, Database, LoaderCircle, RefreshCw } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { loadPredictiveEvaluation } from "../data/loadPredictive";
 import type { EvaluationScope, EvaluationTarget, PredictiveEvaluation, ScoreName } from "../types/predictive";
@@ -123,7 +123,7 @@ export function PredictiveResearchPage() {
     </>}
 
     <SpatialHindcast />
-    <section className="forecast-explorer panel" aria-labelledby="forecast-heading"><div className="forecast-icon"><LockKeyhole size={18} /></div><div className="forecast-copy"><div className="eyebrow">SEPARATE WORKSPACE / DISABLED</div><h2 id="forecast-heading">Forecast Explorer</h2><p>Unavailable until a separately validated <code>forecast_v1.json</code> provides an explicit issue time, data-availability cutoff, forecast horizon, predictive uncertainty, and verified operational-eligibility decision.</p><small>Historical holdout predictions shown above are not live forecasts.</small></div><button disabled aria-disabled="true">Forecast unavailable</button></section>
+    <div className="research-notice" role="note"><Activity size={15} /><span>Forecast artifacts and operational eligibility are handled separately. Historical holdout predictions are not live forecasts.</span></div>
     <footer className="page-footer"><span><Database size={13} /> MODEL EVALUATION ARTIFACT · {state.status === "ready" ? "VALIDATED" : "NOT AVAILABLE"}</span><span>RETROSPECTIVE OUT-OF-SAMPLE SCORES · NO LIVE FORECASTS</span><span>ALPHA AGRO · DEVELOPED BY QUANT ALPHA</span></footer>
   </>;
 }

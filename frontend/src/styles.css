@@ -581,6 +581,39 @@ h1, h2, h3, p { margin-top: 0; }
 .research-selection-context p { max-width: 1040px; margin: 0 0 7px; color: #a6b0a8; font-size: 10px; line-height: 1.7; }
 .research-selection-context > span { color: #87938b; font-size: 8px; }
 
+.source-status { min-height: 30px; padding: 0 10px; color: #aab9ac; font: 8px var(--mono); letter-spacing: .04em; }
+.study-region-label { display: inline-flex; align-items: center; gap: 6px; margin-top: 9px; color: #a8baaa; font: 8px var(--mono); letter-spacing: .06em; }
+.study-region-label svg { color: var(--green); }
+.forecast-intro { align-items: center; }
+.forecast-status { display: flex; flex-direction: column; gap: 5px; min-width: 185px; padding: 12px; border: 1px solid #51473a; border-radius: 5px; background: #1b1915; }
+.forecast-status > span { width: 7px; height: 7px; border-radius: 50%; background: #c49d5c; }
+.forecast-status b { color: #dbc394; font: 8px var(--mono); letter-spacing: .045em; }
+.forecast-status small { color: #8e8779; font: 7px var(--mono); }
+.forecast-unavailable { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 13px; margin: 14px 0; padding: 19px; border-color: #38433b; }
+.forecast-unavailable-icon { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid #465542; border-radius: 6px; color: #c2d0ad; background: #1b231d; }
+.forecast-unavailable h2, .forecast-setup h2 { margin: 6px 0 8px; color: #e1e8df; font: 550 16px "Segoe UI Variable", "Aptos", "Segoe UI", sans-serif; }
+.forecast-unavailable p { max-width: 850px; margin: 0; color: #a2ada5; font-size: 10px; line-height: 1.7; }
+.forecast-unavailable code, .forecast-file-path code { color: #c1cfb6; font: 9px var(--mono); overflow-wrap: anywhere; }
+.forecast-file-path { display: inline-flex; align-items: center; gap: 8px; margin-top: 13px; padding: 8px 10px; border: 1px solid #303b36; border-radius: 4px; background: #101616; }
+.forecast-file-path svg { color: #91aa91; }
+.forecast-setup { padding: 17px; }
+.forecast-controls { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 12px; margin-top: 15px; }
+.forecast-controls label { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.forecast-controls label > span { color: #89968e; font: 8px var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+.forecast-controls select, .forecast-fixed-field { min-height: 36px; width: 100%; padding: 9px 10px; border: 1px solid #34403e; border-radius: 4px; color: #9ba79f; background: #151d1e; font-size: 10px; }
+.forecast-controls select:disabled { opacity: .67; cursor: not-allowed; }
+.forecast-fixed-field { display: flex; align-items: center; gap: 7px; }
+.forecast-fixed-field svg { flex: 0 0 auto; color: #a1b69a; }
+.forecast-controls-note { display: flex; align-items: flex-start; gap: 7px; margin: 12px 0 0; color: #929f96; font-size: 9px; line-height: 1.6; }
+.forecast-controls-note svg { flex: 0 0 auto; margin-top: 1px; color: #aab69f; }
+.forecast-requirements { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+.forecast-requirements article { display: flex; align-items: flex-start; gap: 10px; padding: 14px; }
+.forecast-requirements article > svg { flex: 0 0 auto; color: #a8b89f; }
+.forecast-requirements article div { display: flex; flex-direction: column; gap: 5px; }
+.forecast-requirements b { color: #cbd4cb; font-size: 10px; }
+.forecast-requirements span { color: #8f9b93; font-size: 9px; line-height: 1.6; }
+.nav-index { max-width: 70px; overflow: hidden; text-overflow: ellipsis; }
+
 @media (max-width: 900px) {
   .landing-hero { grid-template-columns: minmax(0, 1.1fr) minmax(250px, .8fr); gap: 30px; }
   .landing-capability-grid { grid-template-columns: 1fr 1fr; }
@@ -623,6 +656,11 @@ h1, h2, h3, p { margin-top: 0; }
   .landing-footer > a { margin-left: 39px; }
   .map-legend { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; font-size: 7px; }
   .research-status-ladder { grid-template-columns: 1fr; }
+  .forecast-intro { align-items: flex-start; flex-direction: column; }
+  .forecast-status { min-width: 0; width: 100%; }
+  .forecast-controls, .forecast-requirements { grid-template-columns: 1fr; }
+  .forecast-unavailable { grid-template-columns: 1fr; padding: 15px; }
+  .source-status { max-width: 145px; font-size: 7px; }
 }
 .phase7-hindcast { padding: 20px; }
 .phase7-controls, .phase7-grid-head { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin: 12px 0; }
