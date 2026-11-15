@@ -753,3 +753,14 @@ h1, h2, h3, p { margin-top: 0; }
 .phase7-grid-head { max-width: 610px; font-size: 0.83rem; }
 .phase7-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px 16px; }
 .phase7-metrics dd { margin: 4px 0 0; overflow-wrap: anywhere; }
+.dual-track-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 0 0 16px; }
+.dual-track-card { padding: 20px; }
+.dual-track-card h2, .location-diagnosis h2 { margin: 8px 0; color: var(--text); font-size: 18px; }
+.dual-track-card p, .location-diagnosis p, .conditional-guidance p { color: var(--muted); font-size: 13px; line-height: 1.65; }
+.dual-track-card dl { display: grid; gap: 8px; margin: 14px 0 0; }
+.dual-track-card dl div { display: grid; grid-template-columns: minmax(100px, .7fr) 1.3fr; gap: 10px; border-top: 1px solid var(--line-soft); padding-top: 8px; }
+.dual-track-card dt, .location-diagnosis dt { color: var(--dim); font-size: 11px; }
+.dual-track-card dd, .location-diagnosis dd { margin: 0; color: var(--text); font-size: 12px; }
+.location-diagnosis, .conditional-guidance { margin-bottom: 16px; padding: 20px; }
+.location-diagnosis .phase7-metrics { margin: 12px 0; }
+@media (max-width: 760px) { .dual-track-grid { grid-template-columns: 1fr; } }

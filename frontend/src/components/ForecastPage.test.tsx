@@ -56,6 +56,10 @@ describe("ForecastPage location selection", () => {
     expect(container.textContent).toContain("Forecast result withheld");
     expect(container.textContent).toContain("frontend/public/data/forecast_v1.json");
     expect(container.textContent).toContain("Argentine Pampas");
+    expect(container.textContent).toContain("14- and 28-day water outlook");
+    expect(container.textContent).toContain("1-, 2- and 3-month outlook");
+    expect(container.textContent).toContain("selected in all 18 configurations");
+    expect(container.textContent).toContain("does not meet the history requirement");
     expect(container.textContent).not.toContain("predicted value");
     const horizon = container.querySelector<HTMLSelectElement>("select[aria-label='Forecast horizon']");
     expect(horizon?.disabled).toBe(false);
@@ -75,6 +79,8 @@ describe("ForecastPage location selection", () => {
     clickButton(container, "Map select supported cell");
     expect(container.textContent).toContain("Selected within a grid cell with an eligible historical trend estimate.");
     expect(container.textContent).toContain("34.0000° S · 60.0000° W");
+    expect(container.textContent).toContain("Historical GLDAS trend for the selected grid cell");
+    expect(container.textContent).toContain("does not measure current field conditions");
     expect(container.textContent).toContain("Map marker selected");
     expect(container.textContent).toContain("GPS precision or a satellite soil-moisture observation resolution");
     clickButton(container, "Clear location");

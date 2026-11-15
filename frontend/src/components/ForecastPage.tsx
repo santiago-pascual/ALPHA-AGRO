@@ -43,6 +43,9 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange }: Fo
   }, []);
 
   const selectedModel = selectedPreHoldoutModel(evaluation, horizon, target);
+  const selectedTrendCell = selectedLocation && dataset
+    ? findEligibleCell(selectedLocation, dataset.cells, dataset.resolutionDegrees)
+    : null;
   const requestResult = useMemo(() => {
     try {
       return { request: buildForecastRequest({ location: selectedLocation, dataset, evaluation, horizon, target, issue: issueMode === "date" ? { mode: "date", value: issueDate } : { mode: "latest_verified_eligible" } }), error: null };
@@ -119,6 +122,40 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange }: Fo
         <p>Configure a spatial request for the selected eligible Pampas grid cell. Results appear only after issue-time availability and scientific eligibility are verified.</p>
       </div>
       <div className="forecast-status" role="status"><span /><b>{resolution?.status === "available" ? "OPERATIONALLY ELIGIBLE" : forecastState.status === "loading" ? "CHECKING ARTIFACT" : "NOT OPERATIONALLY ELIGIBLE"}</b><small>{forecastState.status === "ready" ? "FORECAST WITHHELD · REQUEST OR EVIDENCE MISMATCH" : forecastState.status === "loading" ? "VALIDATING FORECAST CONTRACT" : "NO VERIFIED LIVE RESULT · FORECAST WITHHELD"}</small></div>
+    </section>
+
+    <section className="dual-track-grid" aria-label="Complementary forecasting tracks">
+      <article className="dual-track-card panel">
+        <div className="eyebrow">TRACK 1 · SHORT TERM</div>
+        <h2>14- and 28-day water outlook</h2>
+        <p>Designed around SMAP/GLDAS soil-water inputs and meteorological forecasts only when their issue-time publication is verified. The available NASA pilot covers two days and does not meet the history requirement.</p>
+        <dl><div><dt>Current status</dt><dd>Withheld · no validated out-of-sample skill</dd></div><div><dt>Required comparison</dt><dd>Seasonal climatology and persistence</dd></div><div><dt>Weather inputs</dt><dd>Not yet admitted; causal vintages required</dd></div></dl>
+      </article>
+      <article className="dual-track-card panel">
+        <div className="eyebrow">TRACK 2 · SEASONAL</div>
+        <h2>1-, 2- and 3-month outlook</h2>
+        <p>Based on the 2006–2025 GLDAS research. Seasonal climatology was selected in all 18 configurations using pre-holdout walk-forward results; this is a benchmark finding, not evidence of a skillful dynamic forecast.</p>
+        <dl><div><dt>Current status</dt><dd>Historical evaluation only · no operational forecast</dd></div><div><dt>Comparisons</dt><dd>Climatology and persistence; holdout ranking stays descriptive</dd></div><div><dt>Additional predictors</dt><dd>Only with justified, dated availability evidence</dd></div></dl>
+      </article>
+    </section>
+
+    <section className="location-diagnosis panel" aria-labelledby="location-diagnosis-title">
+      <div className="eyebrow">LOCATION-SPECIFIC HISTORICAL DIAGNOSIS</div>
+      <h2 id="location-diagnosis-title">{selectedTrendCell ? "Historical GLDAS trend for the selected grid cell" : "Select a supported location to see its historical trend"}</h2>
+      {selectedTrendCell && <dl className="phase7-metrics">
+        <div><dt>Period</dt><dd>{dataset?.start.slice(0, 4)}–{dataset?.end.slice(0, 4)}</dd></div>
+        <div><dt>Estimated trend</dt><dd>{selectedTrendCell.slopePerDecade === null ? "Unavailable" : `${selectedTrendCell.slopePerDecade >= 0 ? "+" : ""}${selectedTrendCell.slopePerDecade.toFixed(2)} mm/decade`}</dd></div>
+        <div><dt>95% interval</dt><dd>{selectedTrendCell.ci95 ? `${selectedTrendCell.ci95[0].toFixed(2)} to ${selectedTrendCell.ci95[1].toFixed(2)} mm/decade` : "Unavailable"}</dd></div>
+        <div><dt>FDR-adjusted</dt><dd>{selectedTrendCell.significant ? "Significant" : "Not significant"}</dd></div>
+      </dl>}
+      <p>{selectedTrendCell
+        ? "This is a long-term modeled storage trend for a GLDAS grid cell. It does not measure current field conditions, predict near-term soil-water stress, or establish land degradation."
+        : dataset ? "A selected supported cell will show its historical trend with uncertainty. This historical indicator is separate from current soil-water stress and land degradation." : "Validated historical coverage is unavailable, so no location-specific diagnosis is shown."}</p>
+    </section>
+
+    <section className="conditional-guidance panel" aria-label="Agricultural guidance limits">
+      <div className="eyebrow">CONDITIONAL AGRICULTURAL GUIDANCE</div>
+      <p>No action threshold is triggered here. If a future forecast passes chronological out-of-sample, calibration, uncertainty, and issue-time data gates, any guidance must remain conditional on that forecast, local soil measurements, crop and growth stage, and regional agronomic advice.</p>
     </section>
 
     <section className="forecast-unavailable panel" aria-labelledby="forecast-unavailable-title">
