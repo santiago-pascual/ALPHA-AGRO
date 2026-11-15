@@ -952,6 +952,28 @@ h1, h2, h3, p { margin-top: 0; }
 }
 
 .phase8-outlook { display: flex; flex-direction: column; gap: 14px; padding: 20px; border-color: #455044; }
+.phase8-view-switch { display: flex; align-self: flex-start; gap: 5px; padding: 3px; border: 1px solid #35433a; border-radius: 5px; background: #111714; }
+.phase8-view-switch button { min-height: 34px; padding: 7px 11px; border: 1px solid transparent; border-radius: 3px; color: #aab7ac; background: transparent; font-size: 10px; cursor: pointer; }
+.phase8-view-switch button[aria-pressed="true"] { border-color: #66785f; color: #edf3e9; background: #263328; }
+.phase8-view-switch button:focus-visible, .phase8-month-card:focus-visible { outline: 2px solid #c6ddb9; outline-offset: 2px; }
+.phase8-farmer-context { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.phase8-farmer-context article { min-width: 0; display: flex; flex-direction: column; gap: 5px; padding: 11px; border: 1px solid #35423a; border-radius: 4px; background: #121916; }
+.phase8-farmer-context article > span { color: #8f9b91; font: 8px var(--mono); letter-spacing: .05em; }
+.phase8-farmer-context article > b { color: #e1e9df; font-size: 12px; font-weight: 550; overflow-wrap: anywhere; }
+.phase8-farmer-context article > small { color: #aab5aa; font-size: 9px; line-height: 1.5; }
+.phase8-metric-explainer, .phase8-plain-reading, .phase8-uncertainty-note { margin: 0; padding: 12px; border-left: 2px solid #9b8351; color: #c6cebf; background: #191914; font-size: 10px; line-height: 1.65; }
+.phase8-month-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+.phase8-month-card { min-width: 0; min-height: 156px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 14px; border: 1px solid #36433a; border-radius: 5px; color: #ccd5ca; text-align: left; background: #131a16; cursor: pointer; }
+.phase8-month-card[aria-pressed="true"] { border-color: #859776; background: #1d2820; box-shadow: inset 0 2px 0 #9eaf8d; }
+.phase8-month-card .phase8-card-month { color: #b4c4aa; font-size: 10px; font-weight: 600; text-transform: capitalize; }
+.phase8-month-card > b { color: #dce8d5; font: 22px var(--mono); letter-spacing: -.03em; }
+.phase8-month-card > span:not(.phase8-card-month) { color: #aebaa9; font-size: 9px; }
+.phase8-month-card > small { color: #a2aea1; font-size: 9px; line-height: 1.5; overflow-wrap: anywhere; }
+.phase8-month-card .phase8-unavailable-value { color: #e6d7b1; font-family: inherit; font-size: 12px; font-weight: 600; letter-spacing: 0; }
+.phase8-plain-reading { border-left-color: #819773; background: #121815; }
+.phase8-plain-reading > b { color: #e0eadc; font-size: 11px; }
+.phase8-plain-reading > p { margin: 6px 0 0; }
+.phase8-uncertainty-note { border-left-color: #7791a0; color: #b9c9cf; background: #12191c; }
 .phase8-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .phase8-heading h2 { margin: 6px 0 0; color: #e2e8df; font-size: 20px; font-weight: 560; }
 .phase8-status { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px; padding: 7px 9px; border: 1px solid #6d5d3c; border-radius: 4px; color: #e7cf96; background: #252117; font: 8px var(--mono); letter-spacing: .05em; }
@@ -997,11 +1019,18 @@ h1, h2, h3, p { margin-top: 0; }
 .phase8-not-operational { display: flex; align-items: flex-start; gap: 8px; margin: 0; padding: 10px; border: 1px solid #594e37; border-radius: 4px; color: #e3d2a8; background: #201d17; font-size: 9px; line-height: 1.5; }
 .phase8-not-operational > svg { flex: 0 0 auto; }
 @media (max-width: 760px) {
+  .phase8-farmer-context { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .phase8-month-cards { grid-template-columns: 1fr; }
+  .phase8-month-card { min-height: 0; }
+}
+@media (max-width: 760px) {
   .phase8-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .phase8-research-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 560px) {
   .phase8-outlook { padding: 14px; }
+  .phase8-view-switch { width: 100%; }
+  .phase8-view-switch button { flex: 1; }
   .phase8-heading { flex-direction: column; }
   .phase8-heading h2 { font-size: 17px; }
   .phase8-status { align-self: flex-start; }
@@ -1012,4 +1041,5 @@ h1, h2, h3, p { margin-top: 0; }
   .phase8-state-alert { flex-wrap: wrap; }
   .phase8-state-alert button { width: 100%; justify-content: center; }
   .phase8-value { font-size: 30px; }
+  .phase8-farmer-context { grid-template-columns: 1fr; }
 }

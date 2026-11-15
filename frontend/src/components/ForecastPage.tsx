@@ -278,7 +278,7 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
       <p className="forecast-generation-note" id="forecast-generation-note">{language === "es" ? "La solicitud solo consulta un artefacto validado; no calcula predicciones en el navegador." : "The request checks a validated artifact; the browser does not calculate predictions."}</p>
     </section>
 
-    <Phase8Outlook state={phase8State} horizon={horizon} onHorizonChange={setHorizon} selectedLocation={selectedLocation} onRetry={retryPhase8Bundle} language={language} formatDate={formatDate} formatNumber={formatNumber} />
+    <Phase8Outlook state={phase8State} horizon={horizon} onHorizonChange={setHorizon} selectedLocation={selectedLocation} fieldName={activeField?.name ?? null} cropName={CROP_CATALOG.find((crop) => crop.id === cropConfiguration.crop)?.name[language] ?? cropConfiguration.crop} growthStageName={t(cropConfiguration.growthStage)} waterManagementName={t(cropConfiguration.waterManagement)} target={target} onRetry={retryPhase8Bundle} language={language} formatDate={formatDate} formatNumber={formatNumber} />
 
     {submissionAttempted && <section className="forecast-unavailable panel forecast-results" aria-labelledby="forecast-unavailable-title" aria-live="polite">
       <div className="forecast-unavailable-icon"><LockKeyhole size={19} /></div>

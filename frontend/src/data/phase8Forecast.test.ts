@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { adaptPhase8ForecastBundle, loadPhase8ForecastBundle, matchPhase8Cell } from "./phase8Forecast";
+import { adaptPhase8ForecastBundle, loadPhase8ForecastBundle, matchPhase8Cell, resolvePhase8Metric } from "./phase8Forecast";
 import { phase8ForecastFixture } from "./__fixtures__/phase8Forecast.fixture";
 
 const localArtifactPath = resolve(process.cwd(), "public/data/phase8_forecast_bundle_v1.json");
@@ -48,6 +48,17 @@ describe("Phase 8 experimental forecast bundle adapter", () => {
     expect(matchPhase8Cell({ latitude: maskedCell.latitude, longitude: maskedCell.longitude }, spatial)).toMatchObject({ status: "masked", cell: { valid: false, value: null } });
     expect(matchPhase8Cell({ latitude: 0, longitude: 0 }, spatial).status).toBe("outside");
     expect(matchPhase8Cell(null, spatial).status).toBe("outside");
+  });
+
+  it("returns only storage for Phase 8 and never reuses millimeters as anomaly or probability", () => {
+    const bundle = validBundle();
+    expect(resolvePhase8Metric(bundle, 1, "regional", null, "storage")).toMatchObject({ status: "available", value: 101, units: "mm", support: "regional" });
+    expect(resolvePhase8Metric(bundle, 1, "regional", null, "anomaly")).toMatchObject({ status: "unavailable" });
+    expect(resolvePhase8Metric(bundle, 1, "regional", null, "low_moisture")).toMatchObject({ status: "unavailable" });
+    expect(resolvePhase8Metric(bundle, 1, "spatial", null, "storage")).toMatchObject({ status: "unavailable" });
+    const validCell = bundle.spatial_forecasts.forecasts[0].cells[0];
+    expect(resolvePhase8Metric(bundle, 1, "spatial", { latitude: validCell.latitude, longitude: validCell.longitude }, "storage")).toMatchObject({ status: "available", units: "mm", support: "spatial" });
+    expect(resolvePhase8Metric(bundle, 1, "spatial", { latitude: validCell.latitude, longitude: validCell.longitude }, "anomaly")).toMatchObject({ status: "unavailable" });
   });
 
   it("returns explicit missing and error states without falling back to another artifact", async () => {

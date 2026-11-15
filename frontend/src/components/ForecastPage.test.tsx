@@ -90,7 +90,7 @@ describe("ForecastPage location selection", () => {
     }));
     const container = renderForecast();
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
-    expect(container.textContent).toContain("Experimental soil-storage outlook");
+    expect(container.textContent).toContain("Experimental field analysis");
     expect(container.textContent).toContain("EXPERIMENTAL · NOT OPERATIONAL");
     expect(container.textContent).toContain("101 mm");
     expect(container.textContent).toContain("operationally_eligible = false");

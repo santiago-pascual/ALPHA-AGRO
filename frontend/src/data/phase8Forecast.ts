@@ -1,6 +1,7 @@
 import { adaptForecastArtifact } from "./forecast";
 import type { CoordinatePoint } from "./location";
 import type { Phase8Cell, Phase8ForecastBundle, Phase8Metric, Phase8RegionalForecast, Phase8SpatialForecast } from "../types/phase8";
+import type { ForecastTarget } from "../types/forecast";
 
 export type Phase8BundleLoad = { status: "loading" } | { status: "ready"; bundle: Phase8ForecastBundle } | { status: "missing"; message: string } | { status: "error"; message: string };
 export type Phase8CellMatch = { status: "matched"; cell: Phase8Cell; distanceKm: number } | { status: "masked"; cell: Phase8Cell } | { status: "outside" };
@@ -149,6 +150,26 @@ export function adaptPhase8ForecastBundle(input: unknown): Phase8ForecastBundle 
 
 export function phase8ForecastForHorizon(bundle: Phase8ForecastBundle, horizon: 1 | 2 | 3) {
   return { regional: bundle.regional_forecasts[horizon - 1], spatial: bundle.spatial_forecasts.forecasts[horizon - 1] };
+}
+
+export type Phase8MetricResolution =
+  | { status: "available"; value: number; units: "mm"; interval: { level: 0.9; lower: number; upper: number; method: string }; climatologicalReferenceMm: number; support: "regional" | "spatial" }
+  | { status: "unavailable"; reason: string };
+
+/** Phase 8 supplies storage only. Its zero anomaly is a climatology construction, not a predicted anomaly. */
+export function resolvePhase8Metric(bundle: Phase8ForecastBundle, horizon: 1 | 2 | 3, scope: "regional" | "spatial", point: CoordinatePoint | null, target: ForecastTarget): Phase8MetricResolution {
+  if (target === "anomaly") return { status: "unavailable", reason: "The Phase 8 seasonal-climatology outlook does not estimate a dynamic soil-moisture anomaly. Its zero anomaly field is a baseline construction, not an anomaly prediction." };
+  if (target === "low_moisture") return { status: "unavailable", reason: "The Phase 8 bundle contains no defined low-moisture event threshold or calibrated probability estimate." };
+  const { regional, spatial } = phase8ForecastForHorizon(bundle, horizon);
+  if (scope === "regional") {
+    if (!regional.predictive_interval) return { status: "unavailable", reason: "A validated uncertainty interval is not available for this regional estimate." };
+    return { status: "available", value: regional.value, units: "mm", interval: { level: 0.9, lower: regional.predictive_interval.lower, upper: regional.predictive_interval.upper, method: regional.predictive_interval.method }, climatologicalReferenceMm: regional.climatological_reference_mm, support: "regional" };
+  }
+  const match = matchPhase8Cell(point, spatial, bundle.spatial_forecasts.spatial_resolution_degrees);
+  if (match.status === "outside") return { status: "unavailable", reason: "Select a location supported by the validated GLDAS grid to view a cell estimate." };
+  if (match.status === "masked") return { status: "unavailable", reason: "The nearest supported GLDAS cell is masked; no value is substituted or interpolated." };
+  if (!match.cell.predictive_interval || match.cell.value === null || match.cell.climatological_reference_mm === null) return { status: "unavailable", reason: "The selected GLDAS cell has no validated storage estimate or uncertainty interval." };
+  return { status: "available", value: match.cell.value, units: "mm", interval: match.cell.predictive_interval, climatologicalReferenceMm: match.cell.climatological_reference_mm, support: "spatial" };
 }
 
 /** Nearest center only; a masked nearest cell stays unavailable and is never replaced/interpolated. */
