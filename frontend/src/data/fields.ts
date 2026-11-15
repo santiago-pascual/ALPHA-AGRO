@@ -78,10 +78,11 @@ export function createSavedField(input: {
   if (issue) throw new Error(issue);
   if (input.description && input.description.length > 400) throw new Error("La descripción debe tener 400 caracteres o menos. / Description must be 400 characters or fewer.");
   const eligibleCell: TrendCell | null = input.dataset ? findEligibleCell(input.point, input.dataset.cells, input.dataset.resolutionDegrees) : null;
-  if (input.dataset && !eligibleCell) throw new Error("Este punto no está dentro de una celda histórica elegible. / This point is outside the eligible historical grid.");
   const id = input.id ?? (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `field-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
   return {
     id, name, latitude: input.point.latitude, longitude: input.point.longitude,
+    // Keep the farmer's reference point even when the scientific grid does not cover it.
+    // A null cell ID is an explicit unsupported state, never an extrapolated forecast.
     gridCellId: eligibleCell && input.dataset ? gridCellId(eligibleCell) : null,
     createdAt: (input.now ?? new Date()).toISOString(),
     ...(input.description?.trim() ? { description: input.description.trim() } : {}),

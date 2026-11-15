@@ -54,7 +54,7 @@ function renderForecast(dataset?: DashboardDataset | null) {
 
 function clickButton(container: HTMLElement, name: string) {
   const button = Array.from(container.querySelectorAll("button")).find((item) => item.textContent?.includes(name));
-  if (!button) throw new Error(`Button not found: ${name}`);
+  if (!button) throw new Error(`Button not found: ${name}. Buttons: ${Array.from(container.querySelectorAll("button")).map((item) => item.textContent).join(" | ")}`);
   act(() => button.dispatchEvent(new MouseEvent("click", { bubbles: true })));
 }
 
@@ -122,7 +122,9 @@ describe("ForecastPage location selection", () => {
     act(() => { management.value = "irrigated"; management.dispatchEvent(new Event("change", { bubbles: true })); });
     expect(container.querySelector(".crop-comparison-panel")).toBeNull();
     clickButton(container, "Generate forecast");
-    expect(container.querySelectorAll(".crop-evidence-card")).toHaveLength(3);
+    expect(container.querySelectorAll(".crop-evidence-card")).toHaveLength(10);
+    expect(container.textContent).toContain("Sunflower");
+    expect(container.textContent).toContain("Yerba mate");
     expect(container.textContent).toContain("No crop suitability ranking");
     expect(container.textContent).toContain("No numeric suitability score or recommendation is produced");
     expect(container.textContent).toContain("No eligible soil-water forecast is available for this selection; historical context is separate.");
@@ -159,7 +161,7 @@ describe("ForecastPage location selection", () => {
     clickButton(container, "Map select supported cell");
     clickButton(container, "Generar pronóstico");
     expect(container.textContent).toContain("Solicitud de análisis");
-    expect(container.textContent).toContain("Soja · Planificación / siembra · Secano");
+    expect(container.textContent).toContain("Soja · Planificación / siembra · Desconocido");
   });
 
   it("relocalizes an existing validation message when the user switches language", () => {
@@ -208,7 +210,10 @@ describe("ForecastPage location selection", () => {
     setValue(longitude, "0");
     clickButton(container, "Use coordinates");
     expect(container.textContent).toContain("outside cells with eligible historical trend estimates");
-    expect(container.textContent).not.toContain("Map marker selected");
+    expect(container.textContent).toContain("Map marker selected");
+    clickButton(container, "Generate forecast");
+    expect(container.textContent).toContain("outside the validated Pampas grid cells");
+    expect(container.textContent).toContain("No scientifically validated forecast is currently available");
 
     setValue(latitude, "-34");
     setValue(longitude, "-60");
@@ -270,5 +275,41 @@ describe("ForecastPage location selection", () => {
     } as GeolocationPosition));
     expect(container.textContent).toContain("GPS-reported horizontal accuracy ±8 m");
     expect(container.textContent).toContain("0.25° — GLDAS grid spacing is model-grid support");
+  });
+
+  it("accepts coordinate search without geocoding locality text", () => {
+    const container = renderForecast();
+    const search = container.querySelector<HTMLInputElement>("#field-location-search")!;
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+    act(() => { setter?.call(search, "-34, -60"); search.dispatchEvent(new Event("input", { bubbles: true })); });
+    clickButton(container, "Search");
+    expect(container.textContent).toContain("34.0000° S · 60.0000° W");
+    act(() => { setter?.call(search, "Marcos Paz, Buenos Aires"); search.dispatchEvent(new Event("input", { bubbles: true })); });
+    clickButton(container, "Search");
+    expect(container.textContent).toContain("Locality and address search are not connected");
+    expect(container.textContent).toContain("34.0000° S · 60.0000° W");
+  });
+
+  it("offers crop-specific stage options and an explicit unknown irrigation state", () => {
+    const container = renderForecast();
+    const crop = container.querySelector<HTMLSelectElement>("select[aria-label='Crop']")!;
+    act(() => { crop.value = "citrus"; crop.dispatchEvent(new Event("change", { bubbles: true })); });
+    const stage = container.querySelector<HTMLSelectElement>("select[aria-label='Growth stage']")!;
+    expect(Array.from(stage.options).map((option) => option.value)).toContain("fruit_development");
+    expect(Array.from(stage.options).map((option) => option.value)).not.toContain("planning");
+    const irrigation = container.querySelector<HTMLSelectElement>("select[aria-label='Water management']")!;
+    expect(Array.from(irrigation.options).map((option) => option.value)).toContain("unknown");
+  });
+
+  it("lets farmers select comparison alternatives without producing a ranking", () => {
+    const container = renderForecast();
+    clickButton(container, "Map select supported cell");
+    clickButton(container, "Generate forecast");
+    expect(container.querySelectorAll(".crop-evidence-card")).toHaveLength(10);
+    const sunflower = Array.from(container.querySelectorAll<HTMLLabelElement>(".crop-comparison-selector label")).find((label) => label.textContent?.includes("Sunflower"))?.querySelector("input");
+    act(() => sunflower?.click());
+    expect(container.querySelectorAll(".crop-evidence-card")).toHaveLength(9);
+    expect(container.textContent).toContain("No crop suitability ranking");
+    expect(container.textContent).toContain("No numeric suitability score or recommendation is produced");
   });
 });

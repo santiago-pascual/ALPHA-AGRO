@@ -1,13 +1,15 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CircleHelp, Layers3, MapPin } from "lucide-react";
 import { divIcon } from "leaflet";
-import { Circle, MapContainer, Marker, Popup, Rectangle, ScaleControl, TileLayer, Tooltip, useMapEvents } from "react-leaflet";
+import { Circle, MapContainer, Marker, Popup, Rectangle, ScaleControl, TileLayer, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import type { CoordinatePoint, SelectedLocation } from "../data/location";
 import type { DashboardDataset, TrendCell } from "../types";
 import type { SavedField } from "../data/fields";
 import { useI18n } from "../i18n";
 
 export type RegionSelection = "all" | "north" | "south" | "west" | "east";
+export type FieldMapMode = "road" | "satellite" | "hybrid";
+export const FIELD_SELECTION_GRID_DEFAULT_VISIBLE = false;
 
 type TrendMapProps = {
   dataset: DashboardDataset;
@@ -33,6 +35,16 @@ export function MapClickHandler({ onSelect }: { onSelect?: (point: CoordinatePoi
       onSelect?.({ latitude: event.latlng.lat, longitude: event.latlng.lng });
     },
   });
+  return null;
+}
+
+export function SelectedLocationMapSync({ location, enabled }: { location: SelectedLocation | null; enabled: boolean }) {
+  const map = useMap();
+  useEffect(() => {
+    if (enabled && location && location.source !== "map") {
+      map.flyTo([location.latitude, location.longitude], Math.max(map.getZoom(), 8), { animate: false });
+    }
+  }, [enabled, location?.latitude, location?.longitude, location?.source, map]);
   return null;
 }
 
@@ -73,14 +85,16 @@ export function TrendMap({ dataset, region, onRegionChange, selectedLocation = n
   const { t, formatNumber } = useI18n();
   const regionLabels: Record<RegionSelection, string> = { all: t("regionStudy"), north: t("regionNorth"), south: t("regionSouth"), west: t("regionWest"), east: t("regionEast") };
   const [selectedCell, setSelectedCell] = useState<TrendCell | null>(null);
-  const visibleCells = useMemo(() => dataset.cells, [dataset.cells]);
+  const [showScientificGrid, setShowScientificGrid] = useState(FIELD_SELECTION_GRID_DEFAULT_VISIBLE);
+  const [fieldMapMode, setFieldMapMode] = useState<FieldMapMode>("road");
+  const visibleCells = useMemo(() => selectionMode && !showScientificGrid ? [] : dataset.cells, [dataset.cells, selectionMode, showScientificGrid]);
 
   return (
     <section className="panel map-panel" aria-labelledby="map-title">
       <div className="panel-heading map-heading">
         <div>
-            <div className="eyebrow">{selectionMode ? t("coverage") + " · " + t("validatedSupport") : t("mapSpatial")}</div>
-            <h2 id="map-title">{selectionMode ? t("selectSupportedMap") : t("cellTrend")}</h2>
+            <div className="eyebrow">{selectionMode ? t("fieldMapEyebrow") : t("mapSpatial")}</div>
+            <h2 id="map-title">{selectionMode ? t("selectFieldLocationMap") : t("cellTrend")}</h2>
         </div>
         {!selectionMode && <label className="select-wrap compact-select">
           <span className="sr-only">{t("selectSubregion")}</span>
@@ -100,26 +114,36 @@ export function TrendMap({ dataset, region, onRegionChange, selectedLocation = n
           </select>
         </label>}
       </div>
+      {selectionMode && <div className="field-map-toolbar">
+        <div className="field-map-mode" role="group" aria-label={t("mapLayerSelector")}>
+          <button type="button" aria-pressed={fieldMapMode === "road"} onClick={() => setFieldMapMode("road")}>{t("mapRoad")}</button>
+          <button type="button" disabled title={t("satelliteUnavailable")}>{t("mapSatellite")}</button>
+          <button type="button" disabled title={t("satelliteUnavailable")}>{t("mapHybrid")}</button>
+        </div>
+        <span className="field-map-provider-note" role="status">{t("satelliteUnavailable")}</span>
+        <label className="scientific-grid-toggle"><input type="checkbox" checked={showScientificGrid} onChange={(event) => setShowScientificGrid(event.target.checked)} />{t("showScientificGrid")}</label>
+      </div>}
       <div className="map-meta">
-        <span><span className="live-dot" /> {dataset.eligibleCells} / {dataset.gridCells} {t("trendCells")} · {dataset.resolutionDegrees}° grid</span>
-        <span>{selectionMode ? t("selectCellMarker") : t("regionName") + " · " + t("regionResolution")}</span>
+        <span><span className="live-dot" /> {selectionMode ? `${dataset.eligibleCells} ${t("trendCells")}` : `${dataset.eligibleCells} / ${dataset.gridCells} ${t("trendCells")}`} · {dataset.resolutionDegrees}° grid</span>
+        <span>{selectionMode ? t("selectAnyArgentinaPoint") : t("regionName") + " · " + t("regionResolution")}</span>
       </div>
-      <div className="map-frame">
+      <div className={selectionMode ? "map-frame field-selection-frame" : "map-frame"}>
         <MapContainer
-          center={[-34.2, -60.5]}
-          zoom={6}
-          minZoom={5}
-          maxZoom={10}
+          center={selectionMode ? [-38.4161, -63.6167] : [-34.2, -60.5]}
+          zoom={selectionMode ? 4 : 6}
+          minZoom={selectionMode ? 3 : 5}
+          maxZoom={selectionMode ? 17 : 10}
           scrollWheelZoom
           zoomControl
-          className="pampas-map"
-          aria-label={selectionMode ? t("selectSupportedMap") : t("mapSpatial") + " · " + t("regionName")}
+          className={selectionMode ? "pampas-map field-selection-map" : "pampas-map"}
+          aria-label={selectionMode ? t("selectFieldLocationMap") : t("mapSpatial") + " · " + t("regionName")}
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <ScaleControl position="bottomright" imperial={false} />
+          <SelectedLocationMapSync location={selectedLocation} enabled={selectionMode} />
           <MapClickHandler onSelect={onLocationSelect} />
           {visibleCells.map((cell) => {
             const selectedRegion = isInRegion(cell, region);
@@ -174,31 +198,31 @@ export function TrendMap({ dataset, region, onRegionChange, selectedLocation = n
             <Popup>{t("selectedLocation")} · {selectedLocation.source === "gps" ? t("browserGps") : selectedLocation.source === "map" ? t("mapSource") : t("manualEntry")}</Popup>
           </Marker>}
         </MapContainer>
-        <div className="map-overlay map-overlay-top">
+        {(!selectionMode || showScientificGrid) && <div className="map-overlay map-overlay-top">
           <Layers3 size={14} aria-hidden="true" />
-          <span>{t("linearTrend")}</span>
-        </div>
+          <span>{selectionMode ? t("scientificGrid") : t("linearTrend")}</span>
+        </div>}
         <div className="map-overlay map-overlay-bottom" aria-hidden="true">N ↑</div>
       </div>
-      <div className="map-legend" role="list" aria-label={t("legendLabel")}>
+      {(!selectionMode || showScientificGrid) && <div className="map-legend" role="list" aria-label={t("legendLabel")}>
         {trendLegend.map((item) => <span className="map-legend-item" role="listitem" key={item.label}>
           <i aria-hidden="true" style={{ backgroundColor: item.color }} />
           <span>{item.label === "No estimate" ? t("noEstimate") : item.label}</span>
         </span>)}
         <span className="legend-unit">{t("dryWet")}</span>
-      </div>
+      </div>}
       <div className="map-footnote">
         <CircleHelp size={14} aria-hidden="true" />
         <span>
           {selectionMode
-            ? `${t("mapSelectionFoot")} ${dataset.gridCells - dataset.eligibleCells} ${t("noEstimateCoverage")}`
+          ? `${showScientificGrid ? t("mapSelectionFoot") : t("fieldMapGridHidden")} ${dataset.gridCells - dataset.eligibleCells} ${t("noEstimateCoverage")}`
             : dataset.mode === "demo"
               ? t("mapDemoFoot")
               : `${t("mapRealFoot")} ${dataset.gridCells - dataset.eligibleCells} ${t("noEstimateCoverage")}`}
         </span>
       </div>
       {selectionMode && <p className="location-grid-note">{t("gridResolutionNote")}</p>}
-      {selectedCell && (
+      {showScientificGrid && selectedCell && (
         <div className="selected-cell" aria-live="polite">
           <div>
             <span className="eyebrow">{t("selectedGridCell")}</span>

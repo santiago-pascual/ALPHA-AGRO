@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildFarmerAnalysisRequest, CROP_IDS, CROP_REQUIREMENTS, DEFAULT_CROP_CONFIGURATION } from "./agronomy";
+import { buildFarmerAnalysisRequest, CROP_CATALOG, CROP_IDS, CROP_REQUIREMENTS, DEFAULT_CROP_CONFIGURATION, readCropConfiguration } from "./agronomy";
 import { historicalContextForForecast } from "./farmerAnalysis";
 import { adaptTrendAnalysis } from "./loadTrend";
 import { trendAnalysisFixture } from "./__fixtures__/trendAnalysis.fixture";
@@ -21,11 +21,23 @@ describe("farmer crop context", () => {
   });
 
   it("does not provide numeric agronomic thresholds or source-free recommendations", () => {
-    expect(CROP_IDS).toEqual(["soybean", "maize", "wheat"]);
+    expect(CROP_IDS).toEqual(["soybean", "maize", "wheat", "sunflower", "barley", "sorghum", "sugarcane", "grapevine", "citrus", "yerba_mate"]);
     for (const crop of CROP_IDS) {
       expect(CROP_REQUIREMENTS[crop]).toMatchObject({ status: "insufficient_evidence", relevantIndicators: [], evidenceSource: null, geographicApplicability: null });
     }
-    expect(DEFAULT_CROP_CONFIGURATION).toMatchObject({ crop: "soybean", growthStage: "planning", waterManagement: "rainfed" });
+    expect(DEFAULT_CROP_CONFIGURATION).toMatchObject({ crop: "soybean", growthStage: "planning", waterManagement: "unknown" });
+  });
+
+  it("keeps crop stages specific to annual or perennial configuration and preserves uncertainty", () => {
+    const annual = CROP_CATALOG.find((crop) => crop.id === "wheat")!;
+    const perennial = CROP_CATALOG.find((crop) => crop.id === "citrus")!;
+    expect(annual.stages).toContain("planning");
+    expect(perennial.stages).toContain("fruit_development");
+    expect(perennial.stages).not.toContain("planning");
+    expect(perennial.geographicContext).toBeNull();
+    expect(perennial.evidenceReferences).toEqual([]);
+    expect(readCropConfiguration({ crop: "citrus", growthStage: "planning", waterManagement: "irrigated" })).toBeUndefined();
+    expect(readCropConfiguration({ crop: "citrus", growthStage: "fruit_development", waterManagement: "unknown" })).toEqual({ crop: "citrus", growthStage: "fruit_development", waterManagement: "unknown" });
   });
 
   it("limits the latest observation and same-month reference to the artifact cutoff", () => {

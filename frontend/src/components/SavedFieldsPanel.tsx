@@ -4,6 +4,7 @@ import type { DashboardDataset } from "../types";
 import type { SelectedLocation } from "../data/location";
 import type { SavedField } from "../data/fields";
 import { sameGridCellGroups } from "../data/fields";
+import { CROP_CATALOG } from "../data/agronomy";
 import { formatCoordinate } from "../data/location";
 import { useI18n, type TranslationKey } from "../i18n";
 
@@ -68,7 +69,7 @@ export function SavedFieldsPanel({ dataset, selectedLocation, fields, activeFiel
           </form> : <>
             <button className="saved-field-select" type="button" aria-pressed={activeFieldId === field.id} onClick={() => onSelect(field.id)}>
               <span className="saved-field-check">{activeFieldId === field.id ? <Check size={14} /> : <MapPin size={14} />}</span>
-              <span className="saved-field-details"><b>{field.name}</b><small>{formatCoordinate(field.latitude, "latitude")} · {formatCoordinate(field.longitude, "longitude")}</small><small>{language === "es" ? "Guardado" : "Saved"} {formatDate(field.createdAt, { dateStyle: "medium" })}</small>{field.gridCellId && <small>GLDAS · {field.gridCellId}</small>}{field.cropConfiguration && <small>{t(field.cropConfiguration.crop)} · {t(field.cropConfiguration.growthStage)} · {t(field.cropConfiguration.waterManagement)}</small>}{field.description && <small>{field.description}</small>}</span>
+              <span className="saved-field-details"><b>{field.name}</b><small>{formatCoordinate(field.latitude, "latitude")} · {formatCoordinate(field.longitude, "longitude")}</small><small>{language === "es" ? "Guardado" : "Saved"} {formatDate(field.createdAt, { dateStyle: "medium" })}</small>{field.gridCellId ? <small>GLDAS · {field.gridCellId}</small> : <small>{t("noValidatedCell")}</small>}{field.cropConfiguration && <small>{CROP_CATALOG.find((crop) => crop.id === field.cropConfiguration?.crop)?.name[language]} · {t(field.cropConfiguration.growthStage)} · {t(field.cropConfiguration.waterManagement)}</small>}{field.description && <small>{field.description}</small>}</span>
               <span className="saved-field-active-label">{activeFieldId === field.id ? t("active").toUpperCase() : t("useField").toUpperCase()}</span>
             </button>
             <div className="saved-field-row-actions">

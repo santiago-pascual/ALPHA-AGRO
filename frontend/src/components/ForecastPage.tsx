@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { AlertTriangle, CalendarClock, CircleHelp, Crosshair, Database, LockKeyhole, MapPin } from "lucide-react";
+import { AlertTriangle, ArrowRight, BarChart3, CalendarClock, CircleHelp, Crosshair, Database, LoaderCircle, LockKeyhole, MapPin } from "lucide-react";
 import type { DashboardDataset } from "../types";
 import { coordinateError, findEligibleCell, formatCoordinate, type CoordinatePoint, type LocationSource, type SelectedLocation } from "../data/location";
 import { TrendMap } from "./TrendMap";
@@ -12,7 +12,7 @@ import type { SavedField } from "../data/fields";
 import { interpretAnomaly, interpretCellTrend, interpretForecastAnomaly, interpretLowMoistureProbability, interpretStorage } from "../data/interpretation";
 import { useI18n, type TranslationKey } from "../i18n";
 import { CropComparisonPanel, CropDecisionPanel } from "./CropDecisionPanel";
-import { buildFarmerAnalysisRequest, DEFAULT_CROP_CONFIGURATION, type CropConfiguration, type FarmerAnalysisRequest } from "../data/agronomy";
+import { buildFarmerAnalysisRequest, CROP_CATALOG, DEFAULT_CROP_CONFIGURATION, type CropConfiguration, type FarmerAnalysisRequest } from "../data/agronomy";
 import { historicalContextForForecast } from "../data/farmerAnalysis";
 import { ForecastIntervalVisual } from "./ForecastIntervalVisual";
 
@@ -38,6 +38,8 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
   const { language, t, formatDate, formatNumber } = useI18n();
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
+  const [locationSearch, setLocationSearch] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locationNotice, setLocationNotice] = useState<string | null>(null);
   const [horizon, setHorizon] = useState<1 | 2 | 3>(1);
@@ -64,6 +66,8 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
     return () => { active = false; };
   }, []);
 
+  useEffect(() => { if (forecastState.status !== "loading") setIsGenerating(false); }, [forecastState.status]);
+
   const selectedModel = selectedPreHoldoutModel(evaluation, horizon, target);
   const selectedSeries = evaluation?.results.find((row) => row.scope === "spatial" && row.horizon_months === horizon && row.target === target);
   const selectedEventDefinition = selectedSeries?.target_definition.threshold ?? selectedSeries?.target_definition.method;
@@ -74,6 +78,7 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
     } catch (error) { return { request: null, error: error instanceof Error ? error.message : "Forecast request is invalid." }; }
   }, [selectedLocation, dataset, evaluation, horizon, target, issueMode, issueDate]);
   const requestErrorKey: TranslationKey | null = requestResult.error === "Select a field location first." ? "selectLocationError"
+    : requestResult.error === "The selected point is outside the validated eligible-cell mask." ? "outsideCoverage"
     : requestResult.error?.startsWith("Latitude") ? "latitudeRange"
       : requestResult.error?.startsWith("Longitude") ? "longitudeRange"
         : requestResult.error?.startsWith("Enter finite") ? "validCoordinates"
@@ -133,19 +138,10 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
       setLocationNotice(null);
       return;
     }
-    if (!dataset) {
-      setLocationError(t("coverageCheckUnavailable"));
-      setLocationNotice(null);
-      return;
-    }
-    if (!findEligibleCell(point, dataset.cells, dataset.resolutionDegrees)) {
-      setLocationError(t("outsideCoverage"));
-      setLocationNotice(null);
-      return;
-    }
     onLocationChange({ ...point, source, accuracyMeters });
-    setLocationError(null);
-    setLocationNotice(t("selectedInCoverage"));
+    const eligibleCell = dataset ? findEligibleCell(point, dataset.cells, dataset.resolutionDegrees) : null;
+    setLocationError(dataset && !eligibleCell ? t("outsideCoverageDetail") : null);
+    setLocationNotice(eligibleCell ? t("selectedInCoverage") : t("selectedNoForecastCoverage"));
   };
 
   const submitManualCoordinates = (event: FormEvent<HTMLFormElement>) => {
@@ -158,6 +154,20 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
       return;
     }
     selectLocation({ latitude: Number(latText), longitude: Number(lonText) }, "manual");
+  };
+
+  const submitLocationSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const match = locationSearch.trim().match(/^(-?\d+(?:\.\d+)?)\s*[,;\s]\s*(-?\d+(?:\.\d+)?)$/);
+    if (!match) {
+      setLocationError(t("geocoderUnavailable"));
+      setLocationNotice(null);
+      return;
+    }
+    const point = { latitude: Number(match[1]), longitude: Number(match[2]) };
+    setLatitude(String(point.latitude));
+    setLongitude(String(point.longitude));
+    selectLocation(point, "manual");
   };
 
   const requestDeviceLocation = () => {
@@ -205,6 +215,11 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
         <p>{language === "es" ? "El punto ayuda a encontrar una celda de análisis. No representa el lote completo ni produce una medición local." : "A point identifies an analysis cell; it is not a full field boundary or field measurement."}</p>
       </div>
       <SavedFieldsPanel dataset={dataset} selectedLocation={selectedLocation} fields={savedFields} activeFieldId={activeFieldId} storageWarning={storageWarning} onSelect={onFieldSelect} onAdd={onFieldAdd} onRename={onFieldRename} onDelete={onFieldDelete} />
+      <form className="location-search-form panel" onSubmit={submitLocationSearch}>
+        <label htmlFor="field-location-search">{t("searchLocationLabel")}</label>
+        <div><MapPin size={16} aria-hidden="true" /><input id="field-location-search" value={locationSearch} onChange={(event) => setLocationSearch(event.target.value)} placeholder={t("coordinateSearchPlaceholder")} autoComplete="off" /><button type="submit">{t("searchLocation")}</button></div>
+        <small>{t("geocoderUnavailable")}</small>
+      </form>
       {dataset ? <TrendMap
         dataset={dataset}
         region="all"
@@ -239,7 +254,7 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
     <section className="forecast-setup panel" aria-labelledby="forecast-setup-title">
       <div className="panel-heading"><div><div className="eyebrow">{t("requestCell")}</div><h2 id="forecast-setup-title">{t("forecastSetup")}</h2></div><span className="historical-chip">{forecastState.status === "ready" ? t("checking") : forecastState.status === "loading" ? t("loading") : t("resultsWithheld")}</span></div>
       <div className="forecast-controls">
-        <label><span>{t("location")}</span><div className="forecast-fixed-field"><MapPin size={14} /> {selectedLocation && requestResult.request ? `${activeField?.name ? `${activeField.name} · ` : ""}GLDAS cell · ${requestResult.request.grid_cell_id}` : language === "es" ? "Pampas argentinas · elegí un punto" : "Argentine Pampas · select a point"}</div></label>
+        <label><span>{t("location")}</span><div className="forecast-fixed-field"><MapPin size={14} /> {selectedLocation ? requestResult.request ? `${activeField?.name ? `${activeField.name} · ` : ""}GLDAS cell · ${requestResult.request.grid_cell_id}` : `${formatCoordinate(selectedLocation.latitude, "latitude")} · ${formatCoordinate(selectedLocation.longitude, "longitude")} · ${localizedRequestError ?? t("checking")}` : language === "es" ? "Pampas argentinas · elegí un punto" : "Argentine Pampas · select a point"}</div></label>
         <label><span>{t("horizon")}</span><select aria-label={t("horizon")} value={horizon} onChange={(event) => setHorizon(Number(event.target.value) as 1 | 2 | 3)}><optgroup label={t("shortTermTrack")}><option value="14d" disabled>{t("months14")} — {t("shortTermUnavailable")}</option><option value="28d" disabled>{t("months28")} — {t("shortTermUnavailable")}</option></optgroup><optgroup label={t("monthlyTrack")}><option value="1">{t("oneMonth")}</option><option value="2">{t("twoMonths")}</option><option value="3">{t("threeMonths")}</option></optgroup></select></label>
         <label><span>{t("target")}</span><select aria-label={t("target")} value={target} onChange={(event) => setTarget(event.target.value as ForecastTarget)}><option value="storage">{t("storage")} (mm)</option><option value="anomaly">{t("anomaly")} (mm)</option><option value="low_moisture">{t("lowMoisture")}</option></select></label>
         <label><span>{t("model")}</span><div className="forecast-fixed-field">{evaluationState === "loading" ? t("loading") : selectedModel ? `${selectedModel} · ${language === "es" ? "elegido antes del período reservado" : "selected before holdout"}` : (language === "es" ? "Sin configuración de evaluación" : "No matching evaluation configuration")}</div></label>
@@ -250,7 +265,7 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
       <div className="research-status-ladder" aria-label={language === "es" ? "Niveles de preparación científica" : "Scientific readiness levels"}>
         <div><b>1 · {language === "es" ? "Investigación histórica" : "Historical research"}</b><span>{language === "es" ? "Disponible en el Observatorio" : "Available in Observatory"}</span></div><div><b>2 · {language === "es" ? "Evaluación retrospectiva" : "Retrospective evaluation"}</b><span>{evaluationState === "ready" ? (language === "es" ? "Artefacto de evaluación cargado" : "Evaluation artifact loaded") : (language === "es" ? "Cargando o no disponible" : "Loading or unavailable")}</span></div><div><b>3 · {language === "es" ? "Investigación prospectiva experimental" : "Experimental prospective"}</b><span>{language === "es" ? "Sin conectar" : "Not connected"}</span></div><div><b>4 · {language === "es" ? "Elegibilidad operativa" : "Operational eligibility"}</b><span>{requestedResolution?.status === "available" ? (language === "es" ? "Evidencia verificada" : "Evidence matched") : (language === "es" ? "No establecida" : "Not established")}</span></div>
       </div>
-      <button type="button" className="button-primary forecast-generate" onClick={generateForecast} aria-describedby="forecast-generation-note">{t("generateForecast")}</button>
+      <button type="button" className="button-primary forecast-generate" onClick={() => { setIsGenerating(!!requestResult.request && forecastState.status === "loading"); generateForecast(); }} disabled={isGenerating} aria-describedby="forecast-generation-note" aria-busy={isGenerating}>{isGenerating ? <LoaderCircle className="forecast-generate-spinner" size={17} aria-hidden="true" /> : <BarChart3 size={17} aria-hidden="true" />}{isGenerating ? t("generating") : t("generateForecast")}<ArrowRight size={16} aria-hidden="true" /></button>
       <p className="forecast-generation-note" id="forecast-generation-note">{language === "es" ? "La solicitud solo consulta un artefacto validado; no calcula predicciones en el navegador." : "The request checks a validated artifact; the browser does not calculate predictions."}</p>
     </section>
 
@@ -262,10 +277,10 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
         <h2 id="forecast-unavailable-title">{requestedDisplay ? (language === "es" ? `Pronóstico validado · ${activeField?.name ?? "ubicación seleccionada"}` : `Validated forecast · ${activeField?.name ?? "Selected location"}`) : t("forecastMissing")}</h2>
         <p>{submitError ? t(submitError) : requestedDisplay ? (language === "es" ? "Estimación científica para el período indicado. No describe una medición dentro del lote ni garantiza resultados agrícolas." : "Scientific estimate for the selected period. It is not a measurement within the field and does not guarantee agricultural outcomes.") : forecastState.status === "loading" ? t("generating") : forecastState.status === "error" ? t("artifactInvalid") : requestedResolution?.status === "unavailable" ? requestedResolution.reason : (language === "es" ? t("forecastMissingEs") : t("forecastMissing")) + " " + t("noFallback")}</p>
         <div className="forecast-file-path"><Database size={14} /><code>{forecastFile}</code></div>
-        {submittedAnalysis && <div className="farmer-request-summary" role="status"><b>{t("analysisRequest")}</b><span>{activeField?.name ?? (language === "es" ? "Ubicación seleccionada" : "Selected location")} · {formatCoordinate(submittedAnalysis.selection.latitude, "latitude")} · {formatCoordinate(submittedAnalysis.selection.longitude, "longitude")}{submittedAnalysis.selection.grid_cell_id ? ` · ${submittedAnalysis.selection.grid_cell_id}` : ""}</span><span>{t(submittedAnalysis.crop_context.crop)} · {t(submittedAnalysis.crop_context.growthStage)} · {t(submittedAnalysis.crop_context.waterManagement)}</span><small>{t("cropNeutralForecast")}; {t("insufficientEvidence")} {language === "es" ? "para interpretar aptitud del cultivo." : "for crop-specific interpretation."}</small></div>}
+        {submittedAnalysis && <div className="farmer-request-summary" role="status"><b>{t("analysisRequest")}</b><span>{activeField?.name ?? (language === "es" ? "Ubicación seleccionada" : "Selected location")} · {formatCoordinate(submittedAnalysis.selection.latitude, "latitude")} · {formatCoordinate(submittedAnalysis.selection.longitude, "longitude")}{submittedAnalysis.selection.grid_cell_id ? ` · ${submittedAnalysis.selection.grid_cell_id}` : ""}</span><span>{CROP_CATALOG.find((crop) => crop.id === submittedAnalysis.crop_context.crop)?.name[language]} · {t(submittedAnalysis.crop_context.growthStage)} · {t(submittedAnalysis.crop_context.waterManagement)}</span><small>{t("cropNeutralForecast")}; {t("insufficientEvidence")} {language === "es" ? "para interpretar aptitud del cultivo." : "for crop-specific interpretation."}</small></div>}
         {requestedDisplay && <>
           <div className="farmer-result-summary" aria-label={t("cropAndManagement")}>
-            <article><span>{t("cropAndManagement")}</span><b>{t(cropConfiguration.crop)} · {t(cropConfiguration.growthStage)} · {t(cropConfiguration.waterManagement)}</b></article>
+            <article><span>{t("cropAndManagement")}</span><b>{CROP_CATALOG.find((crop) => crop.id === cropConfiguration.crop)?.name[language]} · {t(cropConfiguration.growthStage)} · {t(cropConfiguration.waterManagement)}</b></article>
             <article><span>{t("targetMonthCard")}</span><b>{requestedDisplay.artifact.target_month} · {requestedDisplay.artifact.horizon_months} {language === "es" ? "meses" : "months"}</b></article>
             <article><span>{t("forecastValueCard")}</span><b>{requestedDisplay.artifact.target === "low_moisture" ? `${formatNumber(requestedDisplay.artifact.value * 100, { maximumFractionDigits: 1 })}%` : `${formatNumber(requestedDisplay.artifact.value, { maximumFractionDigits: 1 })} ${requestedDisplay.artifact.units}`}</b></article>
           </div>

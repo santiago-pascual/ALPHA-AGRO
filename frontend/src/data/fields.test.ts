@@ -33,10 +33,10 @@ describe("saved field storage and actions", () => {
     expect(store.activeFieldId).toBeNull();
   });
 
-  it("rejects invalid coordinates, names, and unsupported cells", () => {
+  it("rejects invalid coordinates and names but can save a location without scientific coverage", () => {
     expect(() => createSavedField({ name: "Bad", point: { latitude: 91, longitude: 0 }, dataset })).toThrow();
     expect(() => createSavedField({ name: "   ", point: { latitude: -34, longitude: -60 }, dataset })).toThrow();
-    expect(() => createSavedField({ name: "Outside", point: { latitude: 0, longitude: 0 }, dataset })).toThrow("outside");
+    expect(createSavedField({ name: "Outside coverage", point: { latitude: -35, longitude: -64 }, dataset }).gridCellId).toBeNull();
   });
 
   it("skips malformed or outdated local records without crashing", () => {
