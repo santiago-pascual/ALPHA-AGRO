@@ -4,6 +4,7 @@ import { divIcon } from "leaflet";
 import { Circle, MapContainer, Marker, Popup, Rectangle, ScaleControl, TileLayer, Tooltip, useMapEvents } from "react-leaflet";
 import type { CoordinatePoint, SelectedLocation } from "../data/location";
 import type { DashboardDataset, TrendCell } from "../types";
+import type { SavedField } from "../data/fields";
 
 export type RegionSelection = "all" | "north" | "south" | "west" | "east";
 
@@ -14,6 +15,8 @@ type TrendMapProps = {
   selectedLocation?: SelectedLocation | null;
   onLocationSelect?: (point: CoordinatePoint) => void;
   selectionMode?: boolean;
+  savedFields?: SavedField[];
+  activeSavedFieldId?: string | null;
 };
 
 const locationIcon = divIcon({
@@ -73,7 +76,7 @@ function isInRegion(cell: TrendCell, region: RegionSelection) {
   }
 }
 
-export function TrendMap({ dataset, region, onRegionChange, selectedLocation = null, onLocationSelect, selectionMode = false }: TrendMapProps) {
+export function TrendMap({ dataset, region, onRegionChange, selectedLocation = null, onLocationSelect, selectionMode = false, savedFields = [], activeSavedFieldId = null }: TrendMapProps) {
   const [selectedCell, setSelectedCell] = useState<TrendCell | null>(null);
   const visibleCells = useMemo(() => dataset.cells, [dataset.cells]);
 
@@ -81,8 +84,8 @@ export function TrendMap({ dataset, region, onRegionChange, selectedLocation = n
     <section className="panel map-panel" aria-labelledby="map-title">
       <div className="panel-heading map-heading">
         <div>
-            <div className="eyebrow">{selectionMode ? "Validated analysis support" : "Spatial pattern"}</div>
-            <h2 id="map-title">{selectionMode ? "Select a field location" : "Cell-level trend"}</h2>
+            <div className="eyebrow">{selectionMode ? "COBERTURA HISTÓRICA VALIDADA · VALIDATED SUPPORT" : "Spatial pattern"}</div>
+            <h2 id="map-title">{selectionMode ? "Elegí un punto · Select a reference point" : "Cell-level trend"}</h2>
         </div>
         {!selectionMode && <label className="select-wrap compact-select">
           <span className="sr-only">Select Pampas subregion</span>
@@ -104,7 +107,7 @@ export function TrendMap({ dataset, region, onRegionChange, selectedLocation = n
       </div>
       <div className="map-meta">
         <span><span className="live-dot" /> {dataset.eligibleCells} / {dataset.gridCells} cells with trend estimates · {dataset.resolutionDegrees}° grid</span>
-        <span>{selectionMode ? "Click an eligible cell to place a marker" : "Argentine Pampas · analysis grid"}</span>
+        <span>{selectionMode ? "Elegí una celda elegible para ubicar el marcador. / Click an eligible cell to place a marker." : "Argentine Pampas · analysis grid"}</span>
       </div>
       <div className="map-frame">
         <MapContainer
@@ -163,7 +166,11 @@ export function TrendMap({ dataset, region, onRegionChange, selectedLocation = n
             radius={selectedLocation.accuracyMeters}
             pathOptions={{ color: "#f2d99d", weight: 1, fillColor: "#f2d99d", fillOpacity: 0.12 }}
           />}
-          {selectedLocation && <Marker
+          {savedFields.map((field) => <Marker key={`saved:${field.id}`} position={[field.latitude, field.longitude]} icon={locationIcon} title={`Saved field: ${field.name}`} alt={`Saved field ${field.name}`}>
+            <Popup>{field.name} · punto de referencia, no perímetro ni medición del lote. / Reference point, not a farm boundary or field measurement.</Popup>
+            <Tooltip>{field.name}{field.id === activeSavedFieldId ? " · activo / active" : ""}</Tooltip>
+          </Marker>)}
+          {selectedLocation && !savedFields.some((field) => field.id === activeSavedFieldId) && <Marker
             position={[selectedLocation.latitude, selectedLocation.longitude]}
             icon={locationIcon}
             title="Selected field location"
@@ -195,7 +202,7 @@ export function TrendMap({ dataset, region, onRegionChange, selectedLocation = n
               : `Cell-level seasonal anomaly trends; significance uses BH-adjusted HAC p-values. ${dataset.gridCells - dataset.eligibleCells} cells have no eligible trend estimate.`}
         </span>
       </div>
-      {selectionMode && <p className="location-grid-note">GLDAS Noah is a land-surface model. Its {dataset.resolutionDegrees}° grid spacing is not GPS precision, a satellite soil-moisture observation, or a field boundary.</p>}
+      {selectionMode && <p className="location-grid-note">GLDAS Noah es un modelo terrestre. Su grilla de {dataset.resolutionDegrees}° no es precisión GPS, una observación satelital de humedad ni el perímetro de un lote. / GLDAS Noah is a land-surface model. Its grid spacing is not GPS precision, a satellite soil-moisture observation, or a field boundary.</p>}
       {selectedCell && (
         <div className="selected-cell" aria-live="polite">
           <div>

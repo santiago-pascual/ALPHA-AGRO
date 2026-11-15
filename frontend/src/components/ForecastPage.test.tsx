@@ -33,7 +33,7 @@ afterEach(() => {
 const testDataset = adaptTrendAnalysis(trendAnalysisFixture);
 function TestForecastPage({ dataset = testDataset }: { dataset?: DashboardDataset | null }) {
   const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(null);
-  return <ForecastPage dataset={dataset} selectedLocation={selectedLocation} onLocationChange={setSelectedLocation} />;
+  return <ForecastPage dataset={dataset} selectedLocation={selectedLocation} onLocationChange={setSelectedLocation} savedFields={[]} activeFieldId={null} storageWarning={null} onFieldSelect={() => undefined} onFieldAdd={() => undefined} onFieldRename={() => undefined} onFieldDelete={() => undefined} />;
 }
 
 function renderForecast(dataset?: DashboardDataset | null) {
@@ -53,21 +53,21 @@ function clickButton(container: HTMLElement, name: string) {
 describe("ForecastPage location selection", () => {
   it("keeps forecasts gated while allowing horizon and target selection", () => {
     const container = renderForecast();
-    expect(container.textContent).toContain("Forecast result withheld");
+    expect(container.textContent).toContain("Pronóstico no disponible");
     expect(container.textContent).toContain("frontend/public/data/forecast_v1.json");
     expect(container.textContent).toContain("Argentine Pampas");
     expect(container.textContent).not.toContain("predicted value");
     const horizon = container.querySelector<HTMLSelectElement>("select[aria-label='Forecast horizon']");
     expect(horizon?.disabled).toBe(false);
     expect(Array.from(horizon?.options ?? []).map((option) => option.textContent)).toEqual([
-      "1 month ahead", "2 months ahead", "3 months ahead",
+      "1 mes · 1 month", "2 meses · 2 months", "3 meses · 3 months",
     ]);
     expect(container.querySelector<HTMLSelectElement>("select[aria-label='Forecast target']")?.disabled).toBe(false);
     act(() => {
       if (horizon) { horizon.value = "3"; horizon.dispatchEvent(new Event("change", { bubbles: true })); }
     });
     expect(horizon?.value).toBe("3");
-    expect(container.textContent).toContain("Forecast result withheld");
+    expect(container.textContent).toContain("Pronóstico no disponible");
   });
 
   it("selects a clicked supported map point and represents the selected marker in the map", () => {

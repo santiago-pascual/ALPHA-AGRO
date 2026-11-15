@@ -35,7 +35,8 @@ import { PredictiveResearchPage } from "./components/PredictiveResearch";
 import { LandingPage } from "./components/LandingPage";
 import type { DashboardDataset, MonthlyObservation } from "./types";
 import { ForecastPage } from "./components/ForecastPage";
-import type { SelectedLocation } from "./data/location";
+import { findEligibleCell, gridCellId, type SelectedLocation } from "./data/location";
+import { addSavedField, createSavedField, deleteSavedField, readSavedFieldStore, renameSavedField, selectSavedField, writeSavedFieldStore, type SavedFieldStore } from "./data/fields";
 
 type Page = "landing" | "overview" | "forecast" | "about" | "research";
 type ChartMeasure = "storage" | "anomaly";
@@ -69,8 +70,48 @@ function App() {
   const [rangeYears, setRangeYears] = useState(20);
   const [measure, setMeasure] = useState<ChartMeasure>("storage");
   const [region, setRegion] = useState<RegionSelection>("all");
-  const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(null);
+  const [fieldStore, setFieldStore] = useState<SavedFieldStore>(() => readSavedFieldStore());
+  const [transientLocation, setTransientLocation] = useState<SelectedLocation | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const activeSavedField = fieldStore.fields.find((field) => field.id === fieldStore.activeFieldId) ?? null;
+  const selectedLocation: SelectedLocation | null = activeSavedField
+    ? { latitude: activeSavedField.latitude, longitude: activeSavedField.longitude, source: "manual", accuracyMeters: null }
+    : transientLocation;
+
+  const persistFieldStore = (next: SavedFieldStore) => {
+    const warning = writeSavedFieldStore(next);
+    setFieldStore({ ...next, warning });
+  };
+  const handleLocationChange = (location: SelectedLocation | null) => {
+    setTransientLocation(location);
+    if (fieldStore.activeFieldId !== null) persistFieldStore(selectSavedField(fieldStore, null));
+  };
+  const handleFieldSelect = (id: string | null) => {
+    setTransientLocation(null);
+    persistFieldStore(selectSavedField(fieldStore, id));
+  };
+  const handleFieldAdd = (name: string, description: string) => {
+    if (!selectedLocation) return;
+    try {
+      const cell = dataset ? findEligibleCell(selectedLocation, dataset.cells, dataset.resolutionDegrees) : null;
+      const field = createSavedField({ name, description, point: selectedLocation, dataset });
+      const next = addSavedField(fieldStore, field);
+      if (cell && field.gridCellId !== gridCellId(cell)) throw new Error("El identificador de celda no coincide con la cobertura validada. / Grid cell does not match validated coverage.");
+      setTransientLocation(null);
+      persistFieldStore(next);
+    } catch (error) {
+      setFieldStore({ ...fieldStore, warning: error instanceof Error ? error.message : "No se pudo guardar el campo. / Field could not be saved." });
+    }
+  };
+  const handleFieldRename = (id: string, name: string) => {
+    try { persistFieldStore(renameSavedField(fieldStore, id, name)); }
+    catch (error) { setFieldStore({ ...fieldStore, warning: error instanceof Error ? error.message : "No se pudo renombrar el campo. / Field could not be renamed." }); }
+  };
+  const handleFieldDelete = (id: string) => {
+    if (fieldStore.activeFieldId === id) setTransientLocation(null);
+    persistFieldStore(deleteSavedField(fieldStore, id));
+  };
 
   useEffect(() => {
     let active = true;
@@ -221,7 +262,7 @@ function App() {
                 <>
                   <OverviewMetrics dataset={dataset} />
                   <div className="dashboard-grid">
-                    <TrendMap dataset={dataset} region={region} onRegionChange={setRegion} selectedLocation={selectedLocation} />
+                    <TrendMap dataset={dataset} region={region} onRegionChange={setRegion} selectedLocation={selectedLocation} savedFields={fieldStore.fields} activeSavedFieldId={fieldStore.activeFieldId} />
                     <TrendPanel dataset={dataset} />
                   </div>
                   <TimeSeries
@@ -243,7 +284,7 @@ function App() {
           ) : page === "about" ? (
             <MethodologyPage dataset={dataset} />
           ) : page === "forecast" ? (
-            <ForecastPage dataset={dataset} selectedLocation={selectedLocation} onLocationChange={setSelectedLocation} />
+            <ForecastPage dataset={dataset} selectedLocation={selectedLocation} onLocationChange={handleLocationChange} savedFields={fieldStore.fields} activeFieldId={fieldStore.activeFieldId} storageWarning={fieldStore.warning} onFieldSelect={handleFieldSelect} onFieldAdd={handleFieldAdd} onFieldRename={handleFieldRename} onFieldDelete={handleFieldDelete} />
           ) : (
             <PredictiveResearchPage />
           )}
