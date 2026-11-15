@@ -3,15 +3,19 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import { trendAnalysisFixture } from "./data/__fixtures__/trendAnalysis.fixture";
+import { SAVED_FIELDS_KEY } from "./data/fields";
+import { adaptTrendAnalysis } from "./data/loadTrend";
+import { gridCellId } from "./data/location";
 
 vi.mock("./components/TrendMap", async () => {
   const React = await import("react");
   return {
-    TrendMap: (props: { selectionMode?: boolean; onLocationSelect?: (point: { latitude: number; longitude: number }) => void; selectedLocation?: { latitude: number; longitude: number } | null }) => React.createElement(
+    TrendMap: (props: { selectionMode?: boolean; onLocationSelect?: (point: { latitude: number; longitude: number }) => void; selectedLocation?: { latitude: number; longitude: number } | null; savedFields?: Array<{ id: string; name: string }> }) => React.createElement(
       "div",
       null,
       props.selectionMode ? React.createElement("button", { onClick: () => props.onLocationSelect?.({ latitude: -34, longitude: -60 }) }, "Select supported map cell") : null,
       props.selectedLocation ? React.createElement("output", null, "Selected location marker persists") : null,
+      ...(props.savedFields ?? []).map((field) => React.createElement("output", { key: field.id }, `Saved map marker: ${field.name}`)),
     ),
   };
 });
@@ -26,6 +30,7 @@ afterEach(() => {
     root = undefined;
   }
   document.body.innerHTML = "";
+  window.localStorage.clear();
   vi.unstubAllGlobals();
 });
 
@@ -146,7 +151,7 @@ describe("dashboard real-data integration", () => {
     const forecastButton = Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Forecast"));
     if (!forecastButton) throw new Error("Forecast navigation control not found.");
     await act(async () => forecastButton.dispatchEvent(new MouseEvent("click", { bubbles: true })));
-    expect(container.querySelector("h1")?.textContent).toContain("Forecast availability");
+    expect(container.querySelector("h1")?.textContent).toContain("Pronóstico y disponibilidad");
     expect(container.textContent).toContain("NOT OPERATIONALLY ELIGIBLE");
     expect(container.textContent).toContain("Historical evaluations are never substituted.");
     expect(container.textContent).not.toContain("999");
@@ -166,5 +171,28 @@ describe("dashboard real-data integration", () => {
     if (!observatoryButton) throw new Error("Observatory navigation control not found.");
     await act(async () => observatoryButton.dispatchEvent(new MouseEvent("click", { bubbles: true })));
     expect(container.textContent).toContain("Selected location marker persists");
+  });
+
+  it("restores saved fields, switches the active field, and explains shared grid support", async () => {
+    const data = adaptTrendAnalysis(trendAnalysisFixture);
+    const cell = data.cells[0];
+    const fields = [
+      { id: "field-a", name: "Campo A", latitude: cell.latitude, longitude: cell.longitude, gridCellId: gridCellId(cell), createdAt: "2026-11-15T12:00:00.000Z" },
+      { id: "field-b", name: "Campo B", latitude: cell.latitude, longitude: cell.longitude, gridCellId: gridCellId(cell), createdAt: "2026-11-15T12:01:00.000Z" },
+    ];
+    window.localStorage.setItem(SAVED_FIELDS_KEY, JSON.stringify({ version: 1, fields, activeFieldId: "field-a" }));
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => trendAnalysisFixture }));
+    const container = await openObservatory();
+    expect(container.textContent).toContain("Saved map marker: Campo A");
+    const forecastButton = Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Forecast"));
+    if (!forecastButton) throw new Error("Forecast navigation control not found.");
+    await act(async () => forecastButton.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(container.textContent).toContain("Campo A");
+    expect(container.textContent).toContain("These fields share the same satellite-model grid cell");
+    const second = Array.from(container.querySelectorAll(".saved-field-select")).find((button) => button.textContent?.includes("Campo B"));
+    if (!second) throw new Error("Second saved field not found.");
+    await act(async () => second.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(JSON.parse(window.localStorage.getItem(SAVED_FIELDS_KEY) ?? "{}").activeFieldId).toBe("field-b");
+    expect(container.textContent).toContain("Saved map marker: Campo B");
   });
 });

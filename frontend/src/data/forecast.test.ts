@@ -64,6 +64,15 @@ describe("forecast request and resolution", () => {
     expect(resolveForecast(request, { ...artifact(), input_observation_cutoff: "2025-11-01T00:00:00Z" }).status).toBe("unavailable");
     expect(resolveForecast(request, { ...artifact(), availability: { ...artifact().availability, publication_evidence: null } }).status).toBe("unavailable");
   });
+  it("does not retain a record for another field's grid cell after switching active locations", () => {
+    // Expand only the eligible-cell mask in this test fixture; no observation values are added.
+    const anotherCell = { ...cell, latitude: cell.latitude + dataset.resolutionDegrees };
+    const twoCellDataset = { ...dataset, cells: [cell, anotherCell] };
+    const originalRequest = buildForecastRequest({ location, dataset: twoCellDataset, evaluation, horizon: 1, target: "storage", issue: { mode: "latest_verified_eligible" } });
+    const switchedRequest = buildForecastRequest({ location: { latitude: anotherCell.latitude, longitude: anotherCell.longitude }, dataset: twoCellDataset, evaluation, horizon: 1, target: "storage", issue: { mode: "latest_verified_eligible" } });
+    expect(switchedRequest.grid_cell_id).not.toBe(originalRequest.grid_cell_id);
+    expect(resolveForecast(switchedRequest, artifact()).status).toBe("unavailable");
+  });
   it("keeps probability and continuous-value units and uncertainty distinct", () => {
     expect(artifact("low_moisture").units).toBe("probability");
     const malformed = { ...artifact("low_moisture"), value: 1.2 };

@@ -35,6 +35,11 @@ export function findEligibleCell(
   ) ?? null;
 }
 
+/** Stable UI identifier based on a validated GLDAS cell centre, not a parcel boundary. */
+export function gridCellId(point: CoordinatePoint): string {
+  return `gldas-noah-v2.1:${point.latitude.toFixed(4)}:${point.longitude.toFixed(4)}`;
+}
+
 export function formatCoordinate(value: number, axis: "latitude" | "longitude") {
   const direction = axis === "latitude" ? (value < 0 ? "S" : "N") : (value < 0 ? "W" : "E");
   return `${Math.abs(value).toFixed(4)}° ${direction}`;
