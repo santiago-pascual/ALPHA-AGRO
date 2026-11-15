@@ -31,10 +31,12 @@ import {
 import { demoDataset } from "./data/demo";
 import { loadValidatedTrend } from "./data/loadTrend";
 import { TrendMap, type RegionSelection } from "./components/TrendMap";
+import { AgriculturalForecast } from "./components/AgriculturalForecast";
 import { PredictiveResearchPage } from "./components/PredictiveResearch";
+import { LandingPage } from "./components/LandingPage";
 import type { DashboardDataset, DataMode, MonthlyObservation } from "./types";
 
-type Page = "overview" | "methodology" | "predictive";
+type Page = "landing" | "overview" | "methodology" | "predictive" | "forecast";
 type ChartMeasure = "storage" | "anomaly";
 type LoadState =
   | { status: "idle" }
@@ -60,7 +62,7 @@ function shortDate(value: string) {
 }
 
 function App() {
-  const [page, setPage] = useState<Page>("overview");
+  const [page, setPage] = useState<Page>(() => window.location.hash === "#forecast" ? "forecast" : "landing");
   const [mode, setMode] = useState<DataMode>("demo");
   const [loadState, setLoadState] = useState<LoadState>({ status: "idle" });
   const [reloadKey, setReloadKey] = useState(0);
@@ -108,10 +110,18 @@ function App() {
     setPage("overview");
   };
 
+  if (page === "landing") {
+    return <LandingPage onOpen={(nextPage, nextMode) => {
+      setMode(nextMode);
+      setPage(nextPage);
+      setMenuOpen(false);
+    }} />;
+  }
+
   return (
     <div className="app-shell">
       <aside className={"sidebar" + (menuOpen ? " sidebar-open" : "")}>
-        <a className="brand" href="#overview" aria-label="Alpha Agro home" onClick={() => setPage("overview")}>
+        <a className="brand" href="#home" aria-label="Alpha Agro home" onClick={() => setPage("landing")}>
           <span className="brand-mark"><Activity size={20} strokeWidth={2.2} /></span>
           <span className="brand-wordmark">
             <b>ALPHA AGRO</b>
@@ -121,6 +131,13 @@ function App() {
 
         <div className="side-kicker">WORKSPACE</div>
         <nav className="side-nav" aria-label="Alpha Agro main navigation">
+          <button
+            className={"nav-item" + (page === "forecast" ? " active" : "")}
+            aria-current={page === "forecast" ? "page" : undefined}
+            onClick={() => { setPage("forecast"); setMenuOpen(false); }}
+          >
+            <CloudRain size={17} /><span>Pronóstico agrícola</span>
+          </button>
           <button
             className={"nav-item" + (page === "overview" ? " active" : "")}
             onClick={() => {
@@ -183,9 +200,9 @@ function App() {
           </button>
           <div className="breadcrumb">
             <span>ALPHA AGRO</span><span className="crumb-slash">/</span>
-            <b>{page === "overview" ? "PAMPAS OVERVIEW" : page === "methodology" ? "METHODS & DATA" : "PREDICTIVE RESEARCH"}</b>
+            <b>{page === "overview" ? "PAMPAS OVERVIEW" : page === "methodology" ? "METHODS & DATA" : page === "forecast" ? "PRONÓSTICO AGRÍCOLA" : "PREDICTIVE RESEARCH"}</b>
           </div>
-          <div className="topbar-right">
+          {page === "forecast" ? <div className="topbar-right"><span className="source-dot real-dot" /> NASA SMAP</div> : <div className="topbar-right">
             <div className="source-switch" aria-label="Data source mode">
               <button
                 className={mode === "demo" ? "selected" : ""}
@@ -203,7 +220,7 @@ function App() {
               </button>
             </div>
             <div className="top-date"><span>PERIOD</span><b>{dataset ? dataset.start.slice(0, 4) + " — " + dataset.end.slice(0, 4) : mode === "demo" ? "2006 — 2025" : "NOT LOADED"}</b></div>
-          </div>
+          </div>}
         </header>
 
         <main className="content">
@@ -260,6 +277,8 @@ function App() {
             </>
           ) : page === "methodology" ? (
             <MethodologyPage dataset={dataset} mode={mode} />
+          ) : page === "forecast" ? (
+            <AgriculturalForecast onResearch={() => setPage("predictive")} />
           ) : (
             <PredictiveResearchPage />
           )}

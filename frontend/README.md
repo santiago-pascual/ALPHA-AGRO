@@ -11,6 +11,8 @@ npm install
 npm run dev
 ~~~
 
+The app opens on the Alpha Agro landing page. Use the seven-step guided demo, or open the dashboard in DEMO mode. To inspect genuine historical results, select **Load validated GLDAS data** only after the reviewed `trend_analysis.json` is available locally. Missing or invalid real data remains an explicit error/empty state.
+
 Build and check the frontend with:
 
 ~~~powershell
@@ -35,6 +37,8 @@ Automated tests use a schema-valid synthetic fixture under `src/data/__fixtures_
 
 ## Screens
 
+- Landing and guided demonstration: study context, evidence boundaries, and a seven-step presenter walkthrough. The cross-variable relationship chart is not connected in this frontend.
+
 - Overview: regional trend, HAC interval and p-value, coverage, cell-level map, date-filtered monthly storage/anomalies, and cautious crop context.
 - Methods & data: GLDAS variables and units, coverage rules, trend methods, provenance, and limits.
 - Predictive research: versioned historical evaluation artifact loader, regional/spatial, horizon and target filters, walk-forward/holdout comparison, baseline skill, score-difference intervals, and explicit separation from future forecasts. The screen remains empty when the evaluation JSON is absent.
@@ -48,3 +52,7 @@ The page labels the best candidate on the untouched holdout as descriptive only.
 Component and adapter tests use a fixture explicitly marked **TEST ONLY — SYNTHETIC**. It is never imported into application runtime code.
 
 The map uses free OpenStreetMap tiles with visible attribution. It requires an internet connection for basemap tiles; the dashboard data itself does not call a paid API or require credentials. Regional GLDAS fields are modeled data and do not establish field conditions, crop yield, or damage.
+
+## Demo and static hosting
+
+The English presenter script is in [../docs/ALPHA_AGRO_DEMO_SCRIPT.md](../docs/ALPHA_AGRO_DEMO_SCRIPT.md). GitHub Pages static hosting is prepared as a manual-only workflow; see [DEPLOYMENT.md](DEPLOYMENT.md). No public deployment is triggered by the workflow file or by building locally. The standard checkout build does not include ignored NASA or predictive JSON artifacts.

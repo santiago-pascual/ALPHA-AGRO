@@ -55,6 +55,20 @@ export function PredictiveResearchPage() {
 
     <div className="research-notice" role="note"><Activity size={16} /><span>Model scores will appear only after a schema-valid evaluation artifact is installed. No illustrative or DEMO scores are shown here.</span><code>predictive_evaluation_v1</code></div>
 
+    <section className="research-status-ladder" aria-label="Evaluation and forecast status">
+      <article><span>01 · HISTORICAL EVALUATION</span><b>{state.status === "ready" ? "Validated artifact loaded" : "No evaluation artifact loaded"}</b></article>
+      <article><span>02 · RETROSPECTIVE HINDCAST</span><b>Historical folds and holdout only</b></article>
+      <article><span>03 · EXPERIMENTAL PROSPECTIVE</span><b>Not connected in this mainline frontend</b></article>
+      <article><span>04 · OPERATIONALLY ELIGIBLE</span><b>Unavailable · no verified eligibility signal</b></article>
+    </section>
+
+    <section className="research-selection-context" aria-labelledby="selection-context-title">
+      <div className="eyebrow">MODEL SELECTION / HOLDOUT DISCIPLINE</div>
+      <h2 id="selection-context-title">Why seasonal climatology remains selected</h2>
+      <p>Selection uses pooled, completed walk-forward results from before the final holdout. In the recorded evaluation, seasonal climatology was selected on that basis. Some XGBoost or HMM configurations scored lower on holdout comparisons, but those holdout rankings are descriptive; selecting a model from them would use the reserved test period to tune the choice.</p>
+      <span>The holdout measures historical generalization. It does not establish prospective or operational forecast skill.</span>
+    </section>
+
     <section className="research-controls panel" aria-label="Evaluation filters">
       <label><span>Evaluation support</span><select value={scope} onChange={(event) => setScope(event.target.value as EvaluationScope)}><option value="regional">Regional average</option><option value="spatial">Spatial cells</option></select></label>
       <label><span>Prediction horizon</span><select value={horizon} onChange={(event) => setHorizon(Number(event.target.value) as 1 | 2 | 3)}><option value={1}>1 month ahead</option><option value={2}>2 months ahead</option><option value={3}>3 months ahead</option></select></label>
@@ -108,7 +122,7 @@ export function PredictiveResearchPage() {
     </>}
 
     <SpatialHindcast />
-    <section className="forecast-explorer panel" aria-labelledby="forecast-heading"><div className="forecast-icon"><LockKeyhole size={18} /></div><div className="forecast-copy"><div className="eyebrow">SEPARATE WORKSPACE / DISABLED</div><h2 id="forecast-heading">Forecast Explorer</h2><p>Reserved for a separately validated <code>forecast_v1.json</code> with an explicit issue time, data-availability cutoff, forecast horizon, and predictive intervals.</p><small>Historical holdout predictions shown above are not live forecasts.</small></div><button disabled aria-disabled="true">Forecast unavailable</button></section>
+    <section className="forecast-explorer panel" aria-labelledby="forecast-heading"><div className="forecast-icon"><LockKeyhole size={18} /></div><div className="forecast-copy"><div className="eyebrow">SEPARATE WORKSPACE / DISABLED</div><h2 id="forecast-heading">Forecast Explorer</h2><p>Prospective forecast artifacts are not consumed by this mainline frontend. A future integration must use the backend’s versioned contract and its explicit data-availability and operational-eligibility decision.</p><small>Historical holdout predictions shown above are not live forecasts.</small></div><button disabled aria-disabled="true">Forecast unavailable</button></section>
     <footer className="page-footer"><span><Database size={13} /> MODEL EVALUATION ARTIFACT · {state.status === "ready" ? "VALIDATED" : "NOT AVAILABLE"}</span><span>RETROSPECTIVE OUT-OF-SAMPLE SCORES · NO LIVE FORECASTS</span><span>ALPHA AGRO · DEVELOPED BY QUANT ALPHA</span></footer>
   </>;
 }
