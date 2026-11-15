@@ -34,6 +34,14 @@ def instant(text):
     return value.tz_convert("UTC")
 
 
+def iso_utc(value):
+    """Serialize a timezone-aware timestamp in the frontend's canonical UTC-Z form."""
+    timestamp = pd.Timestamp(value)
+    if timestamp.tzinfo is None or timestamp.utcoffset().total_seconds() != 0:
+        raise ValueError("Forecast artifact timestamps must be timezone-aware UTC.")
+    return timestamp.tz_convert("UTC").isoformat().replace("+00:00", "Z")
+
+
 def require_operational(issue, registry):
     audit = check_as_of(registry, issue.isoformat())
     raise ValueError(f"Operational forecast withheld ({audit['status']}). A prospectively "
@@ -168,27 +176,30 @@ def retrospective(panel, issue, *, horizon, target, model_name=SELECTED_MODEL, r
     used = available_rows(panel, issue).tail(n_lags)
     latest = used.iloc[-1]
     return {"schema_version": "forecast_v1", "status": "retrospective_simulation",
-            "issue_time": issue.isoformat(), "target_month": target_month.strftime("%Y-%m"),
+            "issue_time": iso_utc(issue), "target_month": target_month.strftime("%Y-%m"),
+            "target_period": {"start": target_month.strftime("%Y-%m-01"),
+                              "end_exclusive": (target_month + pd.offsets.MonthBegin(1)).strftime("%Y-%m-%d")},
             "horizon_months": horizon, "scope": {"id": str(latest["cell_id"]),
             "bounds_west_south_east_north": [-64, -38, -57, -30]}, "target": target,
             "model": {"name": model_name, "version": "phase6-research-v1",
                       "phase5b_selected_model": SELECTED_MODEL, "hmm": diagnostic},
-            "input_observation_cutoff": latest["observation_end"].isoformat(),
+            "input_observation_cutoff": iso_utc(latest["observation_end"]),
+            "latest_available_observation_month": latest["month"].strftime("%Y-%m"),
             "availability": {"policy": "assumed_archive_lag", "release_lag_months": release_lag,
                              "publication_evidence": None, "operationally_eligible": False,
                              "input_months": [{"month": r["month"].strftime("%Y-%m"),
-                                 "observation_start": r["observation_start"].isoformat(),
-                                 "observation_end": r["observation_end"].isoformat(),
-                                 "provider_publication_at": None, "available_at": r["available_at"].isoformat(),
+                                 "observation_start": iso_utc(r["observation_start"]),
+                                 "observation_end": iso_utc(r["observation_end"]),
+                                 "provider_publication_at": None, "available_at": iso_utc(r["available_at"]),
                                  "availability_is_assumed": True,
                                  "soil_sha256": r["soil_sha256"], "driver_sha256": r["driver_sha256"]}
                                  for _, r in used.iterrows()]},
             "value": point, "units": "probability" if interval is None else "mm", "predictive_interval": interval,
             "training": {"first_target": train["target_month"].min().strftime("%Y-%m"),
                          "last_target": train["target_month"].max().strftime("%Y-%m"),
-                         "label_cutoff": issue_month(CALIBRATION, horizon).isoformat()},
+                         "label_cutoff": iso_utc(issue_month(CALIBRATION, horizon))},
             "calibration": {"start": cal.min().strftime("%Y-%m"), "end": cal.max().strftime("%Y-%m"),
-                            "labels_available_by": issue_month(HOLDOUT, horizon).isoformat(),
+                            "labels_available_by": iso_utc(issue_month(HOLDOUT, horizon)),
                             "n_months": count, "metrics": calibration_metrics,
                             "probability_recalibrated": False},
             "out_of_sample": {"period": ["2024-01", "2025-12"], "metrics": metrics},

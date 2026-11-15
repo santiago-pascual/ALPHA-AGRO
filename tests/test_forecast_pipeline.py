@@ -1,5 +1,8 @@
+import json
 from datetime import datetime, timezone
+from pathlib import Path
 
+import jsonschema
 import numpy as np
 import pandas as pd
 import pytest
@@ -50,6 +53,15 @@ def test_retrospective_status_interval_and_score(target):
     assert forecast["model"]["name"] == "seasonal_climatology"
     assert forecast["availability"]["publication_evidence"] is None
     assert forecast["availability"]["operationally_eligible"] is False
+    assert forecast["issue_time"].endswith("Z")
+    assert forecast["input_observation_cutoff"].endswith("Z")
+    assert forecast["availability"]["input_months"][-1]["available_at"].endswith("Z")
+    assert forecast["latest_available_observation_month"] == forecast["availability"]["input_months"][-1]["month"]
+    assert forecast["target_period"]["end_exclusive"] > forecast["target_period"]["start"]
+    forecast["source"] = {"collection": "C1342986036-GES_DISC", "doi": "10.5067/SXAVCZFAQLNO",
+                          "input_panel_sha256": "0" * 64}
+    schema = json.loads((Path(__file__).parents[1] / "config/forecast_v1.schema.json").read_text(encoding="utf-8"))
+    jsonschema.validate(forecast, schema, format_checker=jsonschema.FormatChecker())
     assert forecast["out_of_sample"]["metrics"]["n_months"] == 24
     if target == "low_moisture":
         assert 0 <= forecast["value"] <= 1

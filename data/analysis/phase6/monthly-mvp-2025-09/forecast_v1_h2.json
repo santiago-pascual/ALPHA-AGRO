@@ -1,0 +1,168 @@
+{
+  "schema_version": "forecast_v1",
+  "status": "retrospective_simulation",
+  "issue_time": "2025-09-30T23:59:59.999999999Z",
+  "target_month": "2025-11",
+  "target_period": {
+    "start": "2025-11-01",
+    "end_exclusive": "2025-12-01"
+  },
+  "horizon_months": 2,
+  "scope": {
+    "id": "pampas-study-box",
+    "bounds_west_south_east_north": [
+      -64,
+      -38,
+      -57,
+      -30
+    ],
+    "support": "Regional area-weighted Pampas study series; not a field or grid-cell forecast."
+  },
+  "target": "storage",
+  "model": {
+    "name": "seasonal_climatology",
+    "version": "phase6-research-v1",
+    "phase5b_selected_model": "seasonal_climatology",
+    "hmm": {
+      "filtered": false
+    },
+    "selected_before_holdout": true,
+    "selection_method": "Minimum pooled walk-forward loss across complete windows released by the first holdout issue",
+    "selection_source_sha256": "051792a95902c443bdb43a61d3da9126c33355d4746983bcc52276ff40e28dd9"
+  },
+  "input_observation_cutoff": "2025-05-01T00:00:00Z",
+  "latest_available_observation_month": "2025-04",
+  "availability": {
+    "policy": "assumed_archive_lag",
+    "release_lag_months": 5,
+    "publication_evidence": null,
+    "operationally_eligible": false,
+    "input_months": [
+      {
+        "month": "2024-11",
+        "observation_start": "2024-11-01T00:00:00Z",
+        "observation_end": "2024-12-01T00:00:00Z",
+        "provider_publication_at": null,
+        "available_at": "2025-04-01T00:00:00Z",
+        "availability_is_assumed": true,
+        "soil_sha256": "a030048e48dca18b6acf29e7fde509cf6f960698fd6728098764d680f7aa20a3",
+        "driver_sha256": "49946ac2f8a3c45ba042636623aadbf66275eb90495fe90d43b440fce7f9d862"
+      },
+      {
+        "month": "2024-12",
+        "observation_start": "2024-12-01T00:00:00Z",
+        "observation_end": "2025-01-01T00:00:00Z",
+        "provider_publication_at": null,
+        "available_at": "2025-05-01T00:00:00Z",
+        "availability_is_assumed": true,
+        "soil_sha256": "daf89bb1197c921c6f7e975aa8396015a504cdf33747ed95ac2967907db8a765",
+        "driver_sha256": "82b3489387eed7a38c96e6b1bb9c40607d94f2e796105e006c9ea32ac7faf833"
+      },
+      {
+        "month": "2025-01",
+        "observation_start": "2025-01-01T00:00:00Z",
+        "observation_end": "2025-02-01T00:00:00Z",
+        "provider_publication_at": null,
+        "available_at": "2025-06-01T00:00:00Z",
+        "availability_is_assumed": true,
+        "soil_sha256": "b03f4e6e090aaedf9234cd04aecca2b94d60559fc04cb6b5024e6c974207a818",
+        "driver_sha256": "85fbbc811711ec3645d509aeeced9e173abe0bab326f9c09a5818cfc17b696e3"
+      },
+      {
+        "month": "2025-02",
+        "observation_start": "2025-02-01T00:00:00Z",
+        "observation_end": "2025-03-01T00:00:00Z",
+        "provider_publication_at": null,
+        "available_at": "2025-07-01T00:00:00Z",
+        "availability_is_assumed": true,
+        "soil_sha256": "8aed89a84b66239befb5f35c8929ec47039faef695f8549e858dee434f11d3ef",
+        "driver_sha256": "b34045020b2458fc0b3201de1daee40fcd1f8c5b2add28cde5db6ceb9e94bee4"
+      },
+      {
+        "month": "2025-03",
+        "observation_start": "2025-03-01T00:00:00Z",
+        "observation_end": "2025-04-01T00:00:00Z",
+        "provider_publication_at": null,
+        "available_at": "2025-08-01T00:00:00Z",
+        "availability_is_assumed": true,
+        "soil_sha256": "e4b6f785cbe2a89091d505b9a84ebf8d2d8e3d3fed66c886e276092ee5a1e218",
+        "driver_sha256": "0cdc6807a924f9783c94d54186157cb1b97d4bb846835956713526393f16b9d5"
+      },
+      {
+        "month": "2025-04",
+        "observation_start": "2025-04-01T00:00:00Z",
+        "observation_end": "2025-05-01T00:00:00Z",
+        "provider_publication_at": null,
+        "available_at": "2025-09-01T00:00:00Z",
+        "availability_is_assumed": true,
+        "soil_sha256": "aa3b384423b97a56601a06bbadb4189034c61cbf90eddcbbb5759bd9a0114a4f",
+        "driver_sha256": "d57cd384d71da75ea92702847076ccb7dfb9923dda30cda6dfad94326bef5ef5"
+      }
+    ]
+  },
+  "value": 207.36891027522432,
+  "units": "mm",
+  "predictive_interval": {
+    "level": 0.9,
+    "lower": 131.57570650049317,
+    "upper": 283.16211404995545,
+    "method": "Chronological split residual quantile; nominal coverage only"
+  },
+  "training": {
+    "first_target": "2006-08",
+    "last_target": "2021-06",
+    "label_cutoff": "2021-11-30T23:59:59.999999999Z"
+  },
+  "calibration": {
+    "start": "2022-01",
+    "end": "2023-06",
+    "labels_available_by": "2023-11-30T23:59:59.999999999Z",
+    "n_months": 18,
+    "metrics": {
+      "absolute_residual_radius_mm": 75.79320377473115
+    },
+    "probability_recalibrated": false
+  },
+  "out_of_sample": {
+    "period": [
+      "2024-01",
+      "2025-12"
+    ],
+    "metrics": {
+      "n_rows": 24,
+      "n_months": 24,
+      "rmse": 28.9909371087067,
+      "mae": 23.73886761914538,
+      "bias": -3.979290726000519,
+      "skill_vs_persistence": 0.6049705357128417,
+      "rmse_difference_vs_persistence": -44.398366043709174,
+      "rmse_difference_vs_persistence_95_block_interval": [
+        -55.03530954590479,
+        -30.578018134501995
+      ],
+      "empirical_coverage": 1.0,
+      "interval_width_mm": 151.5864075494623
+    }
+  },
+  "quality_flags": [
+    "archived_final_product",
+    "publication_unverified",
+    "no_prospective_calibration",
+    "temporal_dependence_limits_interval_guarantees"
+  ],
+  "historical_demonstration": {
+    "is_current_prediction": false,
+    "holdout_period": {
+      "start": "2024-01",
+      "end": "2025-12"
+    },
+    "interpretation": "Retrospective out-of-sample hindcast issued at the recorded historical issue time."
+  },
+  "source": {
+    "collection": "C1342986036-GES_DISC",
+    "doi": "10.5067/SXAVCZFAQLNO",
+    "input_panel_sha256": "cd76da4249a09ccb6fc94c734d8535465d84f8c358b88bd338151ee038c199e7",
+    "evaluation_sha256": "051792a95902c443bdb43a61d3da9126c33355d4746983bcc52276ff40e28dd9",
+    "manifest_sha256": "3df68a2e9aa5aae229931e62352f7be206fbcbf854f2ee08d438499059eb3b7a"
+  }
+}
