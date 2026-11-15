@@ -12,7 +12,7 @@ import requests
 
 from .acquisition import AcquisitionError, NETCDF4_MAGIC, checksum, retry, write_json
 from .auth import CredentialError, earthdata_token
-from .benchmark import BASE, LIMIT, ROOT, STEM
+from .benchmark import BASE, LAYERS, LIMIT, ROOT, STEM
 from .discovery import DRIVERS
 from .history import OUTPUT as SOIL
 from .trend_report import INDEX, audit_inputs
@@ -28,10 +28,13 @@ JANUARY_SHA = "5b60e97e2c61ad08cd3d8dc2733508607824446438803abd83e1a815c0bba523"
 JANUARY = ROOT / "raw/GLDAS_NOAH025_M.A202001.021.nc4"
 
 
-def fields(dataset, *, full=False):
+def fields(dataset, *, full=False, allow_soil_layers=False):
     if dataset.data_model != "NETCDF4" or "GLDAS2.1" not in dataset.title:
         raise ValueError("Expected GLDAS Noah v2.1 NetCDF-4.")
-    if not full and set(dataset.variables) != {"time", "time_bnds", "lat", "lon", *DRIVERS}:
+    expected = {"time", "time_bnds", "lat", "lon", *DRIVERS}
+    if allow_soil_layers:
+        expected.update(LAYERS)
+    if not full and set(dataset.variables) != expected:
         raise ValueError("Unexpected variables in the driver export.")
     spatial = SPATIAL if full else (slice(None), slice(None))
     for axis, first, count, units, selection in zip(

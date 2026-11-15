@@ -14,7 +14,7 @@ from gldas.predictive.prospective import (
 
 
 def fixture():
-    config = read(CONFIG)
+    config = {**read(CONFIG), "verified_receipt_authority": "fixture-witness"}
     receipts = {}
     def snapshot(day):
         name = day.strftime("%Y-%m")
@@ -24,6 +24,9 @@ def fixture():
                           "scope": config["scope"], "snapshot_sha256": fingerprint(row),
                           "asset_id": "SYNTHETIC:" + name, "soil_sha256": "a"*64, "driver_sha256": "b"*64,
                           "checksum_scope": "full_validated_assets", "usable_scientific_data": True,
+                          "evidence_status": "independently_witnessed", "authority_id": "fixture-witness",
+                          "capture_manifest_sha256": "c"*64, "witness_record_id": "fixture:" + name,
+                          "witnessed_at": (end + pd.Timedelta(days=2)).isoformat(),
                           "first_success_at": (end + pd.Timedelta(days=1)).isoformat(),
                           "observation_start": day.isoformat(), "observation_end": end.isoformat(),
                           "provider_publication_at": None}
@@ -49,10 +52,26 @@ def test_synthetic_frozen_workflow_scores_only_available_first_vintage(tmp_path)
     append(tmp_path/"prediction.json", prediction)
     with pytest.raises(FileExistsError):
         append(tmp_path/"prediction.json", prediction)
+    seal = {"schema_version": "pilot_prediction_seal_v1", "authority_id": "fixture-witness",
+            "witness_record_id": "fixture-prediction", "prediction_sha256": fingerprint(prediction),
+            "witnessed_at": "2026-01-01T00:01:00Z"}
     with pytest.raises(ValueError, match="unavailable"):
-        score(prediction, truth, receipts, now, config)
-    result = score(prediction, truth, receipts, instant("2026-03-01T00:00:00Z"), config)
+        score(prediction, truth, receipts, now, config, seal=seal)
+    evaluation = instant("2026-03-01T00:00:00Z")
+    result = score(prediction, truth, receipts, evaluation, config, seal=seal)
     assert result["prediction_sha256"] == fingerprint(prediction)
+    with pytest.raises(ValueError, match="before first outcome"):
+        score(prediction, truth, receipts, evaluation, config,
+              seal={**seal, "witnessed_at": "2026-02-03T00:00:00Z"})
+    later_truth = {**truth, "values": {**truth["values"], "soil_water_mm": 37}}
+    first = result["target_evidence"]
+    revision = {**first, "snapshot_sha256": fingerprint(later_truth), "soil_sha256": "d"*64,
+                "first_success_at": "2026-02-05T00:00:00Z", "witnessed_at": "2026-02-05T00:00:01Z"}
+    with pytest.raises(ValueError, match="not a revision"):
+        score(prediction, later_truth, [*receipts, revision], evaluation, config, seal=seal)
+    with pytest.raises(ValueError, match="ambiguous"):
+        score(prediction, truth, [*receipts, {**revision, "first_success_at": first["first_success_at"]}],
+              evaluation, config, seal=seal)
     summary = summarize([result])
     assert summary["metrics"]["seasonal_climatology"]["rmse_mm"] == 0
     bad = {**pair, "config_sha256": "c"*64}
@@ -74,6 +93,7 @@ def test_features_reject_prefix_and_future_publication():
     row = next(r for r in future if r["snapshot_sha256"] == fingerprint(inputs[0]))
     row["first_success_at"] = "2026-01-09T00:00:00Z"
     row["provider_publication_at"] = "2026-01-08T00:00:00Z"
+    row["witnessed_at"] = "2026-01-10T00:00:00Z"
     with pytest.raises(ValueError, match="unavailable"):
         features(inputs, target, issue, future, config)
 

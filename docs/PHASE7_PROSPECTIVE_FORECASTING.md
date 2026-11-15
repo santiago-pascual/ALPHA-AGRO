@@ -4,6 +4,8 @@ The frozen design is [pampas-regional-storage-m1-v1](../config/phase7_prospectiv
 
 ## Current gate
 
+See [Phase 7B verified GLDAS input vintages](PHASE7B_VERIFIED_VINTAGES.md) for the authenticated capture, independent receipt setup, and the signed prediction seal now required for scoring.
+
 No approved receipt signing public key is configured. Metadata-only events, partial files, archive dates and today's access to an old file cannot substitute for original complete science vintages. The live CLI uses the existing Node.js runtime to verify a detached Ed25519 signature on canonical JSON receipts from a trusted ingestion process. The receipt binds the normalized monthly snapshot to the full validated soil and driver byte digests, GLDAS collection/version, scope, interval and access time. Provisioning the signer and the full-content receipt adapter remains prerequisite work. No real model was frozen or prospective prediction issued in this phase. The historic forecast route remains disabled.
 
 The local writer uses exclusive filenames. It resists accidental overwrites and reports a digest. The protocol requires separately time-anchoring each issued digest off the forecasting machine before outcomes arrive. The local directory alone is not tamper-proof.

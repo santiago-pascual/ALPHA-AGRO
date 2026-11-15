@@ -1,6 +1,7 @@
 {
   "schema_version": "prospective_pilot_v1",
   "verified_receipt_public_key": null,
+  "verified_receipt_authority": null,
   "pilot_id": "pampas-regional-storage-m1-v1",
   "status": "experimental",
   "scope": "pampas-study-box",
