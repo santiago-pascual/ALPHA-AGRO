@@ -50,6 +50,10 @@ The data-holding PC must provide `predictive_evaluation_v1.json` at `frontend/pu
 
 The page labels the best model on the untouched holdout as descriptive only. Its 95% intervals describe score differences against a baseline, not uncertainty intervals for a future prediction. `forecast_v1.json` is a separate contract defined in `../config/forecast_v1.schema.json`; it must not be derived by relabeling a retrospective hindcast. Forecast controls remain unavailable until a separately validated and operationally eligible artifact exists. Generated artifacts are ignored by Git.
 
+### Future forecast artifact gate
+
+The main research PC must provide the reviewed artifact at `frontend/public/data/forecast_v1.json`. It must validate against `config/forecast_v1.schema.json`, use a monthly horizon of 1, 2, or 3, and include timezone-aware issue/cutoff timestamps, supported Pampas spatial scope, target units, uncertainty where required, calibration period, quality flags, source identifiers, and input-panel provenance. To qualify for an operational display, `status` must be `operationally_eligible`, `availability.operationally_eligible` must be `true`, and publication evidence must be present. `retrospective_simulation` and `experimental` artifacts are never shown as current forecasts. Experimental 14/28-day SMAP research remains separate from this monthly GLDAS interface.
+
 Component and adapter tests use fixtures explicitly marked **TEST ONLY — SYNTHETIC**. They are never imported into application runtime code.
 
 The navigation is organized as **Observatory**, **Forecast**, **Research & Methods**, and **About & Data Sources**. No geographic selector is exposed: only the validated Argentine Pampas support is represented.
