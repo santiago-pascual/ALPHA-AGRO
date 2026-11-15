@@ -1,4 +1,5 @@
 node_modules/
+public/data/water_risk_v1.json
 dist/
 .vite/
 coverage/
