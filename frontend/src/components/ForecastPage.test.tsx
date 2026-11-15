@@ -6,6 +6,10 @@ import { trendAnalysisFixture } from "../data/__fixtures__/trendAnalysis.fixture
 import type { SelectedLocation } from "../data/location";
 import type { DashboardDataset } from "../types";
 import { ForecastPage } from "./ForecastPage";
+import { I18nProvider, LanguageSelector } from "../i18n";
+import { predictiveEvaluationFixture } from "../data/__fixtures__/predictiveEvaluation.fixture";
+import { adaptPredictiveEvaluation } from "../data/loadPredictive";
+import { gridCellId, selectedPreHoldoutModel } from "../data/forecast";
 
 vi.mock("./TrendMap", async () => {
   const React = await import("react");
@@ -28,12 +32,14 @@ afterEach(() => {
   document.body.innerHTML = "";
   if (originalGeolocation) Object.defineProperty(navigator, "geolocation", originalGeolocation);
   else Reflect.deleteProperty(navigator, "geolocation");
+  vi.unstubAllGlobals();
+  localStorage.clear();
 });
 
 const testDataset = adaptTrendAnalysis(trendAnalysisFixture);
 function TestForecastPage({ dataset = testDataset }: { dataset?: DashboardDataset | null }) {
   const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(null);
-  return <ForecastPage dataset={dataset} selectedLocation={selectedLocation} onLocationChange={setSelectedLocation} savedFields={[]} activeFieldId={null} storageWarning={null} onFieldSelect={() => undefined} onFieldAdd={() => undefined} onFieldRename={() => undefined} onFieldDelete={() => undefined} />;
+  return <I18nProvider><LanguageSelector /><ForecastPage dataset={dataset} selectedLocation={selectedLocation} onLocationChange={setSelectedLocation} savedFields={[]} activeFieldId={null} storageWarning={null} onFieldSelect={() => undefined} onFieldAdd={() => undefined} onFieldRename={() => undefined} onFieldDelete={() => undefined} onViewHistory={() => undefined} /></I18nProvider>;
 }
 
 function renderForecast(dataset?: DashboardDataset | null) {
@@ -51,23 +57,86 @@ function clickButton(container: HTMLElement, name: string) {
 }
 
 describe("ForecastPage location selection", () => {
-  it("keeps forecasts gated while allowing horizon and target selection", () => {
+  it("requires an explicit request and keeps unsupported short-term horizons unavailable", () => {
     const container = renderForecast();
-    expect(container.textContent).toContain("Pronóstico no disponible");
-    expect(container.textContent).toContain("frontend/public/data/forecast_v1.json");
+    expect(container.querySelector(".forecast-results")).toBeNull();
     expect(container.textContent).toContain("Argentine Pampas");
-    expect(container.textContent).not.toContain("predicted value");
     const horizon = container.querySelector<HTMLSelectElement>("select[aria-label='Forecast horizon']");
     expect(horizon?.disabled).toBe(false);
-    expect(Array.from(horizon?.options ?? []).map((option) => option.textContent)).toEqual([
-      "1 mes · 1 month", "2 meses · 2 months", "3 meses · 3 months",
-    ]);
-    expect(container.querySelector<HTMLSelectElement>("select[aria-label='Forecast target']")?.disabled).toBe(false);
+    expect(Array.from(horizon?.options ?? []).filter((option) => option.disabled).map((option) => option.value)).toEqual(["14d", "28d"]);
+    expect(Array.from(horizon?.options ?? []).filter((option) => !option.disabled).map((option) => option.value)).toEqual(["1", "2", "3"]);
+    expect(container.querySelector<HTMLSelectElement>("select[aria-label='Target variable']")?.disabled).toBe(false);
     act(() => {
       if (horizon) { horizon.value = "3"; horizon.dispatchEvent(new Event("change", { bubbles: true })); }
     });
     expect(horizon?.value).toBe("3");
-    expect(container.textContent).toContain("Pronóstico no disponible");
+    clickButton(container, "Generate forecast");
+    expect(container.querySelector(".forecast-results")).not.toBeNull();
+    expect(container.textContent).toContain("Select a supported field location first.");
+    expect(container.textContent).toContain("No scientifically validated forecast is currently available");
+    expect(container.textContent).toContain("forecast_v1.json");
+  });
+
+  it("renders only a matching validated artifact after an explicit request", async () => {
+    const evaluation = adaptPredictiveEvaluation(predictiveEvaluationFixture);
+    const cell = testDataset.cells.find((item) => item.latitude === -34 && item.longitude === -60) ?? testDataset.cells[0];
+    const latitude = cell.latitude;
+    const longitude = cell.longitude;
+    const id = gridCellId({ latitude, longitude }, testDataset.resolutionDegrees);
+    const sha = "a".repeat(64);
+    const artifact = {
+      schema_version: "forecast_v1", status: "operationally_eligible", issue_time: "2025-10-31T23:59:59Z", target_month: "2025-11", horizon_months: 1,
+      scope: { id, bounds_west_south_east_north: [longitude - 0.125, latitude - 0.125, longitude + 0.125, latitude + 0.125] },
+      target: "storage", model: { name: selectedPreHoldoutModel(evaluation, 1, "storage"), version: "fixture-v1" }, input_observation_cutoff: "2025-09-30T23:59:59Z",
+      availability: { policy: "TEST ONLY", publication_evidence: { first_verified_access_at: "2025-10-30T12:00:00Z", asset_id: "fixture", sha256: sha }, operationally_eligible: true, input_months: [{ month: "2025-09", observation_end: "2025-09-30T23:59:59Z", provider_publication_at: "2025-10-20T00:00:00Z", available_at: "2025-10-20T00:00:00Z", availability_is_assumed: false, soil_sha256: sha, driver_sha256: sha }] },
+      value: 111, units: "mm", predictive_interval: { level: 0.9, lower: 90, upper: 132, method: "TEST ONLY — synthetic interval" }, calibration: { start: "2022-01", end: "2025-09", n_months: 44, labels_available_by: "2025-10-31T23:59:59Z", metrics: {} }, quality_flags: ["TEST ONLY — SYNTHETIC"], source: { collection: "TEST ONLY", doi: "https://example.invalid/test", input_panel_sha256: sha },
+    };
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => ({
+      ok: true, status: 200, json: async () => String(input).includes("predictive_evaluation") ? predictiveEvaluationFixture : artifact,
+    })));
+    const container = renderForecast();
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+    clickButton(container, "Map select supported cell");
+    clickButton(container, "Generate forecast");
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+    expect(container.textContent).toContain("Validated forecast · Selected location");
+    expect(container.textContent).toContain("111 mm");
+    expect(container.textContent).toContain("90–132 mm");
+    expect(container.textContent).toContain("TEST ONLY");
+  });
+
+  it("withholds an invalid artifact and offers historical analysis separately", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => ({
+      ok: true, status: 200, json: async () => String(input).includes("predictive_evaluation") ? predictiveEvaluationFixture : { schema_version: "unknown" },
+    })));
+    const container = renderForecast();
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+    clickButton(container, "Map select supported cell");
+    clickButton(container, "Generate forecast");
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+    expect(container.textContent).toContain("The forecast artifact could not be validated");
+    expect(container.textContent).toContain("View historical analysis");
+    expect(container.textContent).not.toContain("111 mm");
+  });
+
+  it("keeps the forecast request workflow in Spanish when selected", () => {
+    localStorage.setItem("alpha-agro.language.v1", "es");
+    const container = renderForecast();
+    expect(container.querySelector("h1")?.textContent).toContain("Pronóstico y disponibilidad");
+    clickButton(container, "Generar pronóstico");
+    expect(container.textContent).toContain("ubicación de campo compatible");
+    expect(container.textContent).toContain("frontend/public/data/forecast_v1.json");
+  });
+
+  it("relocalizes an existing validation message when the user switches language", () => {
+    localStorage.setItem("alpha-agro.language.v1", "es");
+    const container = renderForecast();
+    clickButton(container, "Generar pronóstico");
+    expect(container.textContent).toContain("Primero elegí una ubicación de campo compatible.");
+    const englishButton = Array.from(container.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "EN");
+    expect(englishButton?.textContent).toBe("EN");
+    act(() => englishButton?.click());
+    expect(container.textContent).toContain("Select a supported field location first.");
   });
 
   it("selects a clicked supported map point and represents the selected marker in the map", () => {
@@ -76,7 +145,9 @@ describe("ForecastPage location selection", () => {
     expect(container.textContent).toContain("Selected within a grid cell with an eligible historical trend estimate.");
     expect(container.textContent).toContain("34.0000° S · 60.0000° W");
     expect(container.textContent).toContain("Map marker selected");
-    expect(container.textContent).toContain("GPS precision or a satellite soil-moisture observation resolution");
+    expect(container.textContent).toContain("not GPS precision or satellite soil-moisture observation resolution");
+    clickButton(container, "Generate forecast");
+    expect(container.textContent).toContain("No scientifically validated forecast is currently available");
     clickButton(container, "Clear location");
     expect(container.textContent).not.toContain("Map marker selected");
   });
@@ -164,6 +235,6 @@ describe("ForecastPage location selection", () => {
       timestamp: Date.now(),
     } as GeolocationPosition));
     expect(container.textContent).toContain("GPS-reported horizontal accuracy ±8 m");
-    expect(container.textContent).toContain("0.25° grid spacing is model-grid support");
+    expect(container.textContent).toContain("0.25° — GLDAS grid spacing is model-grid support");
   });
 });

@@ -37,6 +37,7 @@ import type { DashboardDataset, MonthlyObservation } from "./types";
 import { ForecastPage } from "./components/ForecastPage";
 import { findEligibleCell, gridCellId, type SelectedLocation } from "./data/location";
 import { addSavedField, createSavedField, deleteSavedField, readSavedFieldStore, renameSavedField, selectSavedField, writeSavedFieldStore, type SavedFieldStore } from "./data/fields";
+import { I18nProvider, LanguageSelector, useI18n } from "./i18n";
 
 type Page = "landing" | "overview" | "forecast" | "about" | "research";
 type ChartMeasure = "storage" | "anomaly";
@@ -47,23 +48,30 @@ type LoadState =
   | { status: "error"; message: string };
 
 function formatNumber(value: number | null | undefined, digits = 1) {
-  return value === null || value === undefined || !Number.isFinite(value)
-    ? "—"
-    : value.toFixed(digits);
+  if (value === null || value === undefined || !Number.isFinite(value)) return "—";
+  const locale = displayLocale();
+  return new Intl.NumberFormat(locale, { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(value);
 }
 
 function formatDate(value: string, options?: Intl.DateTimeFormatOptions) {
-  return new Intl.DateTimeFormat("en", {
+  const locale = displayLocale();
+  return new Intl.DateTimeFormat(locale, {
     ...(options ?? { month: "short", year: "numeric" }),
     timeZone: "UTC",
   }).format(new Date(value + "T00:00:00Z"));
+}
+
+function displayLocale() {
+  try { return localStorage.getItem("alpha-agro.language.v1") === "es" ? "es-AR" : "en-US"; }
+  catch { return document.documentElement.lang === "es" ? "es-AR" : "en-US"; }
 }
 
 function shortDate(value: string) {
   return value.slice(0, 4);
 }
 
-function App() {
+function DashboardApp() {
+  const { t } = useI18n();
   const [page, setPage] = useState<Page>("landing");
   const [loadState, setLoadState] = useState<LoadState>({ status: "idle" });
   const [reloadKey, setReloadKey] = useState(0);
@@ -148,7 +156,7 @@ function App() {
   return (
     <div className="app-shell">
       <aside className={"sidebar" + (menuOpen ? " sidebar-open" : "")}>
-        <a className="brand" href="#home" aria-label="Alpha Agro home" onClick={() => setPage("landing")}>
+        <a className="brand" href="#home" aria-label={t("home")} onClick={() => setPage("landing")}>
           <span className="brand-mark"><Activity size={20} strokeWidth={2.2} /></span>
           <span className="brand-wordmark">
             <b>ALPHA AGRO</b>
@@ -156,8 +164,8 @@ function App() {
           </span>
         </a>
 
-        <div className="side-kicker">EXPLORE</div>
-        <nav className="side-nav" aria-label="Alpha Agro main navigation">
+        <div className="side-kicker">{t("explore")}</div>
+        <nav className="side-nav" aria-label={t("navLabel")}>
           <button
             className={"nav-item" + (page === "overview" ? " active" : "")}
             onClick={() => {
@@ -166,10 +174,10 @@ function App() {
             }}
             aria-current={page === "overview" ? "page" : undefined}
           >
-            <Map size={17} /><span>Observatory</span><span className="nav-index">01</span>
+            <Map size={17} /><span>{t("observatory")}</span><span className="nav-index">01</span>
           </button>
           <button className={"nav-item" + (page === "forecast" ? " active" : "")} onClick={() => { setPage("forecast"); setMenuOpen(false); }} aria-current={page === "forecast" ? "page" : undefined}>
-            <Telescope size={17} /><span>Forecast</span><span className="nav-index">UNAVAILABLE</span>
+            <Telescope size={17} /><span>{t("forecast")}</span><span className="nav-index">{t("noForecasts").toUpperCase()}</span>
           </button>
           <button
             className={"nav-item" + (page === "about" ? " active" : "")}
@@ -179,31 +187,31 @@ function App() {
             }}
             aria-current={page === "about" ? "page" : undefined}
           >
-            <BookOpen size={17} /><span>About & data sources</span>
+            <BookOpen size={17} /><span>{t("about")}</span>
           </button>
           <button
             className={"nav-item" + (page === "research" ? " active" : "")}
-            aria-label="Research and methods"
-            title="Research and methods"
+            aria-label={t("research")}
+            title={t("research")}
             onClick={() => {
               setPage("research");
               setMenuOpen(false);
             }}
             aria-current={page === "research" ? "page" : undefined}
           >
-            <ChartNoAxesCombined size={17} /><span>Research & methods</span><span className="nav-index">R&amp;D</span>
+            <ChartNoAxesCombined size={17} /><span>{t("research")}</span><span className="nav-index">R&amp;D</span>
           </button>
         </nav>
 
         <div className="side-divider" />
-        <div className="side-kicker">REGION</div>
+        <div className="side-kicker">{t("region")}</div>
         <div className="region-mini">
           <span className="region-pin"><Map size={15} /></span>
-          <span><b>Argentine Pampas</b><small>South America · 0.25°</small></span>
+          <span><b>{t("regionName")}</b><small>{t("regionResolution")}</small></span>
         </div>
         <div className="side-note">
           <span className="note-icon"><CircleHelp size={15} /></span>
-          <p>Regional model data offers context. It does not resolve conditions at an individual field.</p>
+          <p>{t("regionNote")}</p>
         </div>
         <div className="sidebar-bottom">
           <span className="sidebar-bottom-mark">QUANT ALPHA</span>
@@ -216,18 +224,19 @@ function App() {
         <header className="topbar">
           <button
             className="icon-button menu-toggle"
-            aria-label={menuOpen ? "Close navigation" : "Open navigation"}
+            aria-label={menuOpen ? t("closeNav") : t("openNav")}
             onClick={() => setMenuOpen((open) => !open)}
           >
             <Menu size={19} />
           </button>
           <div className="breadcrumb">
             <span>ALPHA AGRO</span><span className="crumb-slash">/</span>
-            <b>{page === "overview" ? "EARTH SYSTEM OBSERVATORY" : page === "forecast" ? "FORECAST" : page === "about" ? "ABOUT & DATA SOURCES" : "RESEARCH & METHODS"}</b>
+            <b>{page === "overview" ? t("observatoryTitle").toUpperCase() : page === "forecast" ? t("forecast").toUpperCase() : page === "about" ? t("about").toUpperCase() : t("research").toUpperCase()}</b>
           </div>
           <div className="topbar-right">
-            <div className="source-switch source-status" role="status"><span className="source-dot real-dot" />{loadState.status === "loading" ? "LOADING VALIDATED DATA" : loadState.status === "error" ? "VALIDATED DATA UNAVAILABLE" : dataset ? "VALIDATED HISTORICAL DATA" : "REAL DATA ONLY"}</div>
-            <div className="top-date"><span>PERIOD</span><b>{dataset ? dataset.start.slice(0, 4) + " — " + dataset.end.slice(0, 4) : "NOT LOADED"}</b></div>
+            <LanguageSelector />
+            <div className="source-switch source-status" role="status"><span className="source-dot real-dot" />{loadState.status === "loading" ? t("loading") : loadState.status === "error" ? t("dataUnavailable") : dataset ? t("validatedData") : t("realOnly")}</div>
+            <div className="top-date"><span>{t("period")}</span><b>{dataset ? dataset.start.slice(0, 4) + " — " + dataset.end.slice(0, 4) : t("notLoaded")}</b></div>
           </div>
         </header>
 
@@ -236,22 +245,22 @@ function App() {
             <>
               <section className="page-intro">
                 <div>
-                  <div className="eyebrow"><span className="eyebrow-line" /> EARTH SYSTEMS / SOIL WATER</div>
-                  <h1>Earth System <em>Observatory</em></h1>
-                  <div className="study-region-label"><Map size={13} /> STUDY REGION: ARGENTINE PAMPAS</div>
-                  <p><strong>From Earth data to agricultural insight.</strong> NASA-powered Earth system intelligence for agriculture. Historical GLDAS analysis, read with uncertainty in view; no operational forecasts are provided.</p>
+                  <div className="eyebrow"><span className="eyebrow-line" /> {t("earthSystems")}</div>
+                  <h1>{t("observatoryTitle")}</h1>
+                  <div className="study-region-label"><Map size={13} /> {t("studyRegionLabel")}</div>
+                  <p><strong>{t("tagline")}</strong> {t("observatoryIntro")}</p>
                 </div>
                 <div className="intro-meta">
-                  <span className="period-label">ANALYSIS WINDOW</span>
-                  <b>{dataset ? formatDate(dataset.start, { month: "short", year: "numeric" }).toUpperCase() : "PERIOD NOT LOADED"} {dataset && <i>→</i>} {dataset ? formatDate(dataset.end, { month: "short", year: "numeric" }).toUpperCase() : ""}</b>
-                  <span>{dataset ? `${dataset.months} monthly records · ${dataset.source}` : "Validated historical analysis not loaded"}</span>
+                  <span className="period-label">{t("analysisWindow")}</span>
+                  <b>{dataset ? formatDate(dataset.start, { month: "short", year: "numeric" }).toUpperCase() : t("periodNotLoaded")} {dataset && <i>→</i>} {dataset ? formatDate(dataset.end, { month: "short", year: "numeric" }).toUpperCase() : ""}</b>
+                  <span>{dataset ? `${dataset.months} ${t("monthlyRecords")} · ${dataset.source}` : t("validatedNotLoaded")}</span>
                 </div>
               </section>
 
               {loadState.status === "loading" ? (
                 <section className="state-card" aria-live="polite">
                   <LoaderCircle className="spin" size={22} />
-                  <div><b>Reading validated historical analysis</b><span>Loading /data/trend_analysis.json · no forecast is included</span></div>
+                  <div><b>{t("historyLoading")}</b><span>{t("historyLoadingDetail")}</span></div>
                 </section>
               ) : loadState.status === "error" ? (
                 <EmptyState
@@ -274,9 +283,9 @@ function App() {
                   />
                   <AgricultureContext />
                   <footer className="page-footer">
-                    <span><Database size={13} /> SOURCE: {dataset.source.toUpperCase()}</span>
-                    <span>HISTORICAL ANALYSIS · NO OPERATIONAL FORECAST · NOT FIELD MEASUREMENTS</span>
-                    <span>ALPHA AGRO · DEVELOPED BY QUANT ALPHA</span>
+                    <span><Database size={13} /> {t("source")}: {dataset.source.toUpperCase()}</span>
+                    <span>{t("historicalNoForecast")}</span>
+                    <span>ALPHA AGRO · {t("developedBy")} QUANT ALPHA</span>
                   </footer>
                 </>
               ) : null}
@@ -284,7 +293,7 @@ function App() {
           ) : page === "about" ? (
             <MethodologyPage dataset={dataset} />
           ) : page === "forecast" ? (
-            <ForecastPage dataset={dataset} selectedLocation={selectedLocation} onLocationChange={handleLocationChange} savedFields={fieldStore.fields} activeFieldId={fieldStore.activeFieldId} storageWarning={fieldStore.warning} onFieldSelect={handleFieldSelect} onFieldAdd={handleFieldAdd} onFieldRename={handleFieldRename} onFieldDelete={handleFieldDelete} />
+            <ForecastPage dataset={dataset} selectedLocation={selectedLocation} onLocationChange={handleLocationChange} savedFields={fieldStore.fields} activeFieldId={fieldStore.activeFieldId} storageWarning={fieldStore.warning} onFieldSelect={handleFieldSelect} onFieldAdd={handleFieldAdd} onFieldRename={handleFieldRename} onFieldDelete={handleFieldDelete} onViewHistory={() => setPage("overview")} />
           ) : (
             <PredictiveResearchPage />
           )}
@@ -295,50 +304,51 @@ function App() {
 }
 
 function OverviewMetrics({ dataset }: { dataset: DashboardDataset }) {
+  const { language, t } = useI18n();
   const trend = dataset.regionalTrend.slopePerDecade;
   const ci = dataset.regionalTrend.ci95;
   const significant = dataset.regionalTrend.pValue !== null && dataset.regionalTrend.pValue < 0.05;
   const metrics = [
     {
-      label: "REGIONAL STORAGE TREND",
+      label: t("regionalTrend"),
       value: trend === null ? "—" : (trend > 0 ? "+" : "") + formatNumber(trend),
       unit: "mm / decade",
-      detail: "HAC linear slope",
+      detail: t("trendEstimate"),
       icon: trend !== null && trend < 0 ? ArrowDownRight : ArrowUpRight,
       tone: trend !== null && trend < 0 ? "warm" : "cool",
     },
     {
-      label: "MEAN DATA COVERAGE",
-      value: (dataset.meanCoverage * 100).toFixed(1) + "%",
-      unit: "of study area",
-      detail: "Area-weighted monthly mean",
+      label: t("coverage"),
+      value: formatNumber(dataset.meanCoverage * 100) + "%",
+      unit: t("studyArea"),
+      detail: t("areaWeightedMonthly"),
       icon: Check,
       tone: "green",
     },
     {
-      label: "95% HAC INTERVAL",
-      value: ci ? formatNumber(ci[0]) + " to " + formatNumber(ci[1]) : "—",
+      label: t("hacInterval"),
+      value: ci ? formatNumber(ci[0]) + (language === "en" ? " to " : " a ") + formatNumber(ci[1]) : "—",
       unit: "mm / decade",
       detail: ci
         ? ci[0] <= 0 && ci[1] >= 0
-          ? "Interval spans zero; direction unresolved"
-          : "Interval excludes zero"
-        : "Interval not available",
+          ? t("intervalSpansZero")
+          : t("intervalExcludesZero")
+        : t("intervalUnavailable"),
       icon: Activity,
       tone: "neutral",
     },
     {
-      label: "SIGNIFICANCE",
-      value: dataset.regionalTrend.pValue === null ? "Not available" : significant ? "p < 0.05" : "Not detected",
+      label: t("significance"),
+      value: dataset.regionalTrend.pValue === null ? t("notAvailable") : significant ? "p < 0.05" : t("notDetected"),
       unit: dataset.regionalTrend.pValue === null ? "" : "HAC p = " + formatNumber(dataset.regionalTrend.pValue, 3),
-      detail: "Two-sided · Newey–West HAC",
+      detail: t("twoSidedHac"),
       icon: significant ? Check : CircleHelp,
       tone: significant ? "green" : "neutral",
     },
   ];
 
   return (
-    <section className="metrics-grid" aria-label="Regional overview metrics">
+    <section className="metrics-grid" aria-label={t("observatoryTitle")}>
       {metrics.map(({ label, value, unit, detail, icon: Icon, tone }, index) => (
         <article className="metric-card" key={label}>
           <div className="metric-topline">
@@ -354,6 +364,7 @@ function OverviewMetrics({ dataset }: { dataset: DashboardDataset }) {
 }
 
 function TrendPanel({ dataset }: { dataset: DashboardDataset }) {
+  const { language, t } = useI18n();
   const trend = dataset.regionalTrend;
   const ci = trend.ci95;
   const low = ci ? Math.min(-30, ci[0]) : -30;
@@ -367,7 +378,7 @@ function TrendPanel({ dataset }: { dataset: DashboardDataset }) {
   return (
     <section className="panel trend-panel" aria-labelledby="trend-title">
       <div className="panel-heading">
-        <div><div className="eyebrow">Regional estimate</div><h2 id="trend-title">Trend signal</h2></div>
+        <div><div className="eyebrow">{t("regionalEstimate")}</div><h2 id="trend-title">{t("trendSignal")}</h2></div>
         <span className="panel-period">2006—25</span>
       </div>
       <div className="trend-big">
@@ -376,35 +387,35 @@ function TrendPanel({ dataset }: { dataset: DashboardDataset }) {
           <span>mm / decade</span>
         </div>
         <span className={"signal-pill" + (trend.pValue !== null && trend.pValue < 0.05 ? " signal-green" : "")}>
-          <i /> {trend.pValue !== null && trend.pValue < 0.05 ? "SIGNAL DETECTED" : "INCONCLUSIVE"}
+          <i /> {trend.pValue !== null && trend.pValue < 0.05 ? t("signalDetected") : t("inconclusive")}
         </span>
       </div>
       <div className="ci-label">
-        <span>95% HAC CONFIDENCE INTERVAL</span>
-        <b>{ci ? "[" + formatNumber(ci[0]) + ", " + formatNumber(ci[1]) + "]" : "Unavailable"}</b>
+        <span>{t("confidenceInterval")}</span>
+        <b>{ci ? "[" + formatNumber(ci[0]) + (language === "en" ? ", " : "; ") + formatNumber(ci[1]) + "]" : t("intervalUnavailable")}</b>
       </div>
-      <div className="ci-chart" role="img" aria-label={ci ? "Confidence interval from " + formatNumber(ci[0]) + " to " + formatNumber(ci[1]) + " millimeters per decade, centered at zero" : "Confidence interval not available"}>
+      <div className="ci-chart" role="img" aria-label={ci ? t("confidenceAria").replace("{low}", formatNumber(ci[0])).replace("{high}", formatNumber(ci[1])) : t("noConfidenceAria")}>
         <span className="ci-zero" style={{ left: zero + "%" }} />
         <span className="ci-range" style={{ left: left + "%", width: Math.max(0, right - left) + "%" }} />
         <span className="ci-point" style={{ left: point + "%" }} />
       </div>
       <div className="ci-axis"><span>{formatNumber(low, 0)}</span><span>0</span><span>{formatNumber(high, 0)}</span></div>
       <div className="trend-detail-grid">
-        <div><span>HAC p-value</span><b>{formatNumber(trend.pValue, 3)}</b></div>
-        <div><span>Seasonal Sen slope</span><b>{trend.seasonalSenSlopePerDecade === null ? "—" : <>{formatNumber(trend.seasonalSenSlopePerDecade)} <small>mm/dec</small></>}</b></div>
-        <div><span>Seasonal Kendall τ</span><b>{formatNumber(trend.seasonalKendallTau, 3)}</b></div>
-        <div><span>Confidence level</span><b>95%</b></div>
+        <div><span>{t("hacP")}</span><b>{formatNumber(trend.pValue, 3)}</b></div>
+        <div><span>{t("seasonalSen")}</span><b>{trend.seasonalSenSlopePerDecade === null ? "—" : <>{formatNumber(trend.seasonalSenSlopePerDecade)} <small>mm/dec</small></>}</b></div>
+        <div><span>{t("kendallTau")}</span><b>{formatNumber(trend.seasonalKendallTau, 3)}</b></div>
+        <div><span>{t("confidenceLevel")}</span><b>95%</b></div>
       </div>
       <div className="panel-rule" />
       <div className="trend-explainer">
         <CircleHelp size={15} />
         <p>
           {ci && ci[0] <= 0 && ci[1] >= 0
-            ? "The interval spans zero, so this record does not resolve a regional drying or wetting trend."
-            : "Interpret this estimate alongside its interval, time window, and spatial support."}
+            ? (language === "en" ? "The interval spans zero, so this record does not resolve a regional drying or wetting trend." : "El intervalo incluye cero; este registro no permite definir una tendencia regional de secamiento o humedecimiento.")
+            : (language === "en" ? "Interpret this estimate alongside its interval, time window, and spatial support." : "Interpretá esta estimación junto con su intervalo, período y soporte espacial.")}
         </p>
       </div>
-      <div className="method-tag"><span /> OLS + MONTH EFFECTS <span className="tag-sep">·</span> HAC 12 LAGS</div>
+      <div className="method-tag"><span /> {t("methodOLS")} <span className="tag-sep">·</span> {t("hacLags")}</div>
     </section>
   );
 }
@@ -422,6 +433,7 @@ function TimeSeries({
   measure: ChartMeasure;
   onMeasureChange: (measure: ChartMeasure) => void;
 }) {
+  const { t } = useI18n();
   const chartData = observations.map((item) => ({
     ...item,
     label: shortDate(item.month),
@@ -431,27 +443,27 @@ function TimeSeries({
   return (
     <section className="panel time-panel" aria-labelledby="series-title">
       <div className="panel-heading series-heading">
-        <div><div className="eyebrow">Monthly observations</div><h2 id="series-title">Soil-water history</h2></div>
+        <div><div className="eyebrow">{t("monthlyObs")}</div><h2 id="series-title">{t("soilHistory")}</h2></div>
         <div className="chart-controls">
-          <div className="segmented-control" role="group" aria-label="Time series measure">
-            <button className={measure === "storage" ? "selected" : ""} onClick={() => onMeasureChange("storage")} aria-pressed={measure === "storage"}>Storage</button>
-            <button className={measure === "anomaly" ? "selected" : ""} onClick={() => onMeasureChange("anomaly")} aria-pressed={measure === "anomaly"}>Anomaly</button>
+          <div className="segmented-control" role="group" aria-label={t("soilHistory")}>
+            <button className={measure === "storage" ? "selected" : ""} onClick={() => onMeasureChange("storage")} aria-pressed={measure === "storage"}>{t("storage")}</button>
+            <button className={measure === "anomaly" ? "selected" : ""} onClick={() => onMeasureChange("anomaly")} aria-pressed={measure === "anomaly"}>{t("anomaly")}</button>
           </div>
           <label className="select-wrap range-select">
-            <span className="sr-only">Select chart date range</span>
+            <span className="sr-only">{t("chartDateRange")}</span>
             <select value={rangeYears} onChange={(event) => onRangeChange(Number(event.target.value))}>
               <option value={20}>2006—2025</option>
-              <option value={10}>Last 10 years</option>
-              <option value={5}>Last 5 years</option>
+              <option value={10}>{t("last10")}</option>
+              <option value={5}>{t("last5")}</option>
             </select>
             <ChevronDown size={14} aria-hidden="true" />
           </label>
         </div>
       </div>
       <div className="chart-legend">
-        <span className="chart-key"><i /> {measure === "storage" ? "0–100 cm storage" : "Seasonal anomaly"}</span>
-        <span>{measure === "storage" ? "mm water equivalent" : "mm from calendar-month mean"}</span>
-        <span className="chart-period">{observations.length} monthly values</span>
+        <span className="chart-key"><i /> {measure === "storage" ? t("storageDepth") : t("seasonalAnomaly")}</span>
+        <span>{measure === "storage" ? t("mmWaterEquivalent") : t("mmFromMonthMean")}</span>
+        <span className="chart-period">{observations.length} {t("monthlyValues")}</span>
       </div>
       <div className="chart-wrap">
         {chartData.length ? (
@@ -486,8 +498,8 @@ function TimeSeries({
                 labelStyle={{ color: "#a5b3ad", marginBottom: 4 }}
                 labelFormatter={(_, payload) => payload?.[0]?.payload?.month ? formatDate(payload[0].payload.month, { month: "long", year: "numeric" }) : ""}
                 formatter={(value) => [
-                  typeof value === "number" ? formatNumber(value) + " mm" : "No monthly mean",
-                  measure === "storage" ? "Storage" : "Anomaly",
+                  typeof value === "number" ? formatNumber(value) + " mm" : t("noMonthlyMean"),
+                  measure === "storage" ? t("storage") : t("anomaly"),
                 ]}
               />
               {measure === "anomaly" && <ReferenceLine y={0} stroke="#80908b" strokeDasharray="4 4" />}
@@ -505,44 +517,45 @@ function TimeSeries({
             </AreaChart>
           </ResponsiveContainer>
         ) : (
-          <div className="chart-empty">No valid monthly values in this date range.</div>
+          <div className="chart-empty">{t("noMonthlyValues")}</div>
         )}
       </div>
       <div className="chart-caption">
-        <span>{measure === "storage" ? "Layer sum: 0–10 + 10–40 + 40–100 cm" : "Anomaly baseline uses calendar-month climatology"}</span>
-        <span>Full-period descriptive baseline</span>
+        <span>{measure === "storage" ? t("layerSum") : t("anomalyBaseline")}</span>
+        <span>{t("descriptiveBaseline")}</span>
       </div>
     </section>
   );
 }
 
 function AgricultureContext() {
+  const { t } = useI18n();
   const crops = [
     {
-      name: "Soybean",
+      name: t("soybean"),
       icon: Sprout,
-      season: "SPRING / SUMMER",
-      copy: "Root-zone moisture context can help frame seasonal water availability during crop development.",
+      season: t("springSummer"),
+      copy: t("soybeanContext"),
     },
     {
-      name: "Maize",
+      name: t("maize"),
       icon: Wheat,
-      season: "SPRING / SUMMER",
-      copy: "Regional moisture patterns are one part of a wider picture that includes rainfall, soil, and management.",
+      season: t("springSummer"),
+      copy: t("maizeContext"),
     },
     {
-      name: "Wheat",
+      name: t("wheat"),
       icon: Leaf,
-      season: "AUTUMN / WINTER",
-      copy: "Cool-season soil-water history can provide background context for crop monitoring conversations.",
+      season: t("autumnWinter"),
+      copy: t("wheatContext"),
     },
   ];
 
   return (
     <section className="ag-section" aria-labelledby="ag-title">
       <div className="ag-heading">
-        <div><div className="eyebrow">Agricultural context</div><h2 id="ag-title">What these trends can—and can’t—say</h2></div>
-        <span className="context-only"><CircleHelp size={13} /> CONTEXT ONLY · NOT A FORECAST</span>
+        <div><div className="eyebrow">{t("agricultureContext")}</div><h2 id="ag-title">{t("trendMeaning")}</h2></div>
+        <span className="context-only"><CircleHelp size={13} /> {t("contextOnly")}</span>
       </div>
       <div className="ag-grid">
         {crops.map(({ name, icon: Icon, season, copy }) => (
@@ -553,87 +566,89 @@ function AgricultureContext() {
           </article>
         ))}
       </div>
-      <p className="ag-disclaimer"><AlertTriangle size={14} /> Regional GLDAS soil water is not a field measurement or a validated yield, stress, or damage model.</p>
+      <p className="ag-disclaimer"><AlertTriangle size={14} /> {t("agDisclaimer")}</p>
     </section>
   );
 }
 
 function EmptyState({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const { t } = useI18n();
   return (
     <section className="empty-state" role="status">
       <span className="empty-icon"><Database size={21} /></span>
-      <div className="eyebrow">REAL DATA UNAVAILABLE</div>
-      <h2>No validated trend file is connected</h2>
+      <div className="eyebrow">{t("realUnavailable")}</div>
+      <h2>{t("noTrendFile")}</h2>
       <p>{message}</p>
       <code>frontend/public/data/trend_analysis.json</code>
-      <button className="button-secondary" onClick={onRetry}>Retry file check</button>
-      <span className="empty-footnote">Scientific values remain hidden until a validated artifact is available.</span>
+      <button className="button-secondary" onClick={onRetry}>{t("retry")}</button>
+      <span className="empty-footnote">{t("emptyScientificValues")}</span>
     </section>
   );
 }
 
 function MethodologyPage({ dataset }: { dataset: DashboardDataset | null }) {
+  const { language, t } = useI18n();
   return (
     <>
       <section className="page-intro methods-intro">
         <div>
-          <div className="eyebrow"><span className="eyebrow-line" /> DOCUMENTATION / PROVENANCE</div>
-          <h1>About & <em>data sources</em></h1>
-          <p>What is measured, how the trend is estimated, and where interpretation stops.</p>
+          <div className="eyebrow"><span className="eyebrow-line" /> {t("docsProvenance")}</div>
+          <h1>{t("methodsTitle")}</h1>
+          <p>{t("whatMeasured")}</p>
         </div>
-        <div className="methods-source-mark"><Database size={18} /><span>NASA EARTH SCIENCE</span><b>GLDAS · NOAH v2.1</b></div>
+        <div className="methods-source-mark"><Database size={18} /><span>{language === "es" ? "CIENCIAS DE LA TIERRA NASA" : "NASA EARTH SCIENCE"}</span><b>GLDAS · NOAH v2.1</b></div>
       </section>
       {loadUnavailableMessage(dataset)}
       <section className="methods-grid">
         <article className="panel method-card method-wide">
-          <div className="eyebrow">01 / INPUT</div>
-          <h2>Modeled soil-water storage</h2>
-          <p>GLDAS Noah v2.1 monthly fields estimate water stored in successive soil layers. This dashboard sums the 0–10 cm, 10–40 cm, and 40–100 cm layers to represent 0–100 cm storage.</p>
+          <div className="eyebrow">01 / {t("product")}</div>
+          <h2>{t("modeledStorage")}</h2>
+          <p>{t("inputDesc")}</p>
           <div className="method-facts">
-            <div><span>PRODUCT</span><b>GLDAS Noah v2.1 · monthly</b></div>
-            <div><span>VARIABLES</span><b>SoilMoi0_10cm_inst, SoilMoi10_40cm_inst, SoilMoi40_100cm_inst</b></div>
-            <div><span>UNITS</span><b>kg m⁻² ≡ mm water equivalent</b></div>
-            <div><span>GRID</span><b>0.25° · model grid cells</b></div>
+            <div><span>{t("product")}</span><b>GLDAS Noah v2.1 · {language === "es" ? "mensual" : "monthly"}</b></div>
+            <div><span>{t("variables")}</span><b>SoilMoi0_10cm_inst, SoilMoi10_40cm_inst, SoilMoi40_100cm_inst</b></div>
+            <div><span>{t("units")}</span><b>kg m⁻² ≡ {t("mmWaterEquivalent")}</b></div>
+            <div><span>{t("grid")}</span><b>0.25° · {language === "es" ? "celdas de la grilla del modelo" : "model grid cells"}</b></div>
           </div>
         </article>
         <article className="panel method-card">
-          <div className="eyebrow">02 / COVERAGE</div>
-          <h2>Missingness stays visible</h2>
-          <p>A cell contributes only when all three layers are valid. Regional coverage is the valid spherical cell area divided by the supplied study-grid area.</p>
+          <div className="eyebrow">02 / {t("coverage")}</div>
+          <h2>{t("missingness")}</h2>
+          <p>{t("coverageRule")}</p>
           <div className="coverage-method">
-            <div><span>Mean coverage</span><b>{dataset ? (dataset.meanCoverage * 100).toFixed(1) + "%" : "—"}</b></div>
-            <div><span>Minimum monthly coverage</span><b>{dataset ? (dataset.minimumCoverage * 100).toFixed(1) + "%" : "—"}</b></div>
-            <div><span>Missing profiles</span><b>{dataset ? (dataset.missingProfileFraction * 100).toFixed(1) + "%" : "—"}</b></div>
+            <div><span>{t("coverage")}</span><b>{dataset ? formatNumber(dataset.meanCoverage * 100) + "%" : "—"}</b></div>
+            <div><span>{t("minimumCoverage")}</span><b>{dataset ? formatNumber(dataset.minimumCoverage * 100) + "%" : "—"}</b></div>
+            <div><span>{t("missingProfiles")}</span><b>{dataset ? formatNumber(dataset.missingProfileFraction * 100) + "%" : "—"}</b></div>
           </div>
         </article>
         <article className="panel method-card">
-          <div className="eyebrow">03 / TREND ESTIMATION</div>
-          <h2>Seasonality & serial dependence</h2>
-          <p>OLS estimates a linear slope with calendar-month fixed effects. Newey–West HAC covariance uses a Bartlett kernel and up to 12 monthly lags.</p>
-          <div className="method-code">slope → mm / decade<br />CI → 95% normal approximation<br />p → two-sided HAC test</div>
+          <div className="eyebrow">03 / {language === "es" ? "ESTIMACIÓN DE TENDENCIA" : "TREND ESTIMATION"}</div>
+          <h2>{t("seasonalitySerial")}</h2>
+          <p>{t("olsDesc")}</p>
+          <div className="method-code">{language === "es" ? "Pendiente → mm / década" : "Slope → mm / decade"}<br />{language === "es" ? "IC → aproximación normal del 95%" : "CI → 95% normal approximation"}<br />{language === "es" ? "p → prueba HAC bilateral" : "p → two-sided HAC test"}</div>
         </article>
         <article className="panel method-card">
-          <div className="eyebrow">04 / ROBUSTNESS</div>
-          <h2>Seasonal Sen & spatial tests</h2>
-          <p>Seasonal Sen slope pairs observations from the same calendar month across years. Cell-level HAC p-values use Benjamini–Hochberg adjustment; spatial dependence limits FDR interpretation.</p>
-          <div className="method-code">Seasonal Sen · mm / decade<br />BH q-value · approximate under spatial dependence</div>
+          <div className="eyebrow">04 / {language === "es" ? "ROBUSTEZ" : "ROBUSTNESS"}</div>
+          <h2>{t("seasonalRobustness")}</h2>
+          <p>{t("seasonalDesc")}</p>
+          <div className="method-code">Sen estacional · mm / década<br />{language === "es" ? "Valor q BH · aproximado con dependencia espacial" : "BH q-value · approximate under spatial dependence"}</div>
         </article>
         <article className="panel method-card">
-          <div className="eyebrow">05 / PROVENANCE</div>
-          <h2>Source, period & status</h2>
+          <div className="eyebrow">05 / {language === "es" ? "PROCEDENCIA" : "PROVENANCE"}</div>
+          <h2>{t("sourcePeriodStatus")}</h2>
           <div className="provenance-list">
-            <div><span>Data source</span><b>{dataset?.source ?? "Not loaded"}</b></div>
-            <div><span>Period</span><b>{dataset ? formatDate(dataset.start, { month: "short", year: "numeric" }) + " — " + formatDate(dataset.end, { month: "short", year: "numeric" }) : "Not loaded"}</b></div>
-            <div><span>Records</span><b>{dataset ? `${dataset.months} monthly` : "Not loaded"}</b></div>
-            <div><span>Geographic coverage</span><b>{dataset ? `${dataset.latitudeCount} × ${dataset.longitudeCount} cells · ${dataset.eligibleCells} trend estimates · ${dataset.resolutionDegrees}°` : "Not loaded"}</b></div>
-            <div><span>Study-grid rule</span><b>{dataset?.boundaryRule ?? "Not loaded"}</b></div>
-            <div><span>Area weighting</span><b>{dataset?.areaWeighting ?? "Not loaded"}</b></div>
-            <div><span>Input files</span><b>{dataset ? `${dataset.inputFiles.length} files with SHA-256 provenance` : "Not loaded"}</b></div>
-            <div><span>Analysis status</span><b>{dataset ? "Historical retrospective · no forecast" : "Validated output not loaded"}</b></div>
+            <div><span>{t("source")}</span><b>{dataset ? language === "es" && dataset.source === "GLDAS Noah v2.1 monthly regional exports" ? "GLDAS Noah v2.1 · exportaciones regionales mensuales" : dataset.source : t("notLoaded")}</b></div>
+            <div><span>{t("period")}</span><b>{dataset ? formatDate(dataset.start, { month: "short", year: "numeric" }) + " — " + formatDate(dataset.end, { month: "short", year: "numeric" }) : t("notLoaded")}</b></div>
+            <div><span>{t("records")}</span><b>{dataset ? `${dataset.months} ${t("monthlyRecords")}` : t("notLoaded")}</b></div>
+            <div><span>{t("geographicCoverage")}</span><b>{dataset ? `${dataset.latitudeCount} × ${dataset.longitudeCount} ${language === "es" ? "celdas ·" : "cells ·"} ${dataset.eligibleCells} ${language === "es" ? "estimaciones de tendencia ·" : "trend estimates ·"} ${dataset.resolutionDegrees}°` : t("notLoaded")}</b></div>
+            <div><span>{t("studyGridRule")}</span><b>{dataset ? language === "es" && dataset.boundaryRule === "all cells in the supplied grid; no polygon overlap fraction applied" ? "Todas las celdas de la grilla provista; sin fracción de superposición poligonal" : dataset.boundaryRule : t("notLoaded")}</b></div>
+            <div><span>{t("areaWeighting")}</span><b>{dataset ? language === "es" && dataset.areaWeighting === "exact spherical regular-grid cell area from latitude bounds" ? "Área esférica exacta de celdas regulares calculada con límites de latitud" : dataset.areaWeighting : t("notLoaded")}</b></div>
+            <div><span>{t("inputFiles")}</span><b>{dataset ? `${dataset.inputFiles.length} ${language === "es" ? "archivos con procedencia SHA-256" : "files with SHA-256 provenance"}` : t("notLoaded")}</b></div>
+            <div><span>{t("analysisStatus")}</span><b>{dataset ? t("historicalRetrospective") : t("validatedNotLoaded")}</b></div>
           </div>
           {dataset && (
             <details className="provenance-files">
-              <summary>Inspect source-file checksums ({dataset.inputFiles.length})</summary>
+              <summary>{t("checksumLabel")} ({dataset.inputFiles.length})</summary>
               <ul>
                 {dataset.inputFiles.map((file) => (
                   <li key={file.filename}><code>{file.filename}</code><code>{file.sha256}</code></li>
@@ -643,39 +658,39 @@ function MethodologyPage({ dataset }: { dataset: DashboardDataset | null }) {
           )}
         </article>
         <article className="panel method-card limitations-card">
-          <div className="eyebrow">06 / LIMITATIONS</div>
-          <h2>Interpret with care</h2>
-          <ul>
-            <li>The Pampas extent is a provisional rectangle, not a crop-field boundary or fractional polygon mask.</li>
-            <li>GLDAS is modeled regional hydrology, not an in-situ soil probe or field measurement.</li>
-            <li>Full-period climatology is retrospective; it is not a valid real-time forecast baseline.</li>
-            <li>Trend patterns cannot establish crop stress, yield effects, or crop damage.</li>
-          </ul>
+          <div className="eyebrow">06 / {t("limitations")}</div>
+          <h2>{t("interpretCare")}</h2>
+          <ul>{t("limitationsList").split("|").map((item) => <li key={item}>{item}</li>)}</ul>
         </article>
       </section>
       <section className="source-footer panel">
         <div className="source-symbol"><CloudRain size={19} /></div>
-        <div><b>NASA Global Land Data Assimilation System</b><span>GLDAS Noah Land Surface Model · Version 2.1 · Historical analysis only</span></div>
-        <a href="https://doi.org/10.5067/SXAVCZFAQLNO" target="_blank" rel="noreferrer">DATASET DOI <ArrowUpRight size={14} /></a>
+        <div><b>NASA Global Land Data Assimilation System</b><span>GLDAS Noah Land Surface Model · {language === "es" ? "Versión 2.1 · solo análisis histórico" : "Version 2.1 · Historical analysis only"}</span></div>
+        <a href="https://doi.org/10.5067/SXAVCZFAQLNO" target="_blank" rel="noreferrer">{t("datasetDoi")} <ArrowUpRight size={14} /></a>
       </section>
-      <footer className="page-footer"><span><Database size={13} /> PROVENANCE IS PART OF THE RESULT</span><span>METHOD NOTES REFLECT THE ANALYSIS OUTPUT CONTRACT</span><span>ALPHA AGRO · DEVELOPED BY QUANT ALPHA</span></footer>
+      <footer className="page-footer"><span><Database size={13} /> {language === "es" ? "LA PROCEDENCIA ES PARTE DEL RESULTADO" : "PROVENANCE IS PART OF THE RESULT"}</span><span>{language === "es" ? "LAS NOTAS METODOLÓGICAS REFLEJAN EL CONTRATO DE SALIDA" : "METHOD NOTES REFLECT THE ANALYSIS OUTPUT CONTRACT"}</span><span>ALPHA AGRO · {t("developedBy")} QUANT ALPHA</span></footer>
     </>
   );
 }
 
 function loadUnavailableMessage(dataset: DashboardDataset | null) {
+  const { t } = useI18n();
   if (dataset) {
     return (
       <div className="inline-source-status">
-        <span className="source-dot real-dot" /> Loaded validated historical analysis · schema 1.0 · {dataset.months} months · no operational forecast
+        <span className="source-dot real-dot" /> {t("dataLoadedStatus").replace("{months}", String(dataset.months))}
       </div>
     );
   }
   return (
     <div className="inline-source-status pending-status">
-      <span className="source-dot real-dot" /> Real-data-only view. No scientific values are displayed until a validated JSON file is available.
+      <span className="source-dot real-dot" /> {t("realOnlyStatus")}
     </div>
   );
+}
+
+function App() {
+  return <I18nProvider><DashboardApp /></I18nProvider>;
 }
 
 export default App;

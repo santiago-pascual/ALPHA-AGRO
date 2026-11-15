@@ -40,7 +40,7 @@ Automated tests use schema-valid fixtures under `src/data/__fixtures__/`. Their 
 - Landing and guided demonstration: study context, evidence boundaries, and a seven-step presenter walkthrough. The cross-variable relationship chart is not connected in this frontend.
 
 - **Observatory:** regional trend, HAC interval and p-value, coverage, cell-level map, date-filtered monthly storage/anomalies, and cautious crop context. The current supported study region is the Argentine Pampas; no other region is implied.
-- **Forecast:** a distinct monthly 1–3 month workspace with interactive horizon, target, issue-time, and eligible spatial-cell request controls. The selected model is derived from the matching pre-holdout spatial evaluation. Numeric forecasts remain withheld unless a compatible artifact passes the operational evidence gates. There are no fallback values or crop recommendations.
+- **Forecast:** a distinct request-and-results workflow for monthly 1–3 month horizons. Users choose a covered location, target, and issue time, then explicitly request a result. The selected model is derived from the matching pre-holdout spatial evaluation. Results display only when a matching `forecast_v1` record passes the operational evidence gates; otherwise the result panel explains why and links back to historical analysis. The browser never computes predictions.
 - **Research & Methods:** versioned historical evaluation, regional/spatial, horizon and target filters, walk-forward/holdout comparison, baseline skill, score-difference intervals, and research-status ladder. Holdout rankings are descriptive only.
 - **About & data sources:** GLDAS variables and units, coverage rules, trend methods, provenance, and scientific limits.
 
@@ -56,7 +56,7 @@ The research PC must provide a compatible artifact at `frontend/public/data/fore
 
 Component and adapter tests use fixtures explicitly marked **TEST ONLY — SYNTHETIC**. They are never imported into application runtime code.
 
-The navigation is organized as **Observatory**, **Forecast**, **Research & Methods**, and **About & Data Sources**. No geographic selector is exposed: only the validated Argentine Pampas support is represented.
+The navigation is organized as **Observatory**, **Forecast**, **Research & Methods**, and **About & Data Sources**. English is the default interface language; use the EN / ES selector to change languages. The choice is stored only in this browser. No geographic selector is exposed: only the validated Argentine Pampas support is represented.
 
 ### Saved fields and farmer-facing interpretation
 
@@ -67,6 +67,14 @@ Map, GPS, and coordinate selections are accepted only when the point falls insid
 Plain-language anomaly interpretation uses only the sign of the validated monthly regional anomaly. The dashboard labels it as regional context and does not present area coverage as confidence; no monthly anomaly uncertainty interval is provided by the current contract. A selected cell's seasonal-anomaly trend is historical and distinct from current moisture. No drought category, irrigation advice, crop stress, yield, or damage outcome is inferred. Forecast values remain hidden unless the existing `forecast_v1` validation gates pass; low-moisture probability is withheld when its research-defined event is missing.
 
 The map uses free OpenStreetMap tiles with visible attribution. It requires an internet connection for basemap tiles; the dashboard data itself does not call a paid API or require credentials. Regional GLDAS fields are modeled data and do not establish field conditions, crop yield, or damage.
+
+### Forecast horizon support
+
+The current `forecast_v1` contract in `../config/forecast_v1.schema.json` defines only monthly horizons of 1, 2, or 3 months. The 14-day and 28-day options belong to a separate short-term research track and remain disabled until its validated artifact contract and eligibility evidence are available. Do not adapt monthly GLDAS outputs or retrospective evaluation rows into short-term predictions.
+
+`forecast_v1` currently describes one spatial record per artifact. The page matches that record to the selected GLDAS cell, horizon, target, issue time, and pre-holdout model. A record for another selection is withheld. Serving multiple locations/horizons/targets from one artifact will require an agreed, versioned record collection or index from the scientific team; this frontend does not invent that schema. The current contract also does not provide baseline-relative forecast skill or farmer-facing decision rules, so the UI reports those as unavailable and does not generate field advice.
+
+See [FORECAST_GENERATION_AND_LOCALIZATION.md](docs/FORECAST_GENERATION_AND_LOCALIZATION.md) for request behavior and the artifact fields needed to enable this workflow.
 
 ## Demo and static hosting
 
