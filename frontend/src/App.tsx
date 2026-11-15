@@ -36,8 +36,9 @@ import { LandingPage } from "./components/LandingPage";
 import type { DashboardDataset, MonthlyObservation } from "./types";
 import { ForecastPage } from "./components/ForecastPage";
 import { findEligibleCell, gridCellId, type SelectedLocation } from "./data/location";
-import { addSavedField, createSavedField, deleteSavedField, readSavedFieldStore, renameSavedField, selectSavedField, writeSavedFieldStore, type SavedFieldStore } from "./data/fields";
+import { addSavedField, createSavedField, deleteSavedField, readSavedFieldStore, renameSavedField, selectSavedField, updateSavedFieldConfiguration, writeSavedFieldStore, type SavedFieldStore } from "./data/fields";
 import { I18nProvider, LanguageSelector, useI18n } from "./i18n";
+import { DEFAULT_CROP_CONFIGURATION, type CropConfiguration } from "./data/agronomy";
 
 type Page = "landing" | "overview" | "forecast" | "about" | "research";
 type ChartMeasure = "storage" | "anomaly";
@@ -80,6 +81,7 @@ function DashboardApp() {
   const [region, setRegion] = useState<RegionSelection>("all");
   const [fieldStore, setFieldStore] = useState<SavedFieldStore>(() => readSavedFieldStore());
   const [transientLocation, setTransientLocation] = useState<SelectedLocation | null>(null);
+  const [cropConfiguration, setCropConfiguration] = useState<CropConfiguration>(() => fieldStore.fields.find((field) => field.id === fieldStore.activeFieldId)?.cropConfiguration ?? DEFAULT_CROP_CONFIGURATION);
   const [menuOpen, setMenuOpen] = useState(false);
 
   const activeSavedField = fieldStore.fields.find((field) => field.id === fieldStore.activeFieldId) ?? null;
@@ -97,13 +99,15 @@ function DashboardApp() {
   };
   const handleFieldSelect = (id: string | null) => {
     setTransientLocation(null);
-    persistFieldStore(selectSavedField(fieldStore, id));
+    const next = selectSavedField(fieldStore, id);
+    persistFieldStore(next);
+    setCropConfiguration(next.fields.find((field) => field.id === id)?.cropConfiguration ?? DEFAULT_CROP_CONFIGURATION);
   };
   const handleFieldAdd = (name: string, description: string) => {
     if (!selectedLocation) return;
     try {
       const cell = dataset ? findEligibleCell(selectedLocation, dataset.cells, dataset.resolutionDegrees) : null;
-      const field = createSavedField({ name, description, point: selectedLocation, dataset });
+      const field = createSavedField({ name, description, point: selectedLocation, dataset, cropConfiguration });
       const next = addSavedField(fieldStore, field);
       if (cell && field.gridCellId !== gridCellId(cell)) throw new Error("El identificador de celda no coincide con la cobertura validada. / Grid cell does not match validated coverage.");
       setTransientLocation(null);
@@ -111,6 +115,10 @@ function DashboardApp() {
     } catch (error) {
       setFieldStore({ ...fieldStore, warning: error instanceof Error ? error.message : "No se pudo guardar el campo. / Field could not be saved." });
     }
+  };
+  const handleCropConfigurationChange = (configuration: CropConfiguration) => {
+    setCropConfiguration(configuration);
+    if (fieldStore.activeFieldId) persistFieldStore(updateSavedFieldConfiguration(fieldStore, fieldStore.activeFieldId, configuration));
   };
   const handleFieldRename = (id: string, name: string) => {
     try { persistFieldStore(renameSavedField(fieldStore, id, name)); }
@@ -293,7 +301,7 @@ function DashboardApp() {
           ) : page === "about" ? (
             <MethodologyPage dataset={dataset} />
           ) : page === "forecast" ? (
-            <ForecastPage dataset={dataset} selectedLocation={selectedLocation} onLocationChange={handleLocationChange} savedFields={fieldStore.fields} activeFieldId={fieldStore.activeFieldId} storageWarning={fieldStore.warning} onFieldSelect={handleFieldSelect} onFieldAdd={handleFieldAdd} onFieldRename={handleFieldRename} onFieldDelete={handleFieldDelete} onViewHistory={() => setPage("overview")} />
+            <ForecastPage dataset={dataset} selectedLocation={selectedLocation} onLocationChange={handleLocationChange} savedFields={fieldStore.fields} activeFieldId={fieldStore.activeFieldId} storageWarning={fieldStore.warning} cropConfiguration={cropConfiguration} onCropConfigurationChange={handleCropConfigurationChange} onFieldSelect={handleFieldSelect} onFieldAdd={handleFieldAdd} onFieldRename={handleFieldRename} onFieldDelete={handleFieldDelete} onViewHistory={() => setPage("overview")} />
           ) : (
             <PredictiveResearchPage />
           )}

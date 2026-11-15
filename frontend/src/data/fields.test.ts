@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addSavedField, createSavedField, deleteSavedField, readSavedFieldStore, renameSavedField, SAVED_FIELDS_KEY, sameGridCellGroups, selectSavedField, writeSavedFieldStore } from "./fields";
+import { addSavedField, createSavedField, deleteSavedField, readSavedFieldStore, renameSavedField, SAVED_FIELDS_KEY, sameGridCellGroups, selectSavedField, updateSavedFieldConfiguration, writeSavedFieldStore } from "./fields";
 import { adaptTrendAnalysis } from "./loadTrend";
 import { trendAnalysisFixture } from "./__fixtures__/trendAnalysis.fixture";
 
@@ -56,5 +56,17 @@ describe("saved field storage and actions", () => {
     const second = createSavedField({ name: "Campo B", point: { latitude: -33.99, longitude: -59.99 }, dataset, id: "b" });
     expect(first.gridCellId).toBe(second.gridCellId);
     expect(sameGridCellGroups([first, second])).toHaveLength(1);
+  });
+
+  it("persists the farmer's crop context with a saved field and reads legacy fields safely", () => {
+    const storage = memoryStorage();
+    const field = createSavedField({ name: "Field A", point: { latitude: -34, longitude: -60 }, dataset, id: "field-a" });
+    let store = addSavedField(readSavedFieldStore(storage), field);
+    store = updateSavedFieldConfiguration(store, field.id, { crop: "wheat", growthStage: "vegetative", waterManagement: "irrigated" });
+    expect(writeSavedFieldStore(store, storage)).toBeNull();
+    expect(readSavedFieldStore(storage).fields[0].cropConfiguration).toEqual({ crop: "wheat", growthStage: "vegetative", waterManagement: "irrigated" });
+
+    const legacy = memoryStorage(JSON.stringify({ version: 1, fields: [{ ...field, cropConfiguration: undefined }], activeFieldId: field.id }));
+    expect(readSavedFieldStore(legacy).fields[0].cropConfiguration).toBeUndefined();
   });
 });

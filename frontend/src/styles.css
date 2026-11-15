@@ -652,6 +652,47 @@ h1, h2, h3, p { margin-top: 0; }
 .forecast-fixed-field svg { flex: 0 0 auto; color: #a1b69a; }
 .forecast-controls-note { display: flex; align-items: flex-start; gap: 7px; margin: 12px 0 0; color: #929f96; font-size: 9px; line-height: 1.6; }
 .forecast-controls-note svg { flex: 0 0 auto; margin-top: 1px; color: #aab69f; }
+.crop-decision { margin: 12px 0; padding: 17px; }
+.crop-decision h2 { margin: 6px 0 0; color: #e1e8df; font: 550 16px "Segoe UI Variable", "Aptos", "Segoe UI", sans-serif; }
+.crop-config-controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 15px; }
+.crop-config-controls label { display: flex; min-width: 0; flex-direction: column; gap: 7px; }
+.crop-config-controls label > span, .farmer-result-context article > span { color: #89968e; font: 8px var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+.crop-config-controls select { min-height: 38px; width: 100%; padding: 9px 10px; border: 1px solid #34403e; border-radius: 4px; color: #cbd5cc; background: #151d1e; font-size: 11px; }
+.crop-context-note { margin: 12px 0; color: #9aa69d; font-size: 9px; line-height: 1.65; }
+.crop-comparison { margin-top: 15px; }
+.crop-comparison-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 9px; }
+.crop-comparison-heading h3 { margin: 0; color: #dbe4dc; font: 550 12px "Segoe UI Variable", "Aptos", "Segoe UI", sans-serif; }
+.crop-comparison-heading > span { color: #c0a975; font: 8px var(--mono); text-transform: uppercase; }
+.crop-physical-status { margin: 0 0 9px; padding: 8px 10px; border-left: 2px solid #a99a67; background: #191a16; color: #c2b991; font-size: 9px; line-height: 1.5; }
+.crop-comparison-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+.crop-evidence-card { min-width: 0; padding: 12px; border: 1px solid #2c3935; border-radius: 4px; background: #131a19; }
+.crop-evidence-card.is-selected { border-color: #647956; box-shadow: inset 0 1px #91a57d; }
+.crop-evidence-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.crop-evidence-top b { color: #dce5da; font-size: 11px; }
+.crop-evidence-top span { max-width: 112px; color: #c3aa72; font-size: 8px; text-align: right; }
+.crop-evidence-card dl { display: grid; gap: 8px; margin: 11px 0; }
+.crop-evidence-card dl div { display: grid; grid-template-columns: minmax(80px, .7fr) 1.3fr; gap: 8px; }
+.crop-evidence-card dt { color: #839088; font-size: 8px; }
+.crop-evidence-card dd { margin: 0; color: #aab7ad; font-size: 8px; line-height: 1.5; }
+.crop-evidence-card p { margin: 9px 0 0; padding-top: 8px; border-top: 1px solid #293430; color: #909d94; font-size: 8px; line-height: 1.55; }
+.crop-context-footnote { margin: 11px 0 0; color: #c3aa72; font-size: 8px; line-height: 1.6; }
+.farmer-request-summary { display: grid; gap: 4px; margin: 12px 0; padding: 12px; border-left: 2px solid #a9bb8b; background: #151d19; color: #cbd6cc; font-size: 9px; }
+.farmer-request-summary > b { color: #dce6d9; font-size: 10px; }
+.farmer-request-summary > small { color: #9ba89e; line-height: 1.5; }
+.farmer-result-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin: 12px 0; }
+.farmer-result-summary article, .farmer-result-context article { min-width: 0; padding: 11px; border: 1px solid #2c3935; border-radius: 4px; background: #141b19; }
+.farmer-result-summary article > span, .farmer-result-context article > span { display: block; color: #88958d; font: 8px var(--mono); text-transform: uppercase; }
+.farmer-result-summary article > b, .farmer-result-context article > b { display: block; margin-top: 6px; color: #d5e0d3; font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
+.farmer-result-context { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin: 10px 0; }
+.farmer-result-context article > small { display: block; margin-top: 7px; color: #929f96; font-size: 8px; line-height: 1.55; overflow-wrap: anywhere; }
+.forecast-interval-figure { max-width: 850px; margin: 12px 0; padding: 12px; border: 1px solid #2c3935; border-radius: 4px; background: #131a19; }
+.forecast-interval-figure svg { display: block; width: 100%; height: 42px; overflow: visible; }
+.forecast-interval-track { stroke: #405049; stroke-width: 2; }
+.forecast-interval-range { stroke: #9bb78d; stroke-width: 6; stroke-linecap: round; }
+.forecast-interval-cap { stroke: #c5d3b7; stroke-width: 2; }
+.forecast-interval-point { fill: #f0d39a; stroke: #151c18; stroke-width: 2; }
+.forecast-interval-legend { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; color: #c1cdc2; font-size: 9px; }
+.forecast-interval-figure figcaption { margin-top: 7px; color: #829087; font-size: 8px; }
 .forecast-requirements { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
 .forecast-requirements article { display: flex; align-items: flex-start; gap: 10px; padding: 14px; }
 .forecast-requirements article > svg { flex: 0 0 auto; color: #a8b89f; }
@@ -710,6 +751,7 @@ h1, h2, h3, p { margin-top: 0; }
 .farmer-forecast-reading p { margin: 6px 0; color: #a4b0a5; font-size: 10px; line-height: 1.65; }
 .farmer-forecast-reading .forecast-event-definition { color: #8f9d91; font-size: 9px; }
 .forecast-generate { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; margin-top: 14px; padding: 0 18px; font-size: 12px; font-weight: 650; }
+.forecast-workflow-steps { margin-top: 9px !important; color: #c4cfbd !important; font-size: 9px !important; letter-spacing: .035em; }
 .forecast-generation-note { margin: 7px 0 0; color: #87958c; font-size: 9px; }
 .forecast-result-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
 .forecast-result-actions span { color: #89968e; font-size: 9px; }
@@ -808,7 +850,7 @@ h1, h2, h3, p { margin-top: 0; }
   .research-status-ladder { grid-template-columns: 1fr; }
   .forecast-intro { align-items: flex-start; flex-direction: column; }
   .forecast-status { min-width: 0; width: 100%; }
-  .forecast-controls, .forecast-requirements { grid-template-columns: 1fr; }
+  .forecast-controls, .forecast-requirements, .crop-config-controls, .crop-comparison-grid, .farmer-result-summary, .farmer-result-context { grid-template-columns: 1fr; }
   .forecast-unavailable { grid-template-columns: 1fr; padding: 15px; }
   .saved-fields-heading { align-items: flex-start; flex-direction: column; }
   .saved-fields-heading .button-secondary { width: 100%; }
@@ -826,6 +868,25 @@ h1, h2, h3, p { margin-top: 0; }
   .coordinate-form { grid-template-columns: 1fr 1fr; }
   .coordinate-form button { grid-column: 1 / -1; }
   .location-tools > button { width: 100%; }
+  .crop-context-note { font-size: 11px; }
+  .crop-config-controls label > span { font-size: 10px; }
+  .crop-config-controls select { min-height: 44px; font-size: 13px; }
+  .crop-comparison-heading h3 { font-size: 14px; }
+  .crop-comparison-heading > span { font-size: 9px; }
+  .crop-physical-status, .crop-context-footnote { font-size: 10px; }
+  .crop-evidence-card { padding: 14px; }
+  .crop-evidence-top b { font-size: 13px; }
+  .crop-evidence-top span { font-size: 10px; }
+  .crop-evidence-card dl div { grid-template-columns: minmax(95px, .7fr) 1.3fr; }
+  .crop-evidence-card dt, .crop-evidence-card dd, .crop-evidence-card p { font-size: 10px; }
+  .farmer-request-summary { font-size: 11px; }
+  .farmer-request-summary > b { font-size: 12px; }
+  .farmer-request-summary > small, .farmer-result-context article > small { font-size: 10px; }
+  .farmer-result-summary article, .farmer-result-context article { padding: 13px; }
+  .farmer-result-summary article > span, .farmer-result-context article > span { font-size: 9px; }
+  .farmer-result-summary article > b, .farmer-result-context article > b { font-size: 13px; }
+  .forecast-interval-legend { font-size: 10px; }
+  .forecast-interval-figure figcaption { font-size: 9px; }
 }
 .phase7-hindcast { padding: 20px; }
 .phase7-controls, .phase7-grid-head { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin: 12px 0; }

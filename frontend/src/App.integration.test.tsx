@@ -196,8 +196,8 @@ describe("dashboard real-data integration", () => {
     const data = adaptTrendAnalysis(trendAnalysisFixture);
     const cell = data.cells[0];
     const fields = [
-      { id: "field-a", name: "Campo A", latitude: cell.latitude, longitude: cell.longitude, gridCellId: gridCellId(cell), createdAt: "2026-11-15T12:00:00.000Z" },
-      { id: "field-b", name: "Campo B", latitude: cell.latitude, longitude: cell.longitude, gridCellId: gridCellId(cell), createdAt: "2026-11-15T12:01:00.000Z" },
+      { id: "field-a", name: "Campo A", latitude: cell.latitude, longitude: cell.longitude, gridCellId: gridCellId(cell), cropConfiguration: { crop: "wheat", growthStage: "vegetative", waterManagement: "irrigated" }, createdAt: "2026-11-15T12:00:00.000Z" },
+      { id: "field-b", name: "Campo B", latitude: cell.latitude, longitude: cell.longitude, gridCellId: gridCellId(cell), cropConfiguration: { crop: "maize", growthStage: "reproductive", waterManagement: "rainfed" }, createdAt: "2026-11-15T12:01:00.000Z" },
     ];
     window.localStorage.setItem(SAVED_FIELDS_KEY, JSON.stringify({ version: 1, fields, activeFieldId: "field-a" }));
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => trendAnalysisFixture }));
@@ -207,11 +207,14 @@ describe("dashboard real-data integration", () => {
     if (!forecastButton) throw new Error("Forecast navigation control not found.");
     await act(async () => forecastButton.dispatchEvent(new MouseEvent("click", { bubbles: true })));
     expect(container.textContent).toContain("Campo A");
+    expect(container.querySelector<HTMLSelectElement>("select[aria-label='Crop']")?.value).toBe("wheat");
     expect(container.textContent).toContain("These points share one GLDAS model grid cell");
     const second = Array.from(container.querySelectorAll(".saved-field-select")).find((button) => button.textContent?.includes("Campo B"));
     if (!second) throw new Error("Second saved field not found.");
     await act(async () => second.dispatchEvent(new MouseEvent("click", { bubbles: true })));
     expect(JSON.parse(window.localStorage.getItem(SAVED_FIELDS_KEY) ?? "{}").activeFieldId).toBe("field-b");
+    expect(container.querySelector<HTMLSelectElement>("select[aria-label='Crop']")?.value).toBe("maize");
+    expect(container.querySelector<HTMLSelectElement>("select[aria-label='Growth stage']")?.value).toBe("reproductive");
     expect(container.textContent).toContain("Saved map marker: Campo B");
   });
 });

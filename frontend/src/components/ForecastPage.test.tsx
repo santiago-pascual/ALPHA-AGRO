@@ -10,6 +10,7 @@ import { I18nProvider, LanguageSelector } from "../i18n";
 import { predictiveEvaluationFixture } from "../data/__fixtures__/predictiveEvaluation.fixture";
 import { adaptPredictiveEvaluation } from "../data/loadPredictive";
 import { gridCellId, selectedPreHoldoutModel } from "../data/forecast";
+import { DEFAULT_CROP_CONFIGURATION, type CropConfiguration } from "../data/agronomy";
 
 vi.mock("./TrendMap", async () => {
   const React = await import("react");
@@ -39,7 +40,8 @@ afterEach(() => {
 const testDataset = adaptTrendAnalysis(trendAnalysisFixture);
 function TestForecastPage({ dataset = testDataset }: { dataset?: DashboardDataset | null }) {
   const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(null);
-  return <I18nProvider><LanguageSelector /><ForecastPage dataset={dataset} selectedLocation={selectedLocation} onLocationChange={setSelectedLocation} savedFields={[]} activeFieldId={null} storageWarning={null} onFieldSelect={() => undefined} onFieldAdd={() => undefined} onFieldRename={() => undefined} onFieldDelete={() => undefined} onViewHistory={() => undefined} /></I18nProvider>;
+  const [cropConfiguration, setCropConfiguration] = useState<CropConfiguration>(DEFAULT_CROP_CONFIGURATION);
+  return <I18nProvider><LanguageSelector /><ForecastPage dataset={dataset} selectedLocation={selectedLocation} onLocationChange={setSelectedLocation} savedFields={[]} activeFieldId={null} storageWarning={null} cropConfiguration={cropConfiguration} onCropConfigurationChange={setCropConfiguration} onFieldSelect={() => undefined} onFieldAdd={() => undefined} onFieldRename={() => undefined} onFieldDelete={() => undefined} onViewHistory={() => undefined} /></I18nProvider>;
 }
 
 function renderForecast(dataset?: DashboardDataset | null) {
@@ -72,6 +74,7 @@ describe("ForecastPage location selection", () => {
     expect(horizon?.value).toBe("3");
     clickButton(container, "Generate forecast");
     expect(container.querySelector(".forecast-results")).not.toBeNull();
+    expect(Array.from(container.querySelectorAll(".location-workspace, .crop-decision:not(.crop-comparison-panel), .forecast-setup, .forecast-results, .crop-comparison-panel")).map((node) => node.classList.contains("location-workspace") ? "location" : node.classList.contains("crop-comparison-panel") ? "comparison" : node.classList.contains("crop-decision") ? "crop" : node.classList.contains("forecast-setup") ? "analysis" : "results")).toEqual(["location", "crop", "analysis", "results", "comparison"]);
     expect(container.textContent).toContain("Select a supported field location first.");
     expect(container.textContent).toContain("No scientifically validated forecast is currently available");
     expect(container.textContent).toContain("forecast_v1.json");
@@ -103,6 +106,29 @@ describe("ForecastPage location selection", () => {
     expect(container.textContent).toContain("111 mm");
     expect(container.textContent).toContain("90–132 mm");
     expect(container.textContent).toContain("TEST ONLY");
+    expect(container.querySelector('.forecast-interval-figure svg[role="img"]')?.getAttribute("aria-label")).toContain("90 percent interval");
+    expect(container.textContent).toContain("Historical same-month reference");
+    expect(container.textContent).toContain("Latest included observation");
+  });
+
+  it("builds a crop-context analysis request without fabricating crop suitability", () => {
+    const container = renderForecast();
+    clickButton(container, "Map select supported cell");
+    const crop = container.querySelector<HTMLSelectElement>("select[aria-label='Crop']")!;
+    const stage = container.querySelector<HTMLSelectElement>("select[aria-label='Growth stage']")!;
+    const management = container.querySelector<HTMLSelectElement>("select[aria-label='Water management']")!;
+    act(() => { crop.value = "maize"; crop.dispatchEvent(new Event("change", { bubbles: true })); });
+    act(() => { stage.value = "reproductive"; stage.dispatchEvent(new Event("change", { bubbles: true })); });
+    act(() => { management.value = "irrigated"; management.dispatchEvent(new Event("change", { bubbles: true })); });
+    expect(container.querySelector(".crop-comparison-panel")).toBeNull();
+    clickButton(container, "Generate forecast");
+    expect(container.querySelectorAll(".crop-evidence-card")).toHaveLength(3);
+    expect(container.textContent).toContain("No crop suitability ranking");
+    expect(container.textContent).toContain("No numeric suitability score or recommendation is produced");
+    expect(container.textContent).toContain("No eligible soil-water forecast is available for this selection; historical context is separate.");
+    expect(container.textContent).toContain("Maize · Flowering / reproductive · Irrigated");
+    expect(container.textContent).toContain("Insufficient evidence for crop-specific interpretation");
+    expect(container.textContent).toContain("No scientifically validated forecast is currently available");
   });
 
   it("withholds an invalid artifact and offers historical analysis separately", async () => {
@@ -126,6 +152,14 @@ describe("ForecastPage location selection", () => {
     clickButton(container, "Generar pronóstico");
     expect(container.textContent).toContain("ubicación de campo compatible");
     expect(container.textContent).toContain("frontend/public/data/forecast_v1.json");
+    expect(container.querySelector<HTMLSelectElement>("select[aria-label='Cultivo']")?.value).toBe("soybean");
+    expect(container.querySelector<HTMLSelectElement>("select[aria-label='Etapa del cultivo']")).not.toBeNull();
+    expect(container.querySelector<HTMLSelectElement>("select[aria-label='Manejo del agua']")).not.toBeNull();
+    expect(container.textContent).toContain("Comparar evidencia por cultivo");
+    clickButton(container, "Map select supported cell");
+    clickButton(container, "Generar pronóstico");
+    expect(container.textContent).toContain("Solicitud de análisis");
+    expect(container.textContent).toContain("Soja · Planificación / siembra · Secano");
   });
 
   it("relocalizes an existing validation message when the user switches language", () => {
