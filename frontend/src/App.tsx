@@ -10,6 +10,7 @@ import {
   CircleHelp,
   CloudRain,
   Database,
+  ChartNoAxesCombined,
   Leaf,
   LoaderCircle,
   Map,
@@ -30,9 +31,10 @@ import {
 import { demoDataset } from "./data/demo";
 import { loadValidatedTrend } from "./data/loadTrend";
 import { TrendMap, type RegionSelection } from "./components/TrendMap";
+import { PredictiveResearchPage } from "./components/PredictiveResearch";
 import type { DashboardDataset, DataMode, MonthlyObservation } from "./types";
 
-type Page = "overview" | "methodology";
+type Page = "overview" | "methodology" | "predictive";
 type ChartMeasure = "storage" | "anomaly";
 type LoadState =
   | { status: "idle" }
@@ -139,6 +141,18 @@ function App() {
           >
             <BookOpen size={17} /><span>Methods & data</span>
           </button>
+          <button
+            className={"nav-item" + (page === "predictive" ? " active" : "")}
+            aria-label="Predictive research"
+            title="Predictive research"
+            onClick={() => {
+              setPage("predictive");
+              setMenuOpen(false);
+            }}
+            aria-current={page === "predictive" ? "page" : undefined}
+          >
+            <ChartNoAxesCombined size={17} /><span>Predictive research</span><span className="nav-index">R&amp;D</span>
+          </button>
         </nav>
 
         <div className="side-divider" />
@@ -168,7 +182,7 @@ function App() {
           </button>
           <div className="breadcrumb">
             <span>OBSERVATORY</span><span className="crumb-slash">/</span>
-            <b>{page === "overview" ? "PAMPAS OVERVIEW" : "METHODS & DATA"}</b>
+            <b>{page === "overview" ? "PAMPAS OVERVIEW" : page === "methodology" ? "METHODS & DATA" : "PREDICTIVE RESEARCH"}</b>
           </div>
           <div className="topbar-right">
             <div className="source-switch" aria-label="Data source mode">
@@ -242,8 +256,10 @@ function App() {
                 </>
               ) : null}
             </>
-          ) : (
+          ) : page === "methodology" ? (
             <MethodologyPage dataset={dataset} mode={mode} />
+          ) : (
+            <PredictiveResearchPage />
           )}
         </main>
       </div>
@@ -358,7 +374,7 @@ function TrendPanel({ dataset }: { dataset: DashboardDataset }) {
       <div className="ci-axis"><span>{formatNumber(low, 0)}</span><span>0</span><span>{formatNumber(high, 0)}</span></div>
       <div className="trend-detail-grid">
         <div><span>HAC p-value</span><b>{formatNumber(trend.pValue, 3)}</b></div>
-        <div><span>Seasonal Sen slope</span><b>{trend.seasonalSenSlopePerDecade === null ? "—" : formatNumber(trend.seasonalSenSlopePerDecade) + " <small>mm/dec</small>"}</b></div>
+        <div><span>Seasonal Sen slope</span><b>{trend.seasonalSenSlopePerDecade === null ? "—" : <>{formatNumber(trend.seasonalSenSlopePerDecade)} <small>mm/dec</small></>}</b></div>
         <div><span>Seasonal Kendall τ</span><b>{formatNumber(trend.seasonalKendallTau, 3)}</b></div>
         <div><span>Confidence level</span><b>95%</b></div>
       </div>
