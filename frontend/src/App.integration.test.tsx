@@ -63,10 +63,21 @@ describe("dashboard real-data integration", () => {
     expect(container.textContent).toContain("Alpha Agro");
     expect(container.textContent).toContain("From Earth data");
     expect(container.textContent).toContain("to agricultural insight.");
+    expect(container.querySelector("#landing-title")?.textContent).toContain("Inteligencia de la Tierra");
+    expect(container.textContent).toContain("Marcos Paz");
+    expect(container.textContent).toContain("productor de soja");
+    expect(container.textContent).toContain("no llegó a completar la secundaria");
+    expect(container.textContent).toContain("no hay pronósticos operativos disponibles");
+    expect(container.textContent).toContain("El futuro del agro no debería depender del tamaño del campo.");
+    expect(container.querySelector('[lang="en"]')?.textContent).toContain("Advanced Earth intelligence");
     expect(container.textContent?.toLowerCase()).toContain("quant alpha");
     expect(container.textContent).toContain("Be An Earth System Trend Detective!");
     expect(container.textContent).toContain("validated scientific artifacts only");
     expect(container.textContent).not.toContain("Fictitious demonstration values.");
+    const missionCta = container.querySelector<HTMLButtonElement>(".landing-mission-cta button");
+    expect(missionCta?.textContent).toContain("Explore Observatory");
+    await act(async () => missionCta?.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(container.querySelector("h1")?.textContent).toContain("Earth System Observatory");
   });
 
   it("guides visitors through the seven scientific demo steps without inventing relationships", async () => {

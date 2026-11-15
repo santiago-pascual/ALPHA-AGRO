@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Activity, ArrowDown, ArrowRight, BookOpen, ChartNoAxesCombined, Database, MapPin, Sprout } from "lucide-react";
+import { Activity, ArrowDown, ArrowRight, BookOpen, CalendarClock, ChartNoAxesCombined, CircleHelp, Crosshair, Database, LockKeyhole, MapPin, Sprout } from "lucide-react";
 
 export type LandingPageName = "overview" | "forecast" | "about" | "research";
 
@@ -73,11 +73,13 @@ export function LandingPage({ onOpen }: LandingPageProps) {
         <section className="landing-hero" id="home" aria-labelledby="landing-title">
           <div className="landing-hero-copy">
             <div className="eyebrow"><span className="eyebrow-line" /> NASA SPACE APPS CHALLENGE 2026 · QUANT ALPHA</div>
-            <h1 id="landing-title">From Earth data<br /><em>to agricultural insight.</em></h1>
-            <p className="landing-description">NASA-powered Earth system intelligence for agriculture. Explore historical soil-water conditions across the Argentine Pampas, with uncertainty and data provenance in view.</p>
+            <h1 id="landing-title">Inteligencia de la Tierra,<br /><em>para cada productor.</em></h1>
+            <p className="landing-description">Inteligencia de la Tierra avanzada, hecha accesible para quienes trabajan el campo. Alpha Agro acerca el análisis histórico del agua en el suelo de la región pampeana, con sus límites y su incertidumbre a la vista.</p>
+            <p className="landing-english-summary" lang="en">Advanced Earth intelligence, made accessible to every farmer. Explore historical soil-water analysis for the Argentine Pampas, with uncertainty and limits in view.</p>
+            <p className="landing-tagline-english" lang="en">From Earth data to agricultural insight.</p>
             <div className="landing-actions">
-              <button className="landing-primary" onClick={() => onOpen("overview")}>Explore Observatory <ArrowRight size={16} /></button>
-              <button className="landing-secondary" onClick={() => onOpen("forecast")}><Database size={15} /> Forecast availability</button>
+              <button className="landing-primary" onClick={() => onOpen("overview")}>Explorar el Observatorio · Explore Observatory <ArrowRight size={16} /></button>
+              <button className="landing-secondary" onClick={() => onOpen("forecast")}><Database size={15} /> Estado de pronósticos · Forecast status</button>
             </div>
             <a className="landing-tour-link" href="#guided-demo" onClick={() => setActiveStep(0)}>Start the guided demo <ArrowDown size={13} /></a>
             <p className="landing-mode-note">The public interface displays validated scientific artifacts only. Missing or invalid files produce an explicit unavailable state; there is no synthetic-data fallback.</p>
@@ -98,14 +100,54 @@ export function LandingPage({ onOpen }: LandingPageProps) {
           <a className="landing-scroll" href="#study"><span>Explore the study</span><ArrowDown size={14} /></a>
         </section>
 
-        <section className="landing-section problem-section" id="study" aria-labelledby="study-title">
+        <section className="landing-section landing-story-section" id="study" aria-labelledby="study-title">
           <div className="landing-section-heading">
-            <div className="eyebrow"><span className="eyebrow-line" /> THE STUDY</div>
-            <h2 id="study-title">Regional context for a region shaped by water.</h2>
+            <div className="eyebrow"><span className="eyebrow-line" /> NUESTRA HISTORIA · OUR STORY</div>
+            <h2 id="study-title">Una idea que nació cerca del campo.</h2>
+            <p className="landing-story-english" lang="en">A product idea rooted in a real place and a farmer’s practical knowledge.</p>
+          </div>
+          <div className="landing-story-grid">
+            <article className="landing-story-card">
+              <span className="landing-story-place"><MapPin size={14} /> MARCOS PAZ · BUENOS AIRES</span>
+              <p>El abuelo del fundador fue productor de soja en Marcos Paz. Su experiencia práctica y su conocimiento del campo fueron una inspiración para Alpha Agro.</p>
+              <p>Su trayectoria escolar no llegó a completar la secundaria; su experiencia práctica en el campo tiene valor por sí misma. El fundador vio una barrera más amplia: los análisis avanzados pueden ser difíciles de encontrar, pagar, entender o usar.</p>
+              <p>Las herramientas deberían encontrarse con el conocimiento del productor en un lenguaje claro. La experiencia agrícola no requiere un título técnico para ser valiosa.</p>
+              <p className="landing-story-english" lang="en">Alpha Agro was inspired by the founder’s grandfather, a soybean farmer in Marcos Paz. He did not complete secondary school; that does not diminish the value of his practical farming knowledge. The product grew from a wider question: how can complex agricultural analysis be easier for producers to access and understand?</p>
+            </article>
+            <article className="landing-access-card">
+              <div className="eyebrow">EL PROPÓSITO · THE PURPOSE</div>
+              <h3>El futuro del agro no debería depender del tamaño del campo.</h3>
+              <p>Los pequeños y medianos productores no deberían necesitar conocimientos de programación, estadística o teledetección para consultar información ambiental.</p>
+              <p lang="en">Small and medium-sized producers should not need a background in data science, statistics, or satellite remote sensing to make sense of Earth data.</p>
+              <span>CLARIDAD · CONTEXTO LOCAL · INCERTIDUMBRE VISIBLE</span>
+            </article>
+          </div>
+          <div className="landing-region-line"><MapPin size={15} /><span>REGIÓN PAMPEANA ARGENTINA</span><i>·</i><span>Argentine Pampas</span></div>
+        </section>
+
+        <section className="landing-section landing-workflow-section" aria-labelledby="workflow-title">
+          <div className="landing-section-heading">
+            <div className="eyebrow"><span className="eyebrow-line" /> CÓMO FUNCIONA · HOW IT IS INTENDED TO WORK</div>
+            <h2 id="workflow-title">Del mapa a una lectura más clara.</h2>
+          </div>
+          <div className="landing-workflow" aria-label="Alpha Agro product steps">
+            <article><span className="landing-workflow-icon"><Crosshair size={17} /></span><b>01 · Elegir una zona</b><p>Seleccioná un punto dentro de las celdas con tendencias históricas validadas. Es contexto de grilla, no un límite de lote.</p><small>UBICACIÓN · DISPONIBLE CON DATOS DE COBERTURA</small></article>
+            <article><span className="landing-workflow-icon"><Database size={17} /></span><b>02 · Explorar el registro</b><p>Consultá estimaciones mensuales de agua en el suelo de GLDAS Noah. Son datos de un modelo terrestre de NASA, no una medición directa del lote.</p><small>ANÁLISIS HISTÓRICO · 2006–2025</small></article>
+            <article><span className="landing-workflow-icon"><CircleHelp size={17} /></span><b>03 · Entender la incertidumbre</b><p>Revisá cobertura, variación e intervalos para saber qué muestra la evidencia y dónde tiene límites.</p><small>INCERTIDUMBRE Y PROCEDENCIA A LA VISTA</small></article>
+            <article className="landing-workflow-future"><span className="landing-workflow-icon"><LockKeyhole size={17} /></span><b>04 · Pronósticos validados</b><p>La investigación prospectiva es una meta futura. Hoy no hay pronósticos operativos disponibles en Alpha Agro.</p><small><CalendarClock size={12} /> FUTURO · SUJETO A VALIDACIÓN CIENTÍFICA</small></article>
+          </div>
+          <p className="landing-workflow-english" lang="en">Choose a supported area · explore NASA GLDAS historical estimates · understand uncertainty · access forecasts only if future research validates them.</p>
+        </section>
+
+        <section className="landing-section problem-section" aria-labelledby="study-context-title">
+          <div className="landing-section-heading">
+            <div className="eyebrow"><span className="eyebrow-line" /> BASE CIENTÍFICA · SCIENTIFIC FOUNDATION</div>
+            <h2 id="study-context-title">NASA data, transparent research, careful interpretation.</h2>
           </div>
           <div className="landing-problem-copy">
-            <p>Rainfall, evaporation, and soil-water storage vary over time and space. Agricultural decisions happen at the field scale, while NASA’s land-surface models represent broader grid cells.</p>
-            <p>Alpha Agro makes the historical evidence easier to inspect. It shows what the data support, where coverage is missing, and how much uncertainty remains—without turning a regional signal into a yield or damage prediction.</p>
+            <p>La lluvia, la evaporación y el agua del suelo cambian en el tiempo y el espacio. Las decisiones se toman en cada lote; GLDAS representa condiciones en celdas de grilla más amplias.</p>
+            <p>Alpha Agro busca hacer más fácil explorar la evidencia histórica: qué datos hay, dónde falta cobertura y cuánta incertidumbre queda. Un patrón regional no es un pronóstico de rendimiento ni de daño.</p>
+            <p className="landing-story-english" lang="en">The Observatory presents historical NASA GLDAS land-model estimates. Predictive research is shown separately, and no retrospective result is presented as an operational forecast.</p>
             <div className="landing-region-line"><MapPin size={15} /><span>ARGENTINE PAMPAS</span><i>·</i><span>South America</span></div>
           </div>
         </section>
@@ -170,6 +212,11 @@ export function LandingPage({ onOpen }: LandingPageProps) {
               <button className="landing-primary" onClick={() => setActiveStep(0)}>Start guided demo <ArrowRight size={14} /></button>
             </div>
           )}
+        </section>
+
+        <section className="landing-mission-cta" aria-labelledby="mission-cta-title">
+          <div><div className="eyebrow"><span className="eyebrow-line" /> NUESTRA MISIÓN · OUR MISSION</div><h2 id="mission-cta-title">Información compleja, más cerca de quienes trabajan la tierra.</h2><p lang="en">Earth intelligence should be understandable, useful, and honest about what it cannot tell us.</p></div>
+          <button className="landing-primary" onClick={() => onOpen("overview")}>Explorar el Observatorio · Explore Observatory <ArrowRight size={16} /></button>
         </section>
       </main>
 

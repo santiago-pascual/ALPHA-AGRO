@@ -500,6 +500,8 @@ h1, h2, h3, p { margin-top: 0; }
 .landing-hero h1 { margin: 24px 0 15px; color: #edf0e9; font: 500 clamp(40px, 6.5vw, 76px)/1.02 "Segoe UI Variable", "Aptos", "Segoe UI", sans-serif; letter-spacing: -.058em; }
 .landing-hero h1 em { color: var(--green); font-style: normal; }
 .landing-description { max-width: 600px; margin: 0; color: #a4afa8; font-size: 14px; line-height: 1.75; }
+.landing-english-summary { max-width: 570px; margin: 9px 0 0; color: #7f8d85; font-size: 11px; line-height: 1.6; }
+.landing-tagline-english { margin: 8px 0 0; color: #99a997; font: 8px var(--mono); letter-spacing: .07em; }
 .landing-actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 25px; }
 .landing-mode-note { max-width: 560px; margin: 11px 0 0; color: #73817a; font-size: 9px; line-height: 1.55; }
 .landing-mode-note code { color: #aab7a9; font: 8px var(--mono); }
@@ -528,6 +530,35 @@ h1, h2, h3, p { margin-top: 0; }
 .landing-region-line { display: flex; align-items: center; gap: 8px; margin-top: 18px; color: #becdbb; font: 8px var(--mono); letter-spacing: .06em; }
 .landing-region-line svg { color: var(--green); }
 .landing-region-line i { color: #65716b; font-style: normal; }
+.landing-story-section { display: grid; grid-template-columns: .82fr 1.18fr; gap: 24px clamp(35px, 7vw, 90px); }
+.landing-story-section > .landing-region-line { grid-column: 1 / -1; margin-top: 0; }
+.landing-story-english { color: #7f8d85 !important; font-size: 10px !important; line-height: 1.7 !important; }
+.landing-story-section .landing-section-heading > p { max-width: 360px; margin: 12px 0 0; color: #89968e; font-size: 11px; line-height: 1.6; }
+.landing-story-grid { display: grid; grid-template-columns: 1.12fr .88fr; gap: 12px; }
+.landing-story-card, .landing-access-card { padding: 17px; border: 1px solid #293635; border-radius: 6px; background: #11191a; }
+.landing-story-card p { margin: 12px 0 0; color: #a3aea6; font-size: 11px; line-height: 1.75; }
+.landing-story-place { display: inline-flex; align-items: center; gap: 7px; color: #b8c7b6; font: 8px var(--mono); letter-spacing: .07em; }
+.landing-story-place svg { color: var(--green); }
+.landing-access-card { display: flex; flex-direction: column; justify-content: space-between; background: #141c19; }
+.landing-access-card .eyebrow { color: #91a18f; font-size: 7px; }
+.landing-access-card h3 { margin: 15px 0; color: #e2e9df; font: 500 clamp(18px, 2vw, 24px)/1.25 "Segoe UI Variable", "Aptos", "Segoe UI", sans-serif; letter-spacing: -.025em; }
+.landing-access-card p { margin: 0 0 16px; color: #98a59b; font-size: 10px; line-height: 1.7; }
+.landing-access-card > span { color: #92a38f; font: 7px var(--mono); letter-spacing: .05em; }
+.landing-workflow-section { padding-bottom: 48px; }
+.landing-workflow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 24px; }
+.landing-workflow article { display: flex; flex-direction: column; min-height: 198px; padding: 15px; border: 1px solid #293635; border-radius: 6px; background: #11191a; }
+.landing-workflow article b { margin-top: 14px; color: #dce4dc; font-size: 11px; }
+.landing-workflow article p { flex: 1; margin: 8px 0 14px; color: #929f98; font-size: 10px; line-height: 1.65; }
+.landing-workflow article small { display: flex; align-items: center; gap: 5px; color: #8fa08e; font: 7px var(--mono); letter-spacing: .025em; }
+.landing-workflow-icon { display: grid; place-items: center; width: 31px; height: 31px; color: var(--green); border: 1px solid #3a4a40; border-radius: 6px; background: #18211e; }
+.landing-workflow-future { border-style: dashed !important; background: #121718 !important; }
+.landing-workflow-future .landing-workflow-icon { color: #c2ad79; border-color: #574d37; background: #211f18; }
+.landing-workflow-future small { color: #b5a477 !important; }
+.landing-workflow-english { margin: 13px 0 0; color: #77857d; font-size: 10px; line-height: 1.6; }
+.landing-mission-cta { display: flex; align-items: center; justify-content: space-between; gap: 25px; width: min(1180px, calc(100% - 64px)); margin: 0 auto 56px; padding: 22px; border: 1px solid #34423a; border-radius: 6px; background: #141d18; }
+.landing-mission-cta h2 { max-width: 650px; margin: 12px 0 6px; color: #e5ebe2; font: 500 clamp(20px, 2.6vw, 29px)/1.2 "Segoe UI Variable", "Aptos", "Segoe UI", sans-serif; letter-spacing: -.03em; }
+.landing-mission-cta p { margin: 0; color: #8f9d93; font-size: 10px; line-height: 1.6; }
+.landing-mission-cta > button { flex: 0 0 auto; }
 .landing-capability-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 24px; }
 .landing-capability { min-height: 208px; padding: 17px; border: 1px solid #293635; border-radius: 6px; background: #11191a; }
 .landing-capability-icon { display: grid; place-items: center; width: 32px; height: 32px; margin-bottom: 18px; color: var(--green); border: 1px solid #3a4a40; border-radius: 6px; background: #18211e; }
@@ -653,6 +684,7 @@ h1, h2, h3, p { margin-top: 0; }
 
 @media (max-width: 900px) {
   .landing-hero { grid-template-columns: minmax(0, 1.1fr) minmax(250px, .8fr); gap: 30px; }
+  .landing-workflow { grid-template-columns: 1fr 1fr; }
   .landing-capability-grid { grid-template-columns: 1fr 1fr; }
   .landing-capability:last-child { grid-column: 1 / -1; }
   .research-status-ladder { grid-template-columns: 1fr 1fr; }
@@ -673,6 +705,13 @@ h1, h2, h3, p { margin-top: 0; }
   .landing-scroll { bottom: 22px; }
   .landing-section, .landing-demo-section { width: calc(100% - 28px); padding: 35px 0; }
   .problem-section { grid-template-columns: 1fr; gap: 16px; }
+  .landing-story-section { grid-template-columns: 1fr; gap: 16px; }
+  .landing-story-grid { grid-template-columns: 1fr; }
+  .landing-story-section > .landing-region-line { grid-column: auto; }
+  .landing-workflow { grid-template-columns: 1fr; }
+  .landing-workflow article { min-height: auto; }
+  .landing-mission-cta { align-items: stretch; flex-direction: column; width: calc(100% - 28px); margin-bottom: 32px; padding: 16px; }
+  .landing-mission-cta > button { width: 100%; }
   .landing-section-heading h2, .landing-demo-heading h2 { font-size: 27px; }
   .landing-capability-grid { grid-template-columns: 1fr; gap: 8px; }
   .landing-capability:last-child { grid-column: auto; }
