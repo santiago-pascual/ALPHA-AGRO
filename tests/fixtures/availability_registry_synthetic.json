@@ -1,0 +1,73 @@
+{
+  "registry_version": "availability_registry_v1",
+  "research_checked_at_utc": "2098-01-01T00:00:00Z",
+  "status_definitions": {},
+  "sources": [
+    {"source_id": "SYNTHETIC_TEST_SOURCE", "product_id": "SYNTHETIC_TEST_PRODUCT", "availability_status": "unknown"}
+  ],
+  "availability_records": [
+    {
+      "record_id": "SYNTHETIC_TEST_AVAILABLE_BEFORE",
+      "source_id": "SYNTHETIC_TEST_SOURCE",
+      "variable_id": "TEST_VAR",
+      "units": "TEST_UNITS",
+      "observation_start": "2098-01-01T00:00:00Z",
+      "observation_end": "2098-01-01T01:00:00Z",
+      "availability_status": "verified_available",
+      "publication_timestamp": "2098-01-02T02:00:00Z",
+      "publication_timestamp_basis": "first_successful_http_request",
+      "availability_evidence": {"url": "https://example.invalid/synthetic-test-file", "observed_at": "2098-01-02T02:00:00Z", "http_status": 200},
+      "data_quality_flags": ["SYNTHETIC TEST ONLY"]
+    },
+    {
+      "record_id": "SYNTHETIC_TEST_AVAILABLE_AFTER",
+      "source_id": "SYNTHETIC_TEST_SOURCE",
+      "variable_id": "TEST_VAR",
+      "units": "TEST_UNITS",
+      "observation_start": "2098-01-01T00:00:00Z",
+      "observation_end": "2098-01-01T01:00:00Z",
+      "availability_status": "verified_available",
+      "publication_timestamp": "2098-01-04T02:00:00Z",
+      "publication_timestamp_basis": "first_successful_http_request",
+      "availability_evidence": {"url": "https://example.invalid/synthetic-test-later-file", "observed_at": "2098-01-04T02:00:00Z", "http_status": 200},
+      "data_quality_flags": []
+    },
+    {
+      "record_id": "SYNTHETIC_TEST_EXPECTED_NOT_VERIFIED",
+      "source_id": "SYNTHETIC_TEST_SOURCE",
+      "variable_id": "TEST_VAR",
+      "units": "TEST_UNITS",
+      "observation_start": "2098-01-01T00:00:00Z",
+      "observation_end": "2098-01-01T01:00:00Z",
+      "availability_status": "expected_available_not_verified",
+      "publication_timestamp": null,
+      "expected_available_at": "2098-01-02T00:00:00Z",
+      "data_quality_flags": ["SYNTHETIC TEST ONLY"]
+    },
+    {
+      "record_id": "SYNTHETIC_TEST_UNKNOWN",
+      "source_id": "SYNTHETIC_TEST_SOURCE",
+      "variable_id": "TEST_VAR",
+      "units": "TEST_UNITS",
+      "observation_start": "2098-01-01T00:00:00Z",
+      "observation_end": "2098-01-01T01:00:00Z",
+      "availability_status": "unknown",
+      "publication_timestamp": null,
+      "data_quality_flags": []
+    },
+    {
+      "record_id": "SYNTHETIC_TEST_UNAVAILABLE",
+      "source_id": "SYNTHETIC_TEST_SOURCE",
+      "variable_id": "TEST_VAR",
+      "units": "TEST_UNITS",
+      "observation_start": "2098-01-01T00:00:00Z",
+      "observation_end": "2098-01-01T01:00:00Z",
+      "availability_status": "unavailable",
+      "publication_timestamp": null,
+      "unavailability_reason": "SYNTHETIC TEST ONLY",
+      "status_observed_at": "2098-01-02T00:00:00Z",
+      "status_evidence_url": "https://example.invalid/synthetic-test-status",
+      "data_quality_flags": ["SYNTHETIC TEST ONLY"]
+    }
+  ]
+}

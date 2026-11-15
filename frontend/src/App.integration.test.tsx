@@ -49,6 +49,8 @@ describe("dashboard real-data integration", () => {
     expect(container.textContent).toContain("TEST FIXTURE");
     expect(container.textContent).toContain("REGIONAL STORAGE TREND");
     expect(container.textContent).toContain("HISTORICAL ANALYSIS · NO OPERATIONAL FORECAST");
+    expect(container.textContent).toContain("mm/dec");
+    expect(container.textContent).not.toContain("<small>");
     expect(container.textContent).not.toContain("Fictitious demonstration values.");
 
     const methodsButton = Array.from(container.querySelectorAll("button")).find((button) =>
