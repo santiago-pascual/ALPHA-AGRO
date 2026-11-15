@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "status",
+    "source",
+    "grid",
+    "forecast"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "agricultural_water_v1"
+    },
+    "status": {
+      "const": "forecast_unavailable"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "collection",
+        "version",
+        "doi",
+        "granule",
+        "sha256",
+        "observed_start",
+        "observed_end",
+        "locally_accessed_at"
+      ],
+      "properties": {
+        "collection": {
+          "const": "C3480440870-NSIDC_CPRD"
+        },
+        "version": {
+          "const": "008"
+        },
+        "doi": {
+          "const": "10.5067/T5RUATAQREF8"
+        },
+        "granule": {
+          "type": "string",
+          "pattern": "^G[0-9]+-NSIDC_CPRD$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "observed_start": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "observed_end": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "locally_accessed_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "grid": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "projection",
+        "bounds",
+        "latitude",
+        "longitude",
+        "moisture",
+        "valid_cells"
+      ],
+      "properties": {
+        "projection": {
+          "const": "EPSG:6933"
+        },
+        "bounds": {
+          "const": [
+            -64,
+            -38,
+            -57,
+            -30
+          ]
+        },
+        "latitude": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number",
+            "minimum": -38,
+            "maximum": -30
+          }
+        },
+        "longitude": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number",
+            "minimum": -64,
+            "maximum": -57
+          }
+        },
+        "moisture": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 0.9
+            }
+          }
+        },
+        "valid_cells": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "forecast": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "horizons_days",
+        "issue_date",
+        "model"
+      ],
+      "properties": {
+        "horizons_days": {
+          "const": [
+            14,
+            28
+          ]
+        },
+        "issue_date": {
+          "type": "null"
+        },
+        "model": {
+          "type": "null"
+        }
+      }
+    }
+  }
+}

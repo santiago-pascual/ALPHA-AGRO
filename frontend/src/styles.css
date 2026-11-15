@@ -635,3 +635,18 @@ h1, h2, h3, p { margin-top: 0; }
 .phase7-grid-head { max-width: 610px; font-size: 0.83rem; }
 .phase7-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px 16px; }
 .phase7-metrics dd { margin: 4px 0 0; overflow-wrap: anywhere; }
+
+.agricultural-grid { align-items: start; }
+.agricultural-results { display: grid; gap: 12px; padding: 20px; }
+.agricultural-results h2, .agricultural-results h3, .agricultural-results p { margin: 0; }
+.agricultural-results h3 { display: flex; align-items: center; gap: 7px; font-size: 15px; }
+.agricultural-results p { color: var(--muted); }
+.agricultural-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; padding: 10px; }
+.agricultural-results .agricultural-controls { padding: 0; }
+.agricultural-controls label { display: grid; gap: 4px; }
+.agricultural-controls input, .agricultural-controls select, .agricultural-grid button {
+  min-height: 36px; max-width: 100%; padding: 5px 10px; border: 1px solid var(--line);
+  border-radius: 6px; color: var(--text); background: var(--bg);
+}
+.agricultural-controls input { width: 115px; }
+.agricultural-grid button { display: inline-flex; gap: 6px; align-items: center; justify-self: start; cursor: pointer; }
