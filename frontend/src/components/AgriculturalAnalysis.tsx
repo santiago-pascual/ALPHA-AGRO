@@ -8,7 +8,7 @@ import type { Language } from "../i18n";
 import type { DashboardDataset } from "../types";
 import { findEligibleCell } from "../data/location";
 import type { LandContextLoad } from "../types/landContext";
-import { assessCropStageSeason, pampasMapGroups, plantingMonthsFor, waterSignalForCrop } from "../data/regionalAgronomy";
+import { assessCropStageSeason, pampasMapGroups, plantingMonthsFor, seasonalCropOptions, waterSignalForCrop } from "../data/regionalAgronomy";
 
 type Props = {
   phase8: Phase8BundleLoad;
@@ -37,7 +37,10 @@ export function AgriculturalAnalysis({ phase8, phase9, historical, landContext =
   const p9Cell = phase9.status === "ready" && cell ? phase9.data.cells.get(cell.cell_id) : null;
   const observed = phase9.status === "ready" && p9Cell ? phase9.data.latestObserved.get(p9Cell.cell_id) : null;
   const issueMonth = phase8.status === "ready" ? Number(phase8.bundle.issue_time.slice(5, 7)) : null;
+  const issueDay = phase8.status === "ready" ? Number(phase8.bundle.issue_time.slice(8, 10)) : null;
   const mapGroups = location ? pampasMapGroups(location.latitude, location.longitude) : [];
+  const cropOptions = issueMonth && issueDay && location ? seasonalCropOptions(issueMonth, issueDay, location.latitude) : [];
+  const lateMaizeWindowApproaching = issueMonth === 11 && issueDay !== null && issueDay < 20;
   const calendarAssessment = issueMonth && location ? assessCropStageSeason(crop.crop, crop.growthStage, issueMonth, location.latitude) : "no-source";
   const plantingMonths = location ? plantingMonthsFor(crop.crop, location.latitude) : null;
   const waterSignal = waterSignalForCrop(observed?.condition_code);
@@ -77,7 +80,7 @@ export function AgriculturalAnalysis({ phase8, phase9, historical, landContext =
           : calendarAssessment === "stage-not-inferable"
             ? (es ? "La etapa del cultivo no se puede confirmar con el mes solamente. Hace falta la fecha de siembra y la variedad." : "The crop stage cannot be confirmed from the month alone. Planting date and cultivar are needed.")
             : (es ? "No hay calendario regional incorporado para este cultivo." : "No regional calendar is connected for this crop.")}</p>
-      <div className="regional-crop-shortlist"><b>{es ? "Cultivos para revisar en la región" : "Regional crops to consider"}</b><span>{es ? "Soja · Maíz · Trigo" : "Soybean · Maize · Wheat"}</span><small>{es ? "Opciones con contexto regional publicado; no es un ranking de aptitud para el lote." : "Options with published regional context; not a field-level suitability ranking."}</small></div>
+      <div className="regional-crop-shortlist"><b>{es ? "Opciones por calendario para revisar" : "Calendar-based options to review"}</b><span>{cropOptions.length ? cropOptions.map((id) => CROP_CATALOG.find((item) => item.id === id)?.name[language]).join(" · ") : (es ? "Sin ventana de siembra identificada" : "No sowing window identified")}</span>{lateMaizeWindowApproaching && <small>{es ? "La ventana orientativa de maíz tardío se acerca a fines de noviembre y diciembre." : "The broad delayed-maize window approaches in late November and December."}</small>}<small>{es ? "Es una coincidencia de calendario regional, no un ranking de aptitud ni una recomendación para este lote." : "This is a regional calendar match, not a suitability ranking or a recommendation for this field."}</small></div>
       <small>{es ? "La zona norte/sur sigue el agrupamiento descriptivo del mapa; no es una zonificación agronómica oficial." : "North/south follows the map's descriptive grouping; it is not an official agronomic zone."}</small>
     </section>}
     {!location && <p className="phase8-state" role="status">{es ? "Elegí una ubicación compatible para preparar el análisis." : "Choose a supported location to prepare the analysis."}</p>}

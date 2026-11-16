@@ -39,3 +39,14 @@ export function plantingMonthsFor(crop: CropId, latitude: number): readonly numb
   const months = plantingMonths[crop]?.[pampasMapGroup(latitude)];
   return months ?? null;
 }
+
+export function seasonalCropOptions(month: number, day: number, latitude: number): CropId[] {
+  if (!Number.isInteger(month) || month < 1 || month > 12 || !Number.isInteger(day) || day < 1 || day > 31) return [];
+  const options: CropId[] = [];
+  if (plantingMonthsFor("soybean", latitude)?.includes(month)) options.push("soybean");
+  const earlyMaizeWindow = month === 9 || month === 10;
+  const delayedMaizeWindow = (month === 11 && day >= 20) || (month === 12 && day <= 15);
+  if (earlyMaizeWindow || delayedMaizeWindow) options.push("maize");
+  if (plantingMonthsFor("wheat", latitude)?.includes(month)) options.push("wheat");
+  return options;
+}

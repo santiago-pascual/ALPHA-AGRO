@@ -98,6 +98,8 @@ describe("farmer agricultural analysis", () => {
     expect(container.textContent).toContain("Southern Pampas");
     expect(container.textContent).toContain("Planning / planting");
     expect(container.textContent).toContain("overlaps a documented regional sowing window");
+    expect(container.textContent).toContain("Calendar-based options to review");
+    expect(container.textContent).toContain("The broad delayed-maize window approaches in late November and December.");
     act(() => root?.unmount()); root = undefined; document.body.innerHTML = "";
     const wheat = render({ crop: { ...DEFAULT_CROP_CONFIGURATION, crop: "wheat" } });
     expect(wheat.textContent).toContain("outside the broad regional sowing window");
