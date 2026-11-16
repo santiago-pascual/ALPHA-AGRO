@@ -39,10 +39,9 @@ export function Phase8Outlook({ state, horizon, onHorizonChange, selectedLocatio
 
   return <section className="phase8-outlook panel" aria-labelledby="phase8-outlook-title">
     <div className="phase8-heading">
-      <div><div className="eyebrow">PHASE 8 · {es ? "INVESTIGACIÓN / PERSPECTIVA EXPERIMENTAL" : "RESEARCH / EXPERIMENTAL OUTLOOK"}</div><h2 id="phase8-outlook-title">{es ? "Análisis experimental del campo" : "Experimental field analysis"}</h2></div>
+      <div><div className="eyebrow">{es ? "INVESTIGACIÓN PHASE 8" : "PHASE 8 RESEARCH"}</div><h2 id="phase8-outlook-title">{es ? "Perspectiva de agua en el suelo" : "Soil-water outlook"}</h2></div>
       <span className="phase8-status"><span aria-hidden="true">●</span> {es ? "EXPERIMENTAL · NO OPERATIVO" : "EXPERIMENTAL · NOT OPERATIONAL"}</span>
     </div>
-    <p className="phase8-summary">{es ? "Perspectiva basada en climatología estacional; no es un pronóstico operativo ni una recomendación agrícola." : "A seasonal-climatology outlook; it is not an operational forecast or an agricultural recommendation."}</p>
     <div className="phase8-view-switch" role="group" aria-label={es ? "Presentación de resultados" : "Results presentation"}>
       <button type="button" aria-pressed={view === "farmer"} onClick={() => setView("farmer")}>{es ? "Vista productor" : "Farmer view"}</button>
       <button type="button" aria-pressed={view === "research"} onClick={() => setView("research")}>{es ? "Vista de investigación" : "Research view"}</button>
@@ -54,29 +53,37 @@ export function Phase8Outlook({ state, horizon, onHorizonChange, selectedLocatio
 
     {state.status === "ready" && selected && view === "farmer" && <>
       <div className="phase8-farmer-context">
-        <article><span>{es ? "CAMPO / UBICACIÓN" : "FIELD / LOCATION"}</span><b>{fieldName || (selectedLocation ? formatNumber(selectedLocation.latitude, { maximumFractionDigits: 4 }) + ", " + formatNumber(selectedLocation.longitude, { maximumFractionDigits: 4 }) : (es ? "Sin punto seleccionado" : "No location selected"))}</b></article>
-        <article><span>{es ? "CULTIVO" : "CROP"}</span><b>{cropName}</b><small>{es ? "Etapa" : "Stage"}: {growthStageName} · {es ? "Manejo" : "Management"}: {waterManagementName}</small></article>
-        <article><span>{es ? "VARIABLE ELEGIDA" : "SELECTED MEASURE"}</span><b>{metricName}</b></article>
+        <article><span>{es ? "CAMPO" : "FIELD"}</span><b>{fieldName || (selectedLocation ? formatNumber(selectedLocation.latitude, { maximumFractionDigits: 4 }) + ", " + formatNumber(selectedLocation.longitude, { maximumFractionDigits: 4 }) : (es ? "Sin punto" : "No field selected"))}</b></article>
+        <article><span>{es ? "CULTIVO Y ETAPA" : "CROP AND STAGE"}</span><b>{cropName} · {growthStageName}</b><small>{waterManagementName}</small></article>
       </div>
       <div className="phase8-controls">
         <div className="phase8-horizons" role="group" aria-label={es ? "Horizonte mensual" : "Monthly horizon"}>{([1, 2, 3] as const).map((n) => <button key={n} type="button" aria-pressed={horizon === n} onClick={() => onHorizonChange(n)}>{dateLabel(state.bundle.temporal_convention.target_months[n - 1])}</button>)}</div>
         <div className="phase8-scope" role="group" aria-label={es ? "Alcance espacial" : "Spatial scope"}><button type="button" aria-pressed={scope === "regional"} onClick={() => setScope("regional")}>{es ? "Regional" : "Regional"}</button><button type="button" aria-pressed={scope === "spatial"} onClick={() => setScope("spatial")}>{es ? "Mi celda GLDAS" : "My GLDAS cell"}</button></div>
       </div>
-      <p className="phase8-metric-explainer">{explanation}</p>
       <div className="phase8-month-cards" aria-label={es ? "Perspectiva mensual experimental" : "Experimental monthly outlook"}>
         {state.bundle.regional_forecasts.map((regional, index) => {
           const monthHorizon = (index + 1) as 1 | 2 | 3;
           const result = resolvePhase8Metric(state.bundle, monthHorizon, scope, selectedLocation, target);
           return <button className="phase8-month-card" key={regional.target_month} type="button" aria-pressed={horizon === monthHorizon} onClick={() => onHorizonChange(monthHorizon)}>
             <span className="phase8-card-month">{dateLabel(regional.target_month)}</span>
-            {result.status === "available" ? <><b>{formatNumber(result.value, { maximumFractionDigits: 1 })} {result.units}</b><span>{es ? "Almacenamiento modelado" : "Modeled storage"}</span><small>{es ? "Intervalo predictivo del 90%" : "90% predictive interval"}: {formatNumber(result.interval.lower, { maximumFractionDigits: 1 })}–{formatNumber(result.interval.upper, { maximumFractionDigits: 1 })} mm</small><small>{es ? "Referencia estacional" : "Seasonal reference"}: {formatNumber(result.climatologicalReferenceMm, { maximumFractionDigits: 1 })} mm</small></> : <><b className="phase8-unavailable-value">{es ? "No disponible científicamente" : "Not scientifically available"}</b><small>{target === "storage" ? result.reason : explanation}</small></>}
+            {result.status === "available" ? <><b>{formatNumber(result.value, { maximumFractionDigits: 1 })} {result.units}</b><span>{es ? "Agua modelada · 0–100 cm" : "Modeled water · 0–100 cm"}</span><small>{es ? "Intervalo 90%" : "90% range"}: {formatNumber(result.interval.lower, { maximumFractionDigits: 1 })}–{formatNumber(result.interval.upper, { maximumFractionDigits: 1 })} mm</small></> : <b className="phase8-unavailable-value">{es ? "No disponible" : "Not available"}</b>}
           </button>;
         })}
       </div>
-      <div className="phase8-plain-reading" aria-live="polite"><b>{es ? "Qué significa" : "What this means"}</b><p>{explanation}</p><p>{es ? "Las necesidades de agua dependen del cultivo, su etapa, el suelo, el tiempo y las condiciones locales. No hay umbrales validados para producir una recomendación para este campo." : "Water needs depend on crop, development stage, soil, weather, and local conditions. Validated thresholds for a recommendation for this field are not available."}</p><p><strong>{es ? "Próximo paso:" : "Next step:"}</strong> {es ? "combiná este contexto regional con observaciones del lote y asesoramiento agronómico local; Alpha Agro no emite recomendaciones por cultivo." : "combine this regional context with field observations and local agronomic advice; Alpha Agro does not issue crop-specific recommendations."}</p></div>
-      {target === "storage" && currentMetric?.status === "available" && <p className="phase8-uncertainty-note">{es ? "El intervalo del 90% resume incertidumbre calibrada con residuos históricos; no garantiza cobertura futura y no representa precisión a escala de lote." : "The 90% interval summarizes uncertainty calibrated from historical residuals; it does not guarantee future coverage or represent field-scale precision."}</p>}
-      {target !== "storage" && <div className="phase8-state phase8-state-alert" role="status"><AlertTriangle size={16} aria-hidden="true" /><span>{explanation}</span></div>}
-      <p className="phase8-not-operational"><AlertTriangle size={15} />{es ? "ESTADO EXPLÍCITO: operationally_eligible = false. Sin pronósticos operativos, recomendaciones de siembra o riego, ni predicciones de rendimiento." : "EXPLICIT STATUS: operationally_eligible = false. No operational forecasts, planting or irrigation advice, or yield predictions."}</p>
+      <p className="phase8-meaning" aria-live="polite">{target === "storage" ? (es ? "Agua modelada en el suelo (0–100 cm), no lluvia prevista." : "Modeled soil water (0–100 cm), not expected rainfall.") : (es ? "Esta métrica no está disponible." : "This metric is unavailable.")} {scope === "spatial" && currentMetric?.status === "unavailable" ? (es ? "Sin datos válidos para esta celda." : "No valid data for this cell.") : ""}</p>
+      <details className="phase8-about"><summary>{es ? "Acerca de esta perspectiva" : "About this outlook"}</summary>
+        <p>{explanation}</p>
+        {scope === "spatial" && currentMetric?.status === "unavailable" && <p>{currentMetric.reason}</p>}
+        <dl><div><dt>{es ? "Método" : "Method"}</dt><dd>{state.bundle.model.name} · {state.bundle.model.version}</dd></div>
+          <div><dt>{es ? "Fuente" : "Source"}</dt><dd>{state.bundle.source_dataset.product} · {state.bundle.source_dataset.collection} · DOI {state.bundle.source_dataset.doi}</dd></div>
+          <div><dt>{es ? "Observaciones" : "Observations"}</dt><dd>{state.bundle.source_dataset.historical_first_month}–{state.bundle.source_dataset.extension_last_month}; latest {state.bundle.latest_available_observation_month}</dd></div>
+          <div><dt>{es ? "Emisión" : "Issue date"}</dt><dd>{formatDate(state.bundle.issue_time, { dateStyle: "medium", timeStyle: "short" })} UTC</dd></div>
+          <div><dt>{es ? "Incertidumbre" : "Uncertainty"}</dt><dd>{selected.regional.predictive_interval?.method}; {es ? "intervalo del 90% basado en errores históricos, no garantiza valores futuros." : "90% interval based on historical errors; it does not guarantee future values."}</dd></div>
+          <div><dt>{es ? "Grilla" : "Grid"}</dt><dd>{state.bundle.spatial_forecasts.spatial_resolution_degrees}°; {es ? "no representa la escala del lote." : "not field-scale."}</dd></div>
+          <div><dt>{es ? "Estado" : "Status"}</dt><dd>{es ? "Experimental; no es un pronóstico operativo (operationally_eligible = false)." : "Experimental; not an operational forecast (operationally_eligible = false)."}</dd></div>
+          <div><dt>{es ? "Uso agrícola" : "Agricultural use"}</dt><dd>{es ? "Contexto regional; no recomienda siembra, riego ni predice rendimiento." : "Regional context only; no planting or irrigation advice or yield prediction."}</dd></div>
+        </dl>
+      </details>
     </>}
 
     {state.status === "ready" && selected && view === "research" && <>

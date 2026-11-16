@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { AlertTriangle, ArrowRight, BarChart3, CalendarClock, CircleHelp, Crosshair, Database, LoaderCircle, LockKeyhole, MapPin } from "lucide-react";
+import { AlertTriangle, ArrowRight, BarChart3, CalendarClock, Crosshair, Database, LoaderCircle, LockKeyhole, MapPin } from "lucide-react";
 import type { DashboardDataset } from "../types";
 import { coordinateError, findEligibleCell, formatCoordinate, type CoordinatePoint, type LocationSource, type SelectedLocation } from "../data/location";
 import { TrendMap } from "./TrendMap";
@@ -210,24 +210,20 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
   return <>
     <section className="page-intro forecast-intro">
       <div>
-        <div className="eyebrow"><span className="eyebrow-line" /> {language === "es" ? "DISPONIBILIDAD DE PRONÓSTICOS" : "FORECAST AVAILABILITY"}</div>
-        <h1>{language === "es" ? <>Pronóstico y <em>disponibilidad</em></> : <>{t("forecastTitle")} <em>availability</em></>}</h1>
-        <p>{t("forecastIntro")}</p>
-        <p className="forecast-workflow-steps">{t("workflowSteps")}</p>
+        <div className="eyebrow"><span className="eyebrow-line" /> {language === "es" ? "TU CAMPO" : "YOUR FIELD"}</div>
+        <h1>{language === "es" ? "Análisis del campo" : "Field analysis"}</h1>
+        <p>{language === "es" ? "Elegí ubicación, cultivo y período." : "Choose a location, crop, and period."}</p>
       </div>
-      <div className="forecast-status" role="status"><span /><b>{requestedDisplay ? (language === "es" ? "ELEGIBLE OPERATIVAMENTE" : "OPERATIONALLY ELIGIBLE") : t("forecastStatus").toUpperCase()}</b><small>{requestedDisplay ? (language === "es" ? "RESULTADO VALIDADO" : "VALIDATED FORECAST RECORD") : (language === "es" ? "RESULTADO RETENIDO · ESPERANDO EVIDENCIA" : "RESULT WITHHELD · AWAITING EVIDENCE")}</small></div>
     </section>
 
     <section className="location-workspace" aria-labelledby="location-title">
       <div className="location-workspace-heading">
         <div><div className="eyebrow">{language === "es" ? "CONTEXTO DEL CAMPO" : "FIELD CONTEXT"}</div><h2 id="location-title">{t("selectLocation")}</h2></div>
-        <p>{language === "es" ? "El punto ayuda a encontrar una celda de análisis. No representa el lote completo ni produce una medición local." : "A point identifies an analysis cell; it is not a full field boundary or field measurement."}</p>
       </div>
       <SavedFieldsPanel dataset={dataset} selectedLocation={selectedLocation} fields={savedFields} activeFieldId={activeFieldId} storageWarning={storageWarning} onSelect={onFieldSelect} onAdd={onFieldAdd} onRename={onFieldRename} onDelete={onFieldDelete} />
       <form className="location-search-form panel" onSubmit={submitLocationSearch}>
         <label htmlFor="field-location-search">{t("searchLocationLabel")}</label>
         <div><MapPin size={16} aria-hidden="true" /><input id="field-location-search" value={locationSearch} onChange={(event) => setLocationSearch(event.target.value)} placeholder={t("coordinateSearchPlaceholder")} autoComplete="off" /><button type="submit">{t("searchLocation")}</button></div>
-        <small>{t("geocoderUnavailable")}</small>
       </form>
       {dataset ? <TrendMap
         dataset={dataset}
@@ -240,7 +236,7 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
         selectionMode
       /> : <div className="location-coverage-missing panel" role="status"><Database size={17} /><div><b>{t("coverageUnavailable")}</b><span>{t("coverageUnavailableDetail")}</span></div></div>}
       <div className="location-tools panel">
-        <div className="location-tool-heading"><Crosshair size={16} /><div><b>{language === "es" ? "Usar este dispositivo" : "Use this device"}</b><span>{t("browserConsent")}</span></div></div>
+        <div className="location-tool-heading"><Crosshair size={16} /><div><b>{language === "es" ? "Ubicarme" : "Use my location"}</b></div></div>
         <button className="button-secondary" type="button" onClick={requestDeviceLocation}>{t("useMyLocation")}</button>
         <form className="coordinate-form" onSubmit={submitManualCoordinates} noValidate>
           <label><span>{t("latitude")}</span><input aria-label={t("latitude")} type="number" inputMode="decimal" min="-90" max="90" step="any" value={latitude} onChange={(event) => setLatitude(event.target.value)} placeholder="−34.00" /></label>
@@ -254,14 +250,14 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
           <span>{selectedLocation.source === "gps" ? selectedLocation.accuracyMeters === null ? (language === "es" ? "Precisión GPS no disponible" : "GPS accuracy unavailable") : `${t("gpsAccuracyValue")}${Math.round(selectedLocation.accuracyMeters)} m` : (language === "es" ? "La precisión GPS no aplica a esta selección" : "GPS accuracy does not apply to this selection")}</span>
           <button className="location-clear" type="button" onClick={() => { onLocationChange(null); setLocationError(null); setLocationNotice(null); }}>{t("clearLocation")}</button>
         </div>}
-        <p className="location-privacy-note">{language === "es" ? "Los campos guardados permanecen en este navegador y dispositivo. No se envían al servicio de mapas ni a un servicio de pronóstico." : "Saved fields stay on this browser and device. They are not sent to map or forecast services."} GLDAS Noah {dataset?.resolutionDegrees ?? "0.25"}° — {t("gridResolutionNote")}</p>
+        <details className="location-privacy-note"><summary>{language === "es" ? "Privacidad y precisión" : "Privacy and map accuracy"}</summary><p>{language === "es" ? `La ubicación queda en este dispositivo. La precisión GPS describe el posicionamiento; ${dataset?.resolutionDegrees ?? "0.25"}° es el soporte de grilla del modelo GLDAS, no la precisión GPS ni una medición del lote.` : `Your location stays on this device. GPS accuracy describes positioning; ${dataset?.resolutionDegrees ?? "0.25"}° — GLDAS grid spacing is model-grid support, not GPS precision or satellite soil-moisture observation resolution.`}</p></details>
       </div>
     </section>
 
     <CropDecisionPanel configuration={cropConfiguration} onChange={onCropConfigurationChange} />
 
     <section className="forecast-setup panel" aria-labelledby="forecast-setup-title">
-      <div className="panel-heading"><div><div className="eyebrow">{t("requestCell")}</div><h2 id="forecast-setup-title">{t("forecastSetup")}</h2></div><span className="historical-chip">{forecastState.status === "ready" ? t("checking") : forecastState.status === "loading" ? t("loading") : t("resultsWithheld")}</span></div>
+      <div className="panel-heading"><div><div className="eyebrow">{t("requestCell")}</div><h2 id="forecast-setup-title">{t("forecastSetup")}</h2></div></div>
       <div className="forecast-controls">
         <label><span>{t("location")}</span><div className="forecast-fixed-field"><MapPin size={14} /> {selectedLocation ? requestResult.request ? `${activeField?.name ? `${activeField.name} · ` : ""}GLDAS cell · ${requestResult.request.grid_cell_id}` : `${formatCoordinate(selectedLocation.latitude, "latitude")} · ${formatCoordinate(selectedLocation.longitude, "longitude")} · ${localizedRequestError ?? t("checking")}` : language === "es" ? "Pampas argentinas · elegí un punto" : "Argentine Pampas · select a point"}</div></label>
         <label><span>{t("horizon")}</span><select aria-label={t("horizon")} value={horizon} onChange={(event) => setHorizon(Number(event.target.value) as 1 | 2 | 3)}><optgroup label={t("shortTermTrack")}><option value="14d" disabled>{t("months14")} — {t("shortTermUnavailable")}</option><option value="28d" disabled>{t("months28")} — {t("shortTermUnavailable")}</option></optgroup><optgroup label={t("monthlyTrack")}><option value="1">{t("oneMonth")}</option><option value="2">{t("twoMonths")}</option><option value="3">{t("threeMonths")}</option></optgroup></select></label>
@@ -270,12 +266,13 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
         <label><span>{t("issueTime")}</span><select aria-label={t("issueTime")} value={issueMode} onChange={(event) => setIssueMode(event.target.value as ForecastIssueRequest["issue"]["mode"])}><option value="latest_verified_eligible">{language === "es" ? "Última fecha elegible verificada" : "Latest verified eligible date"}</option><option value="date">{language === "es" ? "Elegir fecha UTC" : "Choose UTC issue time"}</option></select></label>
         {issueMode === "date" && <label><span>{language === "es" ? "Fecha y hora UTC" : "UTC issue timestamp"}</span><input aria-label={language === "es" ? "Fecha y hora de emisión UTC" : "UTC issue timestamp"} type="text" inputMode="text" placeholder="2025-10-31T23:59:59Z" value={issueDate} onChange={(event) => setIssueDate(event.target.value)} /> <small>{language === "es" ? "Ingresá una fecha UTC terminada en Z. La fecha de hoy no se considera válida por defecto." : "Enter a UTC timestamp ending in Z. Today’s date is not assumed to be scientifically valid."}</small></label>}
       </div>
-      <p className="forecast-controls-note"><CircleHelp size={14} /> {evaluationState === "error" ? (language === "es" ? "No se pudo cargar el artefacto de evaluación predictiva." : "The predictive evaluation artifact could not be loaded.") : localizedRequestError ?? (language === "es" ? `La solicitud comprueba el artefacto al generarla. La selección usa resultados walk-forward previos al holdout, nunca los rankings del holdout. ${selectedModel ? `Modelo: ${selectedModel}.` : "Se necesita el artefacto de evaluación para identificar el modelo."}` : `The request checks the artifact when submitted. Model selection uses pre-holdout walk-forward results, never holdout rankings. ${selectedModel ? `Model: ${selectedModel}.` : "The evaluation artifact is required to identify the model."}`)}</p>
+      <details className="forecast-readiness"><summary>{language === "es" ? "Método y estado de investigación" : "Method and research status"}</summary>
+      <p className="forecast-controls-note">{language === "es" ? "Solo se muestran resultados validados." : "Only validated results are shown."}</p>
       <div className="research-status-ladder" aria-label={language === "es" ? "Niveles de preparación científica" : "Scientific readiness levels"}>
         <div><b>1 · {language === "es" ? "Investigación histórica" : "Historical research"}</b><span>{language === "es" ? "Disponible en el Observatorio" : "Available in Observatory"}</span></div><div><b>2 · {language === "es" ? "Evaluación retrospectiva" : "Retrospective evaluation"}</b><span>{evaluationState === "ready" ? (language === "es" ? "Artefacto de evaluación cargado" : "Evaluation artifact loaded") : (language === "es" ? "Cargando o no disponible" : "Loading or unavailable")}</span></div><div><b>3 · {language === "es" ? "Investigación prospectiva experimental" : "Experimental prospective"}</b><span>{phase8State.status === "ready" ? (language === "es" ? "Bundle experimental validado · no operativo" : "Experimental bundle validated · not operational") : phase8State.status === "loading" ? t("loading") : (language === "es" ? "Artefacto no disponible" : "Artifact unavailable")}</span></div><div><b>4 · {language === "es" ? "Elegibilidad operativa" : "Operational eligibility"}</b><span>{requestedResolution?.status === "available" ? (language === "es" ? "Evidencia verificada" : "Evidence matched") : (language === "es" ? "No establecida" : "Not established")}</span></div>
       </div>
-      <button type="button" className="button-primary forecast-generate" onClick={() => { setIsGenerating(!!requestResult.request && forecastState.status === "loading"); generateForecast(); }} disabled={isGenerating} aria-describedby="forecast-generation-note" aria-busy={isGenerating}>{isGenerating ? <LoaderCircle className="forecast-generate-spinner" size={17} aria-hidden="true" /> : <BarChart3 size={17} aria-hidden="true" />}{isGenerating ? t("generating") : t("generateForecast")}<ArrowRight size={16} aria-hidden="true" /></button>
-      <p className="forecast-generation-note" id="forecast-generation-note">{language === "es" ? "La solicitud solo consulta un artefacto validado; no calcula predicciones en el navegador." : "The request checks a validated artifact; the browser does not calculate predictions."}</p>
+      </details>
+      <button type="button" className="button-primary forecast-generate" onClick={() => { setIsGenerating(!!requestResult.request && forecastState.status === "loading"); generateForecast(); }} disabled={isGenerating} aria-busy={isGenerating}>{isGenerating ? <LoaderCircle className="forecast-generate-spinner" size={17} aria-hidden="true" /> : <BarChart3 size={17} aria-hidden="true" />}{isGenerating ? t("generating") : t("generateForecast")}<ArrowRight size={16} aria-hidden="true" /></button>
     </section>
 
     <Phase8Outlook state={phase8State} horizon={horizon} onHorizonChange={setHorizon} selectedLocation={selectedLocation} fieldName={activeField?.name ?? null} cropName={CROP_CATALOG.find((crop) => crop.id === cropConfiguration.crop)?.name[language] ?? cropConfiguration.crop} growthStageName={t(cropConfiguration.growthStage)} waterManagementName={t(cropConfiguration.waterManagement)} target={target} onRetry={retryPhase8Bundle} language={language} formatDate={formatDate} formatNumber={formatNumber} />
@@ -286,7 +283,7 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
         <div className="eyebrow">{t("forecastResults")}</div>
         <h2 id="forecast-unavailable-title">{requestedDisplay ? (language === "es" ? `Pronóstico validado · ${activeField?.name ?? "ubicación seleccionada"}` : `Validated forecast · ${activeField?.name ?? "Selected location"}`) : t("forecastMissing")}</h2>
         <p>{submitError ? t(submitError) : requestedDisplay ? (language === "es" ? "Estimación científica para el período indicado. No describe una medición dentro del lote ni garantiza resultados agrícolas." : "Scientific estimate for the selected period. It is not a measurement within the field and does not guarantee agricultural outcomes.") : forecastState.status === "loading" ? t("generating") : forecastState.status === "error" ? t("artifactInvalid") : requestedResolution?.status === "unavailable" ? requestedResolution.reason : (language === "es" ? t("forecastMissingEs") : t("forecastMissing")) + " " + t("noFallback")}</p>
-        <div className="forecast-file-path"><Database size={14} /><code>{forecastFile}</code></div>
+        <details className="forecast-artifact-path"><summary>{language === "es" ? "Origen del artefacto" : "Artifact source"}</summary><div className="forecast-file-path"><Database size={14} /><code>{forecastFile}</code></div></details>
         {submittedAnalysis && <div className="farmer-request-summary" role="status"><b>{t("analysisRequest")}</b><span>{activeField?.name ?? (language === "es" ? "Ubicación seleccionada" : "Selected location")} · {formatCoordinate(submittedAnalysis.selection.latitude, "latitude")} · {formatCoordinate(submittedAnalysis.selection.longitude, "longitude")}{submittedAnalysis.selection.grid_cell_id ? ` · ${submittedAnalysis.selection.grid_cell_id}` : ""}</span><span>{CROP_CATALOG.find((crop) => crop.id === submittedAnalysis.crop_context.crop)?.name[language]} · {t(submittedAnalysis.crop_context.growthStage)} · {t(submittedAnalysis.crop_context.waterManagement)}</span><small>{t("cropNeutralForecast")}; {t("insufficientEvidence")} {language === "es" ? "para interpretar aptitud del cultivo." : "for crop-specific interpretation."}</small></div>}
         {requestedDisplay && <>
           <div className="farmer-result-summary" aria-label={t("cropAndManagement")}>
@@ -294,23 +291,24 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
             <article><span>{t("targetMonthCard")}</span><b>{requestedDisplay.artifact.target_month} · {requestedDisplay.artifact.horizon_months} {language === "es" ? "meses" : "months"}</b></article>
             <article><span>{t("forecastValueCard")}</span><b>{requestedDisplay.artifact.target === "low_moisture" ? `${formatNumber(requestedDisplay.artifact.value * 100, { maximumFractionDigits: 1 })}%` : `${formatNumber(requestedDisplay.artifact.value, { maximumFractionDigits: 1 })} ${requestedDisplay.artifact.units}`}</b></article>
           </div>
-          <p className="crop-context-note">{t("cropNeutralForecast")}. {submittedAnalysis?.request_version === "farmer_analysis_v1" ? t("analysisRequest") : ""}: {t("insufficientEvidence")}</p>
+          <p className="crop-context-note">{language === "es" ? "Contexto general; no hay una recomendación validada para este cultivo." : "General context; no validated recommendation is available for this crop."}</p>
+          <details className="farmer-history-details"><summary>{language === "es" ? "Ver contexto histórico" : "View historical context"}</summary>
           <div className="farmer-result-context">
             <article className="panel"><span>{t("latestObservationLabel")}</span><b>{historicalContext?.latestObservation ? `${formatNumber(historicalContext.latestObservation.storageMm!, { maximumFractionDigits: 1 })} mm · ${historicalContext.latestObservation.month.slice(0, 7)}` : t("notAvailable")}</b><small>{historicalContext?.latestObservation?.anomalyMm !== null && historicalContext?.latestObservation?.anomalyMm !== undefined ? `${t("anomaly")}: ${formatNumber(historicalContext.latestObservation.anomalyMm, { maximumFractionDigits: 1 })} mm` : t("noMonthlyValues")}. {t("noFieldMeasurement")}</small></article>
             <article className="panel"><span>{t("seasonalReferenceLabel")}</span><b>{seasonalReference === null || seasonalReference === undefined ? t("noSeasonalReference") : `${formatNumber(seasonalReference, { maximumFractionDigits: 1 })} mm · n=${historicalContext?.seasonalReferenceCount ?? 0}`}</b><small>{t("seasonalReferenceNote")}</small></article>
             <article className="panel"><span>{t("spatialContextLabel")}</span><b>{selectedLocation ? `${formatCoordinate(selectedLocation.latitude, "latitude")} · ${formatCoordinate(selectedLocation.longitude, "longitude")}` : "—"}</b><small>{selectedCell?.slopePerDecade === null || !selectedCell ? t("notAvailable") : `${t("gridTrendLabel")}: ${formatNumber(selectedCell.slopePerDecade, { maximumFractionDigits: 2 })} mm / ${language === "es" ? "década" : "decade"}`}</small></article>
           </div>
+          </details>
           <article className="farmer-forecast-reading" aria-labelledby="forecast-reading-title">
             <div className="eyebrow">{language === "es" ? "LECTURA SENCILLA" : "PLAIN-LANGUAGE READING"}</div>
             <h3 id="forecast-reading-title">{requestedDisplay.artifact.target === "low_moisture" ? `${language === "es" ? "Probabilidad estimada" : "Estimated probability"}: ${formatNumber(requestedDisplay.artifact.value * 100, { maximumFractionDigits: 1 })}%` : `${language === "es" ? "Valor estimado" : "Estimated value"}: ${formatNumber(requestedDisplay.artifact.value, { maximumFractionDigits: 1 })} ${requestedDisplay.artifact.units}`}</h3>
             <p>{language === "es" ? requestedPlainLanguage?.spanish : requestedPlainLanguage?.english}</p>
             {requestedDisplay.artifact.target === "low_moisture" && selectedEventDefinition && <p className="forecast-event-definition">{language === "es" ? "Evento definido por la investigación" : "Research-defined event"}: {selectedEventDefinition}</p>}
             {requestedDisplay.artifact.target === "low_moisture" && <p className="forecast-event-definition">{language === "es" ? "El artefacto no informa un intervalo predictivo para esta probabilidad." : "The artifact does not report a prediction interval for this probability."}</p>}
-            <p>{t("notRecommendation")}</p>
-            <div className="forecast-guidance"><b>{t("conditionalGuidance")}</b><p>{t("noGuidance")}</p></div>
+            <p>{language === "es" ? "No es una recomendación de manejo." : "This is not management advice."}</p>
           </article>
           <ForecastIntervalVisual artifact={requestedDisplay.artifact} valueLabel={t("predictedValue")} intervalLabel={t("interval")} formatNumber={formatNumber} language={language} />
-          <dl className="phase7-metrics" aria-label={language === "es" ? "Detalles científicos del pronóstico" : "Forecast scientific details"}>
+          <details className="forecast-scientific-details"><summary>{language === "es" ? "Detalles científicos" : "Scientific details"}</summary><dl className="phase7-metrics" aria-label={language === "es" ? "Detalles científicos del pronóstico" : "Forecast scientific details"}>
             <div><dt>{t("location")}</dt><dd>{activeField?.name ?? submittedRequest?.grid_cell_id ?? "—"}</dd></div>
             <div><dt>{t("issueDate")} / {t("targetPeriod")}</dt><dd>{formatDate(requestedDisplay.artifact.issue_time, { dateStyle: "medium", timeStyle: "short" })} UTC → {requestedDisplay.artifact.target_month}</dd></div>
             <div><dt>{t("horizon")} / {t("model")}</dt><dd>{requestedDisplay.artifact.horizon_months} {language === "es" ? "meses" : "months"} · {requestedDisplay.artifact.model.name} {requestedDisplay.artifact.model.version}</dd></div>
@@ -320,15 +318,15 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
             <div><dt>{language === "es" ? "Calibración" : "Calibration"}</dt><dd>{requestedDisplay.artifact.calibration.start} — {requestedDisplay.artifact.calibration.end} · n={requestedDisplay.artifact.calibration.n_months}</dd></div>
             <div><dt>{language === "es" ? "Evidencia y archivos" : "Evidence & inputs"}</dt><dd>{requestedDisplay.artifact.availability.publication_evidence && typeof requestedDisplay.artifact.availability.publication_evidence.asset_id === "string" ? requestedDisplay.artifact.availability.publication_evidence.asset_id : "—"} · {requestedDisplay.artifact.availability.input_months.length} {language === "es" ? "meses de entrada" : "input months"} · SHA-256 {requestedDisplay.artifact.source.input_panel_sha256}</dd></div>
             <div><dt>{language === "es" ? "Comparación con línea base" : "Baseline comparison"}</dt><dd>{t("baselineSkillUnavailable")}</dd></div>
-          </dl>
+          </dl></details>
         </>}
         {!requestedDisplay && <div className="forecast-result-actions"><button type="button" className="button-secondary" onClick={onViewHistory}>{t("historicalAction")}</button><span>{t("noFallback")}</span></div>}
       </div>
     </section>}
 
-    {submissionAttempted && <CropComparisonPanel configuration={cropConfiguration} physicalForecastAvailable={!!requestedDisplay} />}
+    {submissionAttempted && <details className="crop-comparison-disclosure"><summary>{language === "es" ? "Comparar contexto de cultivos" : "Compare crop context"}</summary><CropComparisonPanel configuration={cropConfiguration} physicalForecastAvailable={!!requestedDisplay} /></details>}
 
-    <section className="farmer-reading-grid" aria-label={language === "es" ? "Lectura simple de información histórica" : "Plain-language historical reading"}>
+    <details className="farmer-history-details"><summary>{language === "es" ? "Contexto histórico" : "Historical context"}</summary><section className="farmer-reading-grid" aria-label={language === "es" ? "Lectura simple de información histórica" : "Plain-language historical reading"}>
       <article className="farmer-reading-card panel">
         <div className="eyebrow">{language === "es" ? "AGUA DEL SUELO · CONTEXTO REGIONAL" : "SOIL WATER · REGIONAL CONTEXT"}</div><h2>{language === "es" ? "¿Más o menos agua que lo habitual?" : "More or less water than usual?"}</h2>
         <p className="farmer-reading-value">{latestRegionalObservation?.anomalyMm === null || latestRegionalObservation?.anomalyMm === undefined ? (language === "es" ? "Anomalía mensual no disponible" : "Monthly anomaly unavailable") : `${latestRegionalObservation.anomalyMm > 0 ? "+" : ""}${formatNumber(latestRegionalObservation.anomalyMm, { maximumFractionDigits: 1 })} mm · ${latestRegionalObservation.month.slice(0, 7)}`}</p>
@@ -343,12 +341,12 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
         {selectedCell && <details className="farmer-science-details"><summary>{language === "es" ? "Ver detalle científico" : "View scientific detail"}</summary><span>{selectedCell.slopePerDecade === null ? t("noEstimate") : `${formatNumber(selectedCell.slopePerDecade, { maximumFractionDigits: 2 })} mm / ${language === "es" ? "década" : "decade"} · ${dataset?.start.slice(0, 4)}–${dataset?.end.slice(0, 4)}`}</span><span>{selectedCell.ci95 ? `${language === "es" ? "Intervalo HAC del 95%" : "95% HAC interval"}: ${formatNumber(selectedCell.ci95[0], { maximumFractionDigits: 2 })}–${formatNumber(selectedCell.ci95[1], { maximumFractionDigits: 2 })} mm/${language === "es" ? "década" : "decade"}` : language === "es" ? "Intervalo HAC no disponible" : "HAC interval unavailable"}</span></details>}
         <p className="farmer-reading-limit">{language === "es" ? "La anomalía mensual es regional. La tendencia de esta celda describe cambios históricos, no la humedad actual." : "The monthly anomaly is regional. This cell trend describes historical changes, not current moisture."}</p>
       </article>
-    </section>
+    </section></details>
 
-    <section className="forecast-requirements" aria-label={language === "es" ? "Requisitos de evidencia para el pronóstico" : "Forecast evidence requirements"}>
+    <details className="forecast-readiness"><summary>{language === "es" ? "Qué requiere un pronóstico operativo" : "What an operational forecast requires"}</summary><section className="forecast-requirements" aria-label={language === "es" ? "Requisitos de evidencia para el pronóstico" : "Forecast evidence requirements"}>
       <article className="panel"><CalendarClock size={17} /><div><b>{language === "es" ? "Evidencia a la fecha de emisión" : "Issue-time evidence"}</b><span>{language === "es" ? "Los datos y sus fechas de publicación deben estar disponibles antes del momento de emisión registrado." : "Observed inputs and their release times must be available by the recorded issue timestamp."}</span></div></article>
       <article className="panel"><AlertTriangle size={17} /><div><b>{language === "es" ? "Validación antes de mostrar" : "Validation before display"}</b><span>{language === "es" ? "Deben documentarse la evaluación cronológica, calibración, incertidumbre, versiones de fuentes y controles de calidad." : "Chronological evaluation, calibration, uncertainty, source versions, and quality flags must be documented."}</span></div></article>
-    </section>
+    </section></details>
     <footer className="page-footer"><span>{language === "es" ? "HORIZONTES MENSUALES · 1–3 MESES" : "MONTHLY HORIZONS · 1–3 MONTHS"}</span><span>{language === "es" ? "SIN PRONÓSTICOS EN VIVO · SIN CONSEJOS POR CULTIVO" : "NO LIVE FORECASTS · NO CROP-SPECIFIC ADVICE"}</span><span>ALPHA AGRO · {language === "es" ? "DESARROLLADO POR QUANT ALPHA" : "DEVELOPED BY QUANT ALPHA"}</span></footer>
   </>;
 }

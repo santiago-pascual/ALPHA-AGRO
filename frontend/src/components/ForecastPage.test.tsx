@@ -90,7 +90,7 @@ describe("ForecastPage location selection", () => {
     }));
     const container = renderForecast();
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
-    expect(container.textContent).toContain("Experimental field analysis");
+    expect(container.textContent).toContain("Soil-water outlook");
     expect(container.textContent).toContain("EXPERIMENTAL · NOT OPERATIONAL");
     expect(container.textContent).toContain("101 mm");
     expect(container.textContent).toContain("operationally_eligible = false");
@@ -167,7 +167,7 @@ describe("ForecastPage location selection", () => {
   it("keeps the forecast request workflow in Spanish when selected", () => {
     localStorage.setItem("alpha-agro.language.v1", "es");
     const container = renderForecast();
-    expect(container.querySelector("h1")?.textContent).toContain("Pronóstico y disponibilidad");
+    expect(container.querySelector("h1")?.textContent).toContain("Análisis del campo");
     clickButton(container, "Generar pronóstico");
     expect(container.textContent).toContain("ubicación de campo compatible");
     expect(container.textContent).toContain("frontend/public/data/forecast_v1.json");

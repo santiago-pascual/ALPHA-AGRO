@@ -51,7 +51,6 @@ export function SavedFieldsPanel({ dataset, selectedLocation, fields, activeFiel
         <div><div className="eyebrow">{language === "es" ? "TUS CAMPOS · SOLO EN ESTE DISPOSITIVO" : "SAVED FIELDS · THIS DEVICE ONLY"}</div><h2 id="saved-fields-title">{t("savedFields")}</h2></div>
         <button className="button-secondary" type="button" onClick={() => { setAddOpen((open) => !open); setFormError(null); }}><Plus size={14} /> {t("addField")}</button>
       </div>
-      <p className="saved-fields-intro">{t("fieldStoredHere")}</p>
       {storageWarning && <p className="saved-fields-warning" role="status">{storageWarning}</p>}
       {addOpen && <form className="saved-field-form" onSubmit={submitNewField}>
         <div className="saved-field-current-point"><MapPin size={15} /><span>{selectedLocation ? `${formatCoordinate(selectedLocation.latitude, "latitude")} · ${formatCoordinate(selectedLocation.longitude, "longitude")}` : t("choosePointPrompt")}</span></div>
@@ -69,7 +68,7 @@ export function SavedFieldsPanel({ dataset, selectedLocation, fields, activeFiel
           </form> : <>
             <button className="saved-field-select" type="button" aria-pressed={activeFieldId === field.id} onClick={() => onSelect(field.id)}>
               <span className="saved-field-check">{activeFieldId === field.id ? <Check size={14} /> : <MapPin size={14} />}</span>
-              <span className="saved-field-details"><b>{field.name}</b><small>{formatCoordinate(field.latitude, "latitude")} · {formatCoordinate(field.longitude, "longitude")}</small><small>{language === "es" ? "Guardado" : "Saved"} {formatDate(field.createdAt, { dateStyle: "medium" })}</small>{field.gridCellId ? <small>GLDAS · {field.gridCellId}</small> : <small>{t("noValidatedCell")}</small>}{field.cropConfiguration && <small>{CROP_CATALOG.find((crop) => crop.id === field.cropConfiguration?.crop)?.name[language]} · {t(field.cropConfiguration.growthStage)} · {t(field.cropConfiguration.waterManagement)}</small>}{field.description && <small>{field.description}</small>}</span>
+              <span className="saved-field-details"><b>{field.name}</b>{field.cropConfiguration && <small>{CROP_CATALOG.find((crop) => crop.id === field.cropConfiguration?.crop)?.name[language]} · {t(field.cropConfiguration.growthStage)}</small>}</span>
               <span className="saved-field-active-label">{activeFieldId === field.id ? t("active").toUpperCase() : t("useField").toUpperCase()}</span>
             </button>
             <div className="saved-field-row-actions">
@@ -77,6 +76,7 @@ export function SavedFieldsPanel({ dataset, selectedLocation, fields, activeFiel
               {deleteId === field.id ? <span className="saved-field-confirm" role="group" aria-label={`${t("confirmFieldDelete")} ${field.name}`}><span>{t("confirmDelete")}?</span><button type="button" onClick={() => { onDelete(field.id); setDeleteId(null); }}>{language === "es" ? "Sí" : "Yes"}</button><button type="button" onClick={() => setDeleteId(null)}>{language === "es" ? "No" : "Cancel"}</button></span> : <button className="field-icon-button danger" type="button" aria-label={`${t("deleteField")} ${field.name}`} onClick={() => setDeleteId(field.id)}><Trash2 size={14} /></button>}
             </div>
           </>}
+          {editingId !== field.id && <details className="saved-field-more"><summary>{language === "es" ? "Detalles" : "Details"}</summary><div><span>{formatCoordinate(field.latitude, "latitude")} · {formatCoordinate(field.longitude, "longitude")}</span><span>{language === "es" ? "Guardado" : "Saved"} {formatDate(field.createdAt, { dateStyle: "medium" })}</span><span>{field.gridCellId ? "GLDAS · " + field.gridCellId : t("noValidatedCell")}</span>{field.cropConfiguration && <span>{t(field.cropConfiguration.waterManagement)}</span>}{field.description && <span>{field.description}</span>}</div></details>}
           {formError && editingId === field.id && <p className="saved-fields-warning" role="alert">{t(formError)}</p>}
         </li>)}
       </ul>}
@@ -84,7 +84,6 @@ export function SavedFieldsPanel({ dataset, selectedLocation, fields, activeFiel
         <p>{t("duplicateCell")}</p>
         <small>{group.map((field) => field.name).join(" · ")} · {dataset?.resolutionDegrees ?? "—"}°</small>
       </div>)}
-      <p className="saved-fields-footnote">{t("pointNotBoundary")}</p>
     </section>
   );
 }

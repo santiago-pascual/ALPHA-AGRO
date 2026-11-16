@@ -7,7 +7,7 @@ export function CropDecisionPanel({ configuration, onChange }: { configuration: 
   const update = (next: Partial<CropConfiguration>) => onChange({ ...configuration, ...next });
   const selectedCrop = CROP_CATALOG.find((crop) => crop.id === configuration.crop) ?? CROP_CATALOG[0];
   return <section className="crop-decision panel" aria-labelledby="crop-context-title">
-    <div className="panel-heading"><div><div className="eyebrow">{t("cropContextKicker")}</div><h2 id="crop-context-title">{t("cropContextTitle")}</h2></div><span className="historical-chip">{t("evidencePending")}</span></div>
+    <div className="panel-heading"><div><div className="eyebrow">{t("cropContextKicker")}</div><h2 id="crop-context-title">{t("cropContextTitle")}</h2></div></div>
     <div className="crop-config-controls">
       <label><span>{t("cropLabel")}</span><select aria-label={t("cropLabel")} value={configuration.crop} onChange={(event) => {
         const crop = CROP_CATALOG.find((entry) => entry.id === event.target.value);
@@ -16,7 +16,7 @@ export function CropDecisionPanel({ configuration, onChange }: { configuration: 
       <label><span>{t("growthStageLabel")}</span><select aria-label={t("growthStageLabel")} value={configuration.growthStage} onChange={(event) => update({ growthStage: event.target.value as CropConfiguration["growthStage"] })}>{selectedCrop.stages.map((stage) => <option key={stage} value={stage}>{t(stage)}</option>)}</select></label>
       <label><span>{t("waterManagementLabel")}</span><select aria-label={t("waterManagementLabel")} value={configuration.waterManagement} onChange={(event) => update({ waterManagement: event.target.value as WaterManagement })}><option value="rainfed">{t("rainfed")}</option><option value="irrigated">{t("irrigated")}</option><option value="unknown">{t("irrigationUnknown")}</option></select></label>
     </div>
-    <p className="crop-context-note">{t("cropContextSeparation")}</p>
+    <details className="crop-context-note"><summary>{language === "es" ? "Cómo usamos este contexto" : "How crop context is used"}</summary><p>{t("cropContextSeparation")}</p><p>{language === "es" ? "Las necesidades de agua también dependen de la etapa, el suelo, el tiempo y las condiciones locales. No hay recomendaciones por cultivo validadas." : "Water needs also depend on stage, soil, weather, and local conditions. Validated crop-specific recommendations are not available."}</p></details>
   </section>;
 }
 

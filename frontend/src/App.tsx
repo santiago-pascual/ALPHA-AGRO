@@ -256,12 +256,12 @@ function DashboardApp() {
                   <div className="eyebrow"><span className="eyebrow-line" /> {t("earthSystems")}</div>
                   <h1>{t("observatoryTitle")}</h1>
                   <div className="study-region-label"><Map size={13} /> {t("studyRegionLabel")}</div>
-                  <p><strong>{t("tagline")}</strong> {t("observatoryIntro")}</p>
+                  <p>{t("tagline")}</p>
                 </div>
                 <div className="intro-meta">
                   <span className="period-label">{t("analysisWindow")}</span>
                   <b>{dataset ? formatDate(dataset.start, { month: "short", year: "numeric" }).toUpperCase() : t("periodNotLoaded")} {dataset && <i>→</i>} {dataset ? formatDate(dataset.end, { month: "short", year: "numeric" }).toUpperCase() : ""}</b>
-                  <span>{dataset ? `${dataset.months} ${t("monthlyRecords")} · ${dataset.source}` : t("validatedNotLoaded")}</span>
+                  {dataset && <details className="overview-data-details"><summary>{t("validatedData")}</summary><span>{dataset.months} {t("monthlyRecords")} · {dataset.source}</span></details>}
                 </div>
               </section>
 

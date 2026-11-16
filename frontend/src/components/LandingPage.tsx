@@ -122,7 +122,7 @@ export function LandingPage({ onOpen }: LandingPageProps) {
           <div className="landing-story-grid">
             <article className="landing-story-card">
               <span className="landing-story-place"><MapPin size={14} /> MARCOS PAZ · BUENOS AIRES</span>
-              {language === "es" ? <><p>El abuelo del fundador fue productor de soja en Marcos Paz. Su experiencia práctica y su conocimiento del campo inspiraron Alpha Agro.</p><p>No llegó a completar la secundaria; eso no reduce el valor de su experiencia agrícola. El fundador reconoció una barrera más amplia: los análisis avanzados pueden ser difíciles de encontrar, pagar, entender o usar.</p><p>Las herramientas deberían encontrarse con el conocimiento del productor en un lenguaje claro. La experiencia agrícola no requiere un título técnico para ser valiosa.</p></> : <><p>Alpha Agro was inspired by the founder’s grandfather, a soybean farmer in Marcos Paz, Buenos Aires. His practical experience and knowledge of farming inspired the product.</p><p>He did not complete secondary school; that does not diminish the value of his agricultural experience. The founder recognized a broader barrier: advanced analysis can be hard to access, afford, understand, or use.</p><p>Tools should meet producers’ knowledge with clear language. Agricultural experience does not require a technical degree to be valuable.</p></>}
+              {language === "es" ? <><p>Alpha Agro nació inspirado por el abuelo del fundador, productor de soja en Marcos Paz. Su experiencia práctica en el campo fue el punto de partida.</p><p>El fundador vio una barrera más amplia: las herramientas de datos pueden ser difíciles de encontrar, pagar, entender o usar. Alpha Agro busca acercar información ambiental clara a productores pequeños y medianos.</p></> : <><p>Alpha Agro was inspired by the founder’s grandfather, a soybean farmer in Marcos Paz. His practical experience in farming was the starting point.</p><p>The founder saw a broader access barrier: data tools can be hard to find, afford, understand, or use. Alpha Agro aims to make environmental information clearer for small and medium-sized producers.</p></>}
             </article>
             <article className="landing-access-card">
               <div className="eyebrow">{language === "es" ? "EL PROPÓSITO" : "THE PURPOSE"}</div>
@@ -134,6 +134,7 @@ export function LandingPage({ onOpen }: LandingPageProps) {
           <div className="landing-region-line"><MapPin size={15} /><span>{language === "es" ? "PAMPAS ARGENTINAS" : "ARGENTINE PAMPAS"}</span><i>·</i><span>{language === "es" ? "Buenos Aires y alrededores" : "Buenos Aires and surrounding region"}</span></div>
         </section>
 
+        <details className="landing-more"><summary>{language === "es" ? "Cómo funciona y qué respalda el análisis" : "How it works and what supports the analysis"}</summary>
         <section className="landing-section landing-workflow-section" aria-labelledby="workflow-title">
           <div className="landing-section-heading">
             <div className="eyebrow"><span className="eyebrow-line" /> {language === "es" ? "CÓMO FUNCIONA" : "HOW IT IS INTENDED TO WORK"}</div>
@@ -147,7 +148,6 @@ export function LandingPage({ onOpen }: LandingPageProps) {
           </div>
             <p className="landing-workflow-english">{language === "es" ? "Elegí una zona con cobertura · explorá estimaciones históricas de NASA GLDAS · entendé la incertidumbre · consultá pronósticos solo si futuras investigaciones los validan." : "Choose a supported area · explore NASA GLDAS historical estimates · understand uncertainty · use forecasts only if future research validates them."}</p>
         </section>
-
         <section className="landing-section problem-section" aria-labelledby="study-context-title">
           <div className="landing-section-heading">
             <div className="eyebrow"><span className="eyebrow-line" /> {language === "es" ? "BASE CIENTÍFICA" : "SCIENTIFIC FOUNDATION"}</div>
@@ -192,10 +192,10 @@ export function LandingPage({ onOpen }: LandingPageProps) {
           <div className="landing-crops-note"><Sprout size={17} /><p>{language === "es" ? "Este contexto puede ser relevante para el seguimiento de soja, maíz y trigo. La aplicación no pronostica rendimiento, estrés ni daño en cultivos." : "This context may be relevant to soybean, maize, and wheat monitoring. The application does not forecast crop yield, stress, or damage."}</p></div>
         </section>
 
+        </details>
         <section className="landing-demo-section" id="guided-demo" aria-labelledby="guided-demo-title">
           <div className="landing-demo-heading">
             <div><div className="eyebrow"><span className="eyebrow-line" /> NASA SPACE APPS · {language === "es" ? "DEMOSTRACIÓN" : "DEMONSTRATION"}</div><h2 id="guided-demo-title">{language === "es" ? "Un recorrido de siete pasos por la evidencia." : "A seven-step guide to the evidence."}</h2></div>
-            <p>{language === "es" ? "Recorré la incertidumbre regional del agua y lo que aún requiere un pronóstico responsable." : "Follow regional water uncertainty and what a responsible forecast would still require."}</p>
           </div>
           {step ? (
             <div className="guided-demo-card" aria-live="polite">
@@ -217,14 +217,14 @@ export function LandingPage({ onOpen }: LandingPageProps) {
           ) : (
             <div className="landing-demo-prompt">
               <div className="landing-demo-prompt-icon"><BookOpen size={19} /></div>
-              <div><b>{language === "es" ? "Empezá con la pregunta. Terminá con los límites." : "Start with the question. End with the limits."}</b><p>{language === "es" ? "El recorrido usa las pantallas reales disponibles y señala los artefactos de investigación faltantes." : "The walkthrough uses real dashboard screens where available and labels missing research artifacts."}</p></div>
+              <div><b>{language === "es" ? "Recorrido guiado" : "Guided walkthrough"}</b><p>{language === "es" ? "Siete pasos por los datos y su contexto." : "Seven short steps through the data and its context."}</p></div>
               <button className="landing-primary" onClick={() => setActiveStep(0)}>{language === "es" ? "Iniciar recorrido guiado" : "Start guided demo"} <ArrowRight size={14} /></button>
             </div>
           )}
         </section>
 
         <section className="landing-mission-cta" aria-labelledby="mission-cta-title">
-          <div><div className="eyebrow"><span className="eyebrow-line" /> {t("mission").toUpperCase()}</div><h2 id="mission-cta-title">{t("heroMission")}</h2><p>{language === "es" ? "La inteligencia de la Tierra debe ser comprensible, útil y honesta sobre lo que no puede decirnos." : "Earth intelligence should be understandable, useful, and honest about what it cannot tell us."}</p></div>
+          <div><div className="eyebrow"><span className="eyebrow-line" /> {t("mission").toUpperCase()}</div><h2 id="mission-cta-title">{t("heroMission")}</h2></div>
           <button className="landing-primary" onClick={() => onOpen("overview")}>{t("landingOpen")} <ArrowRight size={16} /></button>
         </section>
       </main>

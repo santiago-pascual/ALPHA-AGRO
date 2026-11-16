@@ -24,7 +24,7 @@ describe("Phase 8 Research / Experimental Outlook", () => {
     const { container } = render();
     expect(container.textContent).toContain("EXPERIMENTAL · NOT OPERATIONAL");
     expect(container.textContent).toContain("101 mm");
-    expect(container.textContent).toContain("90% predictive interval");
+    expect(container.textContent).toContain("90% range");
     expect(container.textContent).toContain("operationally_eligible = false");
     expect(container.textContent).not.toContain("Validated forecast");
     expect(container.querySelectorAll(".phase8-month-card")).toHaveLength(3);
@@ -65,8 +65,11 @@ describe("Phase 8 Research / Experimental Outlook", () => {
     const { container } = render({ status: "ready", bundle }, { latitude: masked.latitude, longitude: masked.longitude });
     const cellButton = Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("My GLDAS cell"));
     act(() => cellButton?.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(container.textContent).toContain("No valid data for this cell.");
+    const about = container.querySelector(".phase8-about");
+    act(() => about?.querySelector("summary")?.dispatchEvent(new MouseEvent("click", { bubbles: true })));
     expect(container.textContent).toContain("nearest supported GLDAS cell is masked");
-    expect(container.querySelector(".phase8-month-card")?.textContent).toContain("Not scientifically available");
+    expect(container.querySelector(".phase8-month-card")?.textContent).toContain("Not available");
     const valid = bundle.spatial_forecasts.forecasts[0].cells[0];
     act(() => root?.unmount()); root = undefined; document.body.innerHTML = "";
     const validRender = render({ status: "ready", bundle }, { latitude: valid.latitude, longitude: valid.longitude });

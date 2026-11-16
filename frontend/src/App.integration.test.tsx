@@ -71,7 +71,7 @@ describe("dashboard real-data integration", () => {
     expect(container.querySelector("#landing-title")?.textContent).toContain("Advanced Earth intelligence");
     expect(container.textContent).toContain("Marcos Paz");
     expect(container.textContent).toContain("soybean farmer in Marcos Paz");
-    expect(container.textContent).toContain("did not complete secondary school");
+    expect(container.textContent).toContain("His practical experience in farming was the starting point.");
     expect(container.textContent).toContain("does not yet offer operational forecasts");
     expect(container.textContent).toContain("The future of agriculture should not depend on the size of your farm.");
     expect(container.textContent?.toLowerCase()).toContain("quant alpha");
@@ -167,7 +167,7 @@ describe("dashboard real-data integration", () => {
     const forecastButton = Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Forecast"));
     if (!forecastButton) throw new Error("Forecast navigation control not found.");
     await act(async () => forecastButton.dispatchEvent(new MouseEvent("click", { bubbles: true })));
-    expect(container.querySelector("h1")?.textContent).toContain("Forecast availability");
+    expect(container.querySelector("h1")?.textContent).toContain("Field analysis");
     expect(container.querySelector(".forecast-results")).toBeNull();
     const generate = Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Generate forecast"));
     if (!generate) throw new Error("Generate forecast action not found.");
