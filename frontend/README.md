@@ -86,6 +86,16 @@ On the scientific computer, copy the locally validated `data/analysis/phase8_202
 
 The Phase 8 reader and UI tests use synthetic test-only contract fixtures. If the ignored real bundle is present locally, an additional regression test validates it during `npm test`; the artifact itself is never required by or included in a clean Git checkout.
 
+### Exploratory vegetation and crop context
+
+After `trend_analysis.json` is present, create a small local context bundle from NASA MOD17A3HGF annual NPP samples and Argentina's public agricultural-estimates CSV:
+
+~~~powershell
+python scripts/build_land_context.py --trend public/data/trend_analysis.json --output public/data/agricultural_context_v1.json
+~~~
+
+New generated outputs are git-ignored by default and include source links, request-data checksum, source-file checksum, sample-cell coordinates, and explicit quality notes. The currently approved public snapshot is included in this repository so the dashboard works after cloning. It shows an unweighted five-cell NPP sample and a five-campaign provincial harvested-area-weighted yield reference for soybean, maize, and wheat. These are historical context, not NPP projections, crop-yield predictions, land-degradation classifications, or field-specific recommendations. The existing seasonal-climatology model applies only to modeled 0–100 cm soil-water storage; it must not be reused to invent future NDVI/NPP, soil-carbon, rainfall, or yield values. Crop-calendar comparisons are broad educational context based on INTA/Argentina sources and do not rank crop suitability for a farm.
+
 ## Demo and static hosting
 
-The English presenter script is in [../docs/ALPHA_AGRO_DEMO_SCRIPT.md](../docs/ALPHA_AGRO_DEMO_SCRIPT.md). GitHub Pages static hosting is prepared as a manual-only workflow; see [DEPLOYMENT.md](DEPLOYMENT.md). No public deployment is triggered by the workflow file or by building locally. The standard checkout build does not include ignored NASA or predictive JSON artifacts.
+The English presenter script is in [../docs/ALPHA_AGRO_DEMO_SCRIPT.md](../docs/ALPHA_AGRO_DEMO_SCRIPT.md). GitHub Pages static hosting is prepared as a manual-only workflow; see [DEPLOYMENT.md](DEPLOYMENT.md). The repository includes the approved compact trend, Phase 8, Phase 9, retrospective evaluation, and land-context JSON artifacts so a fresh clone can build the same real-data dashboard. Raw NASA archives are not included. `forecast_v1.json` and `spatial_hindcast_v1.json` are absent, so operational forecast and spatial hindcast outputs remain unavailable. No deployment is triggered by building locally.

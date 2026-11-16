@@ -92,7 +92,6 @@ export function LandingPage({ onOpen }: LandingPageProps) {
             <p className="landing-tagline-english">{t("tagline")}</p>
             <div className="landing-actions">
               <button className="landing-primary" onClick={() => onOpen("overview")}>{t("landingOpen")} <ArrowRight size={16} /></button>
-              <button className="landing-secondary" onClick={() => onOpen("forecast")}><Database size={15} /> {t("forecastStatus")}</button>
             </div>
             <a className="landing-tour-link" href="#guided-demo" onClick={() => setActiveStep(0)}>{language === "es" ? "Iniciar el recorrido guiado" : "Start the guided demo"} <ArrowDown size={13} /></a>
             <p className="landing-mode-note">{language === "es" ? "La interfaz pública muestra únicamente artefactos científicos validados. Los archivos faltantes o inválidos se indican explícitamente; no hay reemplazo con datos sintéticos." : "The public interface displays validated scientific artifacts only. Missing or invalid files produce an explicit unavailable state; there is no synthetic-data fallback."}</p>

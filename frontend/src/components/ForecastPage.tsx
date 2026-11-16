@@ -20,6 +20,8 @@ import { loadPhase9Interpretation } from "../data/phase9Interpretation";
 import { Phase8Outlook } from "./Phase8Outlook";
 import { AgriculturalAnalysis } from "./AgriculturalAnalysis";
 import type { Phase9Load } from "../types/phase9";
+import { loadLandContext } from "../data/loadLandContext";
+import type { LandContextLoad } from "../types/landContext";
 
 const forecastFile = "frontend/public/data/forecast_v1.json";
 
@@ -56,6 +58,7 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
   const [forecastState, setForecastState] = useState<ForecastLoad>({ status: "loading" });
   const [phase8State, setPhase8State] = useState<Phase8BundleLoad>({ status: "loading" });
   const [phase9State, setPhase9State] = useState<Phase9Load>({ status: "loading" });
+  const [landContextState, setLandContextState] = useState<LandContextLoad>({ status: "loading" });
   const [submittedRequest, setSubmittedRequest] = useState<ForecastIssueRequest | null>(null);
   const [submittedAnalysis, setSubmittedAnalysis] = useState<FarmerAnalysisRequest | null>(null);
   const [submissionAttempted, setSubmissionAttempted] = useState(false);
@@ -72,6 +75,7 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
     });
     loadForecastArtifact().then((loadedForecast) => { if (active) setForecastState(loadedForecast); });
     loadPhase8ForecastBundle().then((loadedBundle) => { if (active) setPhase8State(loadedBundle); });
+    loadLandContext().then((loadedContext) => { if (active) setLandContextState(loadedContext); });
     return () => { active = false; };
   }, []);
 
@@ -279,7 +283,7 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
       </button>
       {!selectedLocation && <span>{language === "es" ? "Elegí primero la ubicación del campo." : "Select a field location first."}</span>}
     </section>
-    {analysisGenerated && <AgriculturalAnalysis phase8={phase8State} phase9={phase9State} location={selectedLocation} crop={cropConfiguration} language={language} formatNumber={formatNumber} onChooseCrop={(crop) => onCropConfigurationChange({ ...cropConfiguration, crop })} />}
+    {analysisGenerated && <AgriculturalAnalysis phase8={phase8State} phase9={phase9State} landContext={landContextState} historical={dataset} location={selectedLocation} crop={cropConfiguration} language={language} formatNumber={formatNumber} onChooseCrop={(crop) => onCropConfigurationChange({ ...cropConfiguration, crop })} />}
 
     <section className="forecast-setup panel" aria-labelledby="forecast-setup-title">
       <div className="panel-heading"><div><div className="eyebrow">{t("requestCell")}</div><h2 id="forecast-setup-title">{t("forecastSetup")}</h2></div></div>

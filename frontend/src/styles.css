@@ -1040,7 +1040,42 @@ h1, h2, h3, p { margin-top: 0; }
 .agricultural-months article > small { color: #aeb9ae; font-size: 13px; }
 .agricultural-months article > div { color: #b6c1b8; font-size: 13px; line-height: 1.5; }
 .agricultural-explanation { padding: 12px 14px; border-left: 2px solid #7890a0; background: #12191c; }
+.seasonal-crop-context, .crop-water-interpretation { display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid #3b4940; border-radius: 5px; background: #141a17; }
+.seasonal-crop-context > div:first-child, .seasonal-crop-context > div:nth-child(2) { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; }
+.seasonal-crop-context > div > span { color: #aeb9ae; font-size: 13px; }
+.seasonal-crop-context > div > b, .crop-water-interpretation > b { color: #e1e9df; font-size: 15px; }
+.seasonal-crop-context > small, .crop-water-interpretation > small { color: #aeb9ae; font-size: 13px; line-height: 1.5; }
+.seasonal-crop-context > p, .crop-water-interpretation > p { margin: 0; color: #d1d9cf; font-size: 14px; line-height: 1.55; }
+.regional-crop-shortlist { display: flex; flex-direction: column; gap: 4px; padding-top: 9px; border-top: 1px solid #303c34; }
+.regional-crop-shortlist > b { color: #d8c58f; font-size: 14px; }
+.regional-crop-shortlist > span { color: #e0e8df; font-size: 15px; }
+.regional-crop-shortlist > small { color: #aeb9ae; font-size: 13px; line-height: 1.5; }
+.crop-water-interpretation { border-left: 3px solid #89996d; }
 .agricultural-planning-note { margin: 0; color: #d7cfb7; font-size: 14px; line-height: 1.55; }
+.degradation-screening { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid #3d4b40; border-radius: 5px; background: #111715; }
+.degradation-screening h3 { margin: 4px 0; color: #e0e8df; font-size: 18px; font-weight: 580; }
+.degradation-screening article { min-width: 0; display: flex; flex-direction: column; gap: 6px; padding: 13px; border: 1px solid #344138; border-radius: 4px; background: #151c18; }
+.degradation-screening article > span, .degradation-unavailable-grid > div > span { color: #b0bcb1; font-size: 14px; }
+.degradation-screening article > b { color: #e4ebdf; font: 22px var(--mono); overflow-wrap: anywhere; }
+.degradation-screening article > strong { color: #e4d2a8; font-size: 14px; }
+.degradation-screening article > small, .degradation-unavailable-grid small { color: #aeb9ae; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+.degradation-indicators, .degradation-unavailable-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.degradation-indicators > div, .degradation-unavailable-grid > div { min-width: 0; display: flex; flex-direction: column; gap: 5px; padding: 11px; border: 1px solid #344138; border-radius: 4px; background: #151c18; }
+.degradation-indicators b { color: #dbe4d9; font-size: 14px; }
+.degradation-indicators span { color: #b0bcb1; font-size: 13px; line-height: 1.45; }
+.degradation-screening > p { margin: 0; padding: 12px; border-left: 2px solid #879a70; color: #d4dccf; background: #151b16; font-size: 14px; line-height: 1.55; }
+.degradation-unavailable-grid b { color: #e5d8bd; font-size: 14px; }
+.npp-context, .yield-context { min-width: 0; padding: 13px; border: 1px solid #344138; border-radius: 4px; background: #151c18; }
+.npp-context > div, .yield-context > div { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; }
+.npp-context b, .yield-context span { color: #dbe4d9; font-size: 14px; }
+.npp-context span { color: #afbaae; font-size: 13px; }
+.npp-context svg { display: block; width: 100%; height: 95px; margin: 8px 0; border-bottom: 1px solid #435044; background: repeating-linear-gradient(to bottom, transparent 0, transparent 23px, #253029 24px); }
+.npp-context > small, .yield-context > small { display: block; color: #aeb9ae; font-size: 13px; line-height: 1.5; }
+.yield-context { display: flex; flex-direction: column; gap: 7px; border-left: 3px solid #b49a61; }
+.yield-context > div > span { color: #d8c58f; }
+.yield-context > div > b { color: #e4ebdf; font: 21px var(--mono); }
+.yield-context > p { margin: 0; color: #c3cbbf; font-size: 13px; line-height: 1.5; }
+.land-context-state { color: #dfcca4 !important; }
 .agricultural-details, .agricultural-source { color: #b9c5bc; }
 .agricultural-details summary, .agricultural-source summary { min-height: 42px; display: flex; align-items: center; color: #d1dcd0; font-size: 14px; font-weight: 550; cursor: pointer; }
 .agricultural-details p, .agricultural-source p { color: #aeb9ae; font-size: 14px; line-height: 1.6; }
@@ -1054,6 +1089,7 @@ h1, h2, h3, p { margin-top: 0; }
 
 @media (max-width: 760px) {
   .agricultural-months { grid-template-columns: 1fr; }
+  .degradation-indicators, .degradation-unavailable-grid { grid-template-columns: 1fr; }
   .agricultural-analysis-heading { align-items: flex-start; flex-direction: column; }
   .phase8-farmer-context { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .phase8-month-cards { grid-template-columns: 1fr; }

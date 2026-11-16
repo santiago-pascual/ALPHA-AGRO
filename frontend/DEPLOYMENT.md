@@ -17,7 +17,7 @@ npm run preview
 
 `.github/workflows/deploy-alpha-agro.yml` is manual-only (`workflow_dispatch`). To publish, a repository administrator must enable GitHub Pages with **GitHub Actions** as the source, then run **Deploy Alpha Agro to GitHub Pages** from the Actions tab. The workflow runs checks, builds for the repository subpath, and deploys the generated site. This repository change does not enable Pages or publish a site by itself.
 
-The validated NASA JSON, predictive evaluation JSON, and forecast artifacts are ignored local data. They are not included in a checkout-based static build unless deliberately provided to the build environment. Do not publish real analysis artifacts without authorization to make those data public. Without an artifact, the REAL DATA and Predictive Research views retain their explicit missing-data state; neither substitutes DEMO values.
+The repository contains these approved, compact public artifacts: `trend_analysis.json`, `phase8_forecast_bundle_v1.json`, `soil_moisture_interpretation_v1.json`, `predictive_evaluation_v1.json`, and `agricultural_context_v1.json`. They are copied into `dist/data` by Vite, and the deployment workflow fails if any required artifact is absent. Raw GLDAS archives and source CSV downloads are not included. `forecast_v1.json` and `spatial_hindcast_v1.json` are not available: the interface must keep operational forecast and spatial hindcast values unavailable, while Phase 8 remains explicitly experimental. No forecast data are synthesized to fill these gaps.
 
 ## Hosting and data notes
 

@@ -1,0 +1,996 @@
+{
+  "schema_version": "alpha_agro_land_context_v1",
+  "generated_at_utc": "2026-11-16T01:46:44.674843+00:00",
+  "scope_note": "Exploratory regional indicators only. Not a land-degradation classification, field measurement, validated probability, or operational crop-yield forecast.",
+  "productivity": {
+    "product": "MOD17A3HGF.061",
+    "band": "Npp_500m",
+    "units": "kg_C/m^2/year",
+    "scale_factor": 0.0001,
+    "years": [
+      {
+        "year": 2001,
+        "mean_kg_c_m2": 0.52042,
+        "n_cells": 5
+      },
+      {
+        "year": 2002,
+        "mean_kg_c_m2": 0.54742,
+        "n_cells": 5
+      },
+      {
+        "year": 2003,
+        "mean_kg_c_m2": 0.5874,
+        "n_cells": 5
+      },
+      {
+        "year": 2004,
+        "mean_kg_c_m2": 0.65458,
+        "n_cells": 5
+      },
+      {
+        "year": 2005,
+        "mean_kg_c_m2": 0.61878,
+        "n_cells": 5
+      },
+      {
+        "year": 2006,
+        "mean_kg_c_m2": 0.58452,
+        "n_cells": 5
+      },
+      {
+        "year": 2007,
+        "mean_kg_c_m2": 0.58446,
+        "n_cells": 5
+      },
+      {
+        "year": 2008,
+        "mean_kg_c_m2": 0.55544,
+        "n_cells": 5
+      },
+      {
+        "year": 2009,
+        "mean_kg_c_m2": 0.543,
+        "n_cells": 5
+      },
+      {
+        "year": 2010,
+        "mean_kg_c_m2": 0.65292,
+        "n_cells": 5
+      },
+      {
+        "year": 2011,
+        "mean_kg_c_m2": 0.59196,
+        "n_cells": 5
+      },
+      {
+        "year": 2012,
+        "mean_kg_c_m2": 0.65028,
+        "n_cells": 5
+      },
+      {
+        "year": 2013,
+        "mean_kg_c_m2": 0.63588,
+        "n_cells": 5
+      },
+      {
+        "year": 2014,
+        "mean_kg_c_m2": 0.6965,
+        "n_cells": 5
+      },
+      {
+        "year": 2015,
+        "mean_kg_c_m2": 0.71736,
+        "n_cells": 5
+      },
+      {
+        "year": 2016,
+        "mean_kg_c_m2": 0.68746,
+        "n_cells": 5
+      },
+      {
+        "year": 2017,
+        "mean_kg_c_m2": 0.73498,
+        "n_cells": 5
+      },
+      {
+        "year": 2018,
+        "mean_kg_c_m2": 0.67864,
+        "n_cells": 5
+      },
+      {
+        "year": 2019,
+        "mean_kg_c_m2": 0.72134,
+        "n_cells": 5
+      },
+      {
+        "year": 2020,
+        "mean_kg_c_m2": 0.67148,
+        "n_cells": 5
+      },
+      {
+        "year": 2021,
+        "mean_kg_c_m2": 0.66146,
+        "n_cells": 5
+      },
+      {
+        "year": 2022,
+        "mean_kg_c_m2": 0.57998,
+        "n_cells": 5
+      },
+      {
+        "year": 2023,
+        "mean_kg_c_m2": 0.61192,
+        "n_cells": 5
+      },
+      {
+        "year": 2024,
+        "mean_kg_c_m2": 0.66506,
+        "n_cells": 5
+      },
+      {
+        "year": 2025,
+        "mean_kg_c_m2": 0.6459,
+        "n_cells": 5
+      }
+    ],
+    "sample_cells": [
+      {
+        "cell_id": "-37.8750,-63.8750",
+        "latitude": -37.875,
+        "longitude": -63.875
+      },
+      {
+        "cell_id": "-36.1250,-58.1250",
+        "latitude": -36.125,
+        "longitude": -58.125
+      },
+      {
+        "cell_id": "-33.8750,-62.6250",
+        "latitude": -33.875,
+        "longitude": -62.625
+      },
+      {
+        "cell_id": "-32.1250,-57.3750",
+        "latitude": -32.125,
+        "longitude": -57.375
+      },
+      {
+        "cell_id": "-30.1250,-57.1250",
+        "latitude": -30.125,
+        "longitude": -57.125
+      }
+    ],
+    "cell_observations": [
+      {
+        "cell_id": "-37.8750,-63.8750",
+        "latitude": -37.875,
+        "longitude": -63.875,
+        "observations": [
+          {
+            "year": 2001,
+            "value_kg_c_m2": 0.4877,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2002,
+            "value_kg_c_m2": 0.3448,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2003,
+            "value_kg_c_m2": 0.31520000000000004,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2004,
+            "value_kg_c_m2": 0.46990000000000004,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2005,
+            "value_kg_c_m2": 0.2877,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2006,
+            "value_kg_c_m2": 0.3064,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2007,
+            "value_kg_c_m2": 0.3909,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2008,
+            "value_kg_c_m2": 0.2842,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2009,
+            "value_kg_c_m2": 0.1534,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2010,
+            "value_kg_c_m2": 0.2732,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2011,
+            "value_kg_c_m2": 0.3648,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2012,
+            "value_kg_c_m2": 0.4339,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2013,
+            "value_kg_c_m2": 0.2874,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2014,
+            "value_kg_c_m2": 0.5278,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2015,
+            "value_kg_c_m2": 0.48660000000000003,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2016,
+            "value_kg_c_m2": 0.5431,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2017,
+            "value_kg_c_m2": 0.5197,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2018,
+            "value_kg_c_m2": 0.365,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2019,
+            "value_kg_c_m2": 0.34740000000000004,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2020,
+            "value_kg_c_m2": 0.5089,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2021,
+            "value_kg_c_m2": 0.42460000000000003,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2022,
+            "value_kg_c_m2": 0.38380000000000003,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2023,
+            "value_kg_c_m2": 0.37420000000000003,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2024,
+            "value_kg_c_m2": 0.37420000000000003,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2025,
+            "value_kg_c_m2": 0.47850000000000004,
+            "quality_flag": "pixel_QC_not_requested"
+          }
+        ]
+      },
+      {
+        "cell_id": "-36.1250,-58.1250",
+        "latitude": -36.125,
+        "longitude": -58.125,
+        "observations": [
+          {
+            "year": 2001,
+            "value_kg_c_m2": 0.47900000000000004,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2002,
+            "value_kg_c_m2": 0.5549000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2003,
+            "value_kg_c_m2": 0.7451,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2004,
+            "value_kg_c_m2": 0.7969,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2005,
+            "value_kg_c_m2": 0.8084,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2006,
+            "value_kg_c_m2": 0.8249000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2007,
+            "value_kg_c_m2": 0.8250000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2008,
+            "value_kg_c_m2": 0.7614000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2009,
+            "value_kg_c_m2": 0.8143,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2010,
+            "value_kg_c_m2": 0.8482000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2011,
+            "value_kg_c_m2": 0.7582,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2012,
+            "value_kg_c_m2": 0.8170000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2013,
+            "value_kg_c_m2": 0.73,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2014,
+            "value_kg_c_m2": 0.6794,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2015,
+            "value_kg_c_m2": 0.6657000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2016,
+            "value_kg_c_m2": 0.7186,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2017,
+            "value_kg_c_m2": 0.8530000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2018,
+            "value_kg_c_m2": 0.8387,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2019,
+            "value_kg_c_m2": 0.8570000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2020,
+            "value_kg_c_m2": 0.8632000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2021,
+            "value_kg_c_m2": 0.8098000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2022,
+            "value_kg_c_m2": 0.6632,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2023,
+            "value_kg_c_m2": 0.6573,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2024,
+            "value_kg_c_m2": 0.7934,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2025,
+            "value_kg_c_m2": 0.7476,
+            "quality_flag": "pixel_QC_not_requested"
+          }
+        ]
+      },
+      {
+        "cell_id": "-33.8750,-62.6250",
+        "latitude": -33.875,
+        "longitude": -62.625,
+        "observations": [
+          {
+            "year": 2001,
+            "value_kg_c_m2": 0.6152000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2002,
+            "value_kg_c_m2": 0.6538,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2003,
+            "value_kg_c_m2": 0.5700000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2004,
+            "value_kg_c_m2": 0.7455,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2005,
+            "value_kg_c_m2": 0.7582,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2006,
+            "value_kg_c_m2": 0.665,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2007,
+            "value_kg_c_m2": 0.605,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2008,
+            "value_kg_c_m2": 0.5468000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2009,
+            "value_kg_c_m2": 0.44070000000000004,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2010,
+            "value_kg_c_m2": 0.6294000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2011,
+            "value_kg_c_m2": 0.5462,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2012,
+            "value_kg_c_m2": 0.8160000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2013,
+            "value_kg_c_m2": 0.6617000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2014,
+            "value_kg_c_m2": 0.7636000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2015,
+            "value_kg_c_m2": 0.9206000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2016,
+            "value_kg_c_m2": 0.7992,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2017,
+            "value_kg_c_m2": 0.7751,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2018,
+            "value_kg_c_m2": 0.6395000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2019,
+            "value_kg_c_m2": 0.7477,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2020,
+            "value_kg_c_m2": 0.6177,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2021,
+            "value_kg_c_m2": 0.7166,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2022,
+            "value_kg_c_m2": 0.5926,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2023,
+            "value_kg_c_m2": 0.5862,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2024,
+            "value_kg_c_m2": 0.559,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2025,
+            "value_kg_c_m2": 0.5910000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          }
+        ]
+      },
+      {
+        "cell_id": "-32.1250,-57.3750",
+        "latitude": -32.125,
+        "longitude": -57.375,
+        "observations": [
+          {
+            "year": 2001,
+            "value_kg_c_m2": 0.652,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2002,
+            "value_kg_c_m2": 0.7382000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2003,
+            "value_kg_c_m2": 0.7741,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2004,
+            "value_kg_c_m2": 0.7164,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2005,
+            "value_kg_c_m2": 0.7409,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2006,
+            "value_kg_c_m2": 0.675,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2007,
+            "value_kg_c_m2": 0.6181,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2008,
+            "value_kg_c_m2": 0.6164000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2009,
+            "value_kg_c_m2": 0.7506,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2010,
+            "value_kg_c_m2": 0.8195,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2011,
+            "value_kg_c_m2": 0.7436,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2012,
+            "value_kg_c_m2": 0.7426,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2013,
+            "value_kg_c_m2": 0.8152,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2014,
+            "value_kg_c_m2": 0.8205,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2015,
+            "value_kg_c_m2": 0.7851,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2016,
+            "value_kg_c_m2": 0.6982,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2017,
+            "value_kg_c_m2": 0.8861,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2018,
+            "value_kg_c_m2": 0.8502000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2019,
+            "value_kg_c_m2": 0.9317000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2020,
+            "value_kg_c_m2": 0.8476,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2021,
+            "value_kg_c_m2": 0.7495,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2022,
+            "value_kg_c_m2": 0.7185,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2023,
+            "value_kg_c_m2": 0.7364,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2024,
+            "value_kg_c_m2": 0.8520000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2025,
+            "value_kg_c_m2": 0.7199,
+            "quality_flag": "pixel_QC_not_requested"
+          }
+        ]
+      },
+      {
+        "cell_id": "-30.1250,-57.1250",
+        "latitude": -30.125,
+        "longitude": -57.125,
+        "observations": [
+          {
+            "year": 2001,
+            "value_kg_c_m2": 0.3682,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2002,
+            "value_kg_c_m2": 0.4454,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2003,
+            "value_kg_c_m2": 0.5326000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2004,
+            "value_kg_c_m2": 0.5442,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2005,
+            "value_kg_c_m2": 0.49870000000000003,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2006,
+            "value_kg_c_m2": 0.45130000000000003,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2007,
+            "value_kg_c_m2": 0.4833,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2008,
+            "value_kg_c_m2": 0.5684,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2009,
+            "value_kg_c_m2": 0.556,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2010,
+            "value_kg_c_m2": 0.6943,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2011,
+            "value_kg_c_m2": 0.547,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2012,
+            "value_kg_c_m2": 0.4419,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2013,
+            "value_kg_c_m2": 0.6851,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2014,
+            "value_kg_c_m2": 0.6912,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2015,
+            "value_kg_c_m2": 0.7288,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2016,
+            "value_kg_c_m2": 0.6782,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2017,
+            "value_kg_c_m2": 0.641,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2018,
+            "value_kg_c_m2": 0.6998000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2019,
+            "value_kg_c_m2": 0.7229,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2020,
+            "value_kg_c_m2": 0.52,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2021,
+            "value_kg_c_m2": 0.6068,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2022,
+            "value_kg_c_m2": 0.5418000000000001,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2023,
+            "value_kg_c_m2": 0.7055,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2024,
+            "value_kg_c_m2": 0.7467,
+            "quality_flag": "pixel_QC_not_requested"
+          },
+          {
+            "year": 2025,
+            "value_kg_c_m2": 0.6925,
+            "quality_flag": "pixel_QC_not_requested"
+          }
+        ]
+      }
+    ],
+    "sample_design": "Five evenly spaced eligible GLDAS trend cells; unweighted point sample, not full Pampas area coverage.",
+    "quality_note": "Npp_QC_500m was not requested; no pixel-level quality filtering was applied. Fill and invalid values were excluded.",
+    "api_payload_sha256": "9b5ea8fffae42b29e737f91b3810f4755b21d3cc62c5060105f83da3040667cb"
+  },
+  "yield_context": {
+    "dataset": "Argentina agricultural estimates by crop, campaign, province/department",
+    "geography": [
+      "Buenos Aires",
+      "Córdoba",
+      "Entre Ríos",
+      "La Pampa",
+      "Santa Fe"
+    ],
+    "aggregation": "sum production / sum harvested area; province-level context, not field-level",
+    "campaigns": [
+      "2019/2020",
+      "2020/2021",
+      "2021/2022",
+      "2022/2023",
+      "2023/2024"
+    ],
+    "crops": {
+      "soybean": {
+        "annual": [
+          {
+            "campaign": "2019/2020",
+            "yield_kg_ha": 2959.1,
+            "harvested_area_ha": 14239780,
+            "province_count": 5
+          },
+          {
+            "campaign": "2020/2021",
+            "yield_kg_ha": 2810.8,
+            "harvested_area_ha": 14065914,
+            "province_count": 5
+          },
+          {
+            "campaign": "2021/2022",
+            "yield_kg_ha": 2786.5,
+            "harvested_area_ha": 13431232,
+            "province_count": 5
+          },
+          {
+            "campaign": "2022/2023",
+            "yield_kg_ha": 1675.6,
+            "harvested_area_ha": 11923482,
+            "province_count": 5
+          },
+          {
+            "campaign": "2023/2024",
+            "yield_kg_ha": 3063.9,
+            "harvested_area_ha": 13932108,
+            "province_count": 5
+          }
+        ],
+        "exploratory_baseline_kg_ha": 2689.1,
+        "recent_campaign_range_kg_ha": [
+          1675.6,
+          3063.9
+        ],
+        "baseline_campaigns": [
+          "2019/2020",
+          "2020/2021",
+          "2021/2022",
+          "2022/2023",
+          "2023/2024"
+        ]
+      },
+      "maize": {
+        "annual": [
+          {
+            "campaign": "2019/2020",
+            "yield_kg_ha": 7933.5,
+            "harvested_area_ha": 5974667,
+            "province_count": 5
+          },
+          {
+            "campaign": "2020/2021",
+            "yield_kg_ha": 7646.5,
+            "harvested_area_ha": 6479822,
+            "province_count": 5
+          },
+          {
+            "campaign": "2021/2022",
+            "yield_kg_ha": 6894.9,
+            "harvested_area_ha": 6955916,
+            "province_count": 5
+          },
+          {
+            "campaign": "2022/2023",
+            "yield_kg_ha": 5115.0,
+            "harvested_area_ha": 6287652,
+            "province_count": 5
+          },
+          {
+            "campaign": "2023/2024",
+            "yield_kg_ha": 7258.3,
+            "harvested_area_ha": 7102988,
+            "province_count": 5
+          }
+        ],
+        "exploratory_baseline_kg_ha": 6970.1,
+        "recent_campaign_range_kg_ha": [
+          5115.0,
+          7933.5
+        ],
+        "baseline_campaigns": [
+          "2019/2020",
+          "2020/2021",
+          "2021/2022",
+          "2022/2023",
+          "2023/2024"
+        ]
+      },
+      "wheat": {
+        "annual": [
+          {
+            "campaign": "2019/2020",
+            "yield_kg_ha": 3043.0,
+            "harvested_area_ha": 5833687,
+            "province_count": 5
+          },
+          {
+            "campaign": "2020/2021",
+            "yield_kg_ha": 2904.6,
+            "harvested_area_ha": 5823418,
+            "province_count": 5
+          },
+          {
+            "campaign": "2021/2022",
+            "yield_kg_ha": 3666.2,
+            "harvested_area_ha": 5747790,
+            "province_count": 5
+          },
+          {
+            "campaign": "2022/2023",
+            "yield_kg_ha": 2391.6,
+            "harvested_area_ha": 5030884,
+            "province_count": 5
+          },
+          {
+            "campaign": "2023/2024",
+            "yield_kg_ha": 3022.9,
+            "harvested_area_ha": 4992699,
+            "province_count": 5
+          }
+        ],
+        "exploratory_baseline_kg_ha": 3021.1,
+        "recent_campaign_range_kg_ha": [
+          2391.6,
+          3666.2
+        ],
+        "baseline_campaigns": [
+          "2019/2020",
+          "2020/2021",
+          "2021/2022",
+          "2022/2023",
+          "2023/2024"
+        ]
+      }
+    },
+    "csv_sha256": "7a47a6d356258a69ce0010031f9b2f45ea4c873901d8f812c7c394d9946f9395",
+    "csv_url": "https://datos.magyp.gob.ar/dataset/9e1e77ba-267e-4eaa-a59f-3296e86b5f36/resource/95d066e6-8a0f-4a80-b59d-6f28f88eacd5/download/estimaciones-agricolas-2026-03.csv",
+    "interpretation": "Exploratory trailing five-campaign historical baseline; not a trained or validated yield forecast."
+  },
+  "provenance": {
+    "trend_input_sha256": "a40195cab9449d226d452b6520cf9b05be861b7eb5744ed1d01af8a73263eb41",
+    "npp_api": "https://modis.ornl.gov/rst/api/v1",
+    "yield_catalog": "https://datos.gob.ar/api/3/action"
+  }
+}
