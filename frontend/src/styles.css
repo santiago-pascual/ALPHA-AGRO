@@ -1097,6 +1097,40 @@ h1, h2, h3, p { margin-top: 0; }
 .saved-fields-panel button, .location-tool button { min-height: 40px; }
 .page-intro > div > p { font-size: 15px; }
 .metric-detail { font-size: 12px; line-height: 1.4; }
+.phase9-context { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-color: #35423a; background: #111715; }
+.phase9-context-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.phase9-context-heading h3 { margin: 4px 0 0; color: #e0e8df; font-size: 17px; font-weight: 560; }
+.phase9-context-heading > span { color: #e7cf96; font: 10px var(--mono); letter-spacing: .05em; }
+.phase9-context > p { margin: 0; color: #b5c1b7; font-size: 13px; }
+.phase9-observed { display: grid; grid-template-columns: minmax(130px, .7fr) 1.3fr; align-items: center; gap: 4px 18px; padding: 12px 14px; border-left: 3px solid #8eaa80; background: #151d19; }
+.phase9-observed > div { grid-row: span 2; display: flex; flex-direction: column; gap: 3px; }
+.phase9-observed > div > span { color: #a9b7ab; font-size: 12px; }
+.phase9-observed > div > b { color: #e2eadf; font: 22px var(--mono); }
+.phase9-observed > p { margin: 0; color: #c3cec3; font-size: 13px; line-height: 1.45; }
+.phase9-observed > p > strong { color: #e3d4aa; }
+.phase9-month-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+.phase9-month-card { min-width: 0; display: flex; flex-direction: column; gap: 7px; padding: 12px; border: 1px solid #303c37; border-radius: 4px; background: #141b18; }
+.phase9-month-card > span:first-child { color: #c5d2be; font-size: 13px; font-weight: 600; text-transform: capitalize; }
+.phase9-month-card > b { color: #dce8d5; font: 21px var(--mono); }
+.phase9-month-card > small { color: #aab7ac; font-size: 12px; line-height: 1.45; }
+.phase9-month-card > div { display: flex; flex-direction: column; gap: 2px; padding-top: 6px; border-top: 1px solid #293430; }
+.phase9-month-card > div > span { color: #9eada1; font-size: 11px; }
+.phase9-month-card > div > strong { color: #ced9cc; font-size: 13px; font-weight: 550; }
+.phase9-probability-unavailable, .phase9-uncertainty { color: #b1bdae; font-size: 11px; line-height: 1.45; }
+.phase9-probability-unavailable { color: #d4c49e; }
+.phase9-interpretation { margin: 0; color: #c0cbbf; font-size: 13px; line-height: 1.55; }
+.phase9-details { border-top: 1px solid #293430; padding-top: 3px; }
+.phase9-details > summary { min-height: 42px; display: flex; align-items: center; color: #c5d2c5; font-size: 13px; cursor: pointer; }
+.phase9-details > p, .phase9-details li { max-width: 900px; color: #aebbb0; font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; }
+.phase9-details > ul { padding-left: 20px; }
+.phase9-unavailable details { margin-top: 4px; }
+.phase9-unavailable details > summary { min-height: 38px; cursor: pointer; }
+.phase9-context [role="alert"] { color: #e1c99b; }
+@media (max-width: 760px) {
+  .phase9-month-grid { grid-template-columns: 1fr; }
+  .phase9-observed { grid-template-columns: 1fr; }
+  .phase9-observed > div { grid-row: auto; }
+}
 
 @media (max-width: 560px) {
   .phase8-farmer-context { grid-template-columns: 1fr; }

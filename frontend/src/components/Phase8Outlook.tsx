@@ -5,9 +5,12 @@ import { phase8ForecastForHorizon, resolvePhase8Metric } from "../data/phase8For
 import type { CoordinatePoint } from "../data/location";
 import type { Language } from "../i18n";
 import type { ForecastTarget } from "../types/forecast";
+import type { Phase9Load } from "../types/phase9";
+import { Phase9ContextPanel } from "./Phase9ContextPanel";
 
 type Props = {
   state: Phase8BundleLoad;
+  phase9State: Phase9Load;
   horizon: 1 | 2 | 3;
   onHorizonChange: (horizon: 1 | 2 | 3) => void;
   selectedLocation: CoordinatePoint | null;
@@ -23,7 +26,7 @@ type Props = {
 };
 const filePath = "frontend/public/data/phase8_forecast_bundle_v1.json";
 
-export function Phase8Outlook({ state, horizon, onHorizonChange, selectedLocation, fieldName, cropName, growthStageName, waterManagementName, target, onRetry, language, formatDate, formatNumber }: Props) {
+export function Phase8Outlook({ state, phase9State, horizon, onHorizonChange, selectedLocation, fieldName, cropName, growthStageName, waterManagementName, target, onRetry, language, formatDate, formatNumber }: Props) {
   const es = language === "es";
   const [scope, setScope] = useState<"regional" | "spatial">("regional");
   const [view, setView] = useState<"farmer" | "research">("farmer");
@@ -71,6 +74,7 @@ export function Phase8Outlook({ state, horizon, onHorizonChange, selectedLocatio
         })}
       </div>
       <p className="phase8-meaning" aria-live="polite">{target === "storage" ? (es ? "Agua modelada en el suelo (0–100 cm), no lluvia prevista." : "Modeled soil water (0–100 cm), not expected rainfall.") : (es ? "Esta métrica no está disponible." : "This metric is unavailable.")} {scope === "spatial" && currentMetric?.status === "unavailable" ? (es ? "Sin datos válidos para esta celda." : "No valid data for this cell.") : ""}</p>
+      <Phase9ContextPanel state={phase9State} bundle={state.bundle} selectedLocation={selectedLocation} horizon={horizon} language={language} formatNumber={formatNumber} />
       <details className="phase8-about"><summary>{es ? "Acerca de esta perspectiva" : "About this outlook"}</summary>
         <p>{explanation}</p>
         {scope === "spatial" && currentMetric?.status === "unavailable" && <p>{currentMetric.reason}</p>}

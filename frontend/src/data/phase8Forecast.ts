@@ -3,7 +3,7 @@ import type { CoordinatePoint } from "./location";
 import type { Phase8Cell, Phase8ForecastBundle, Phase8Metric, Phase8RegionalForecast, Phase8SpatialForecast } from "../types/phase8";
 import type { ForecastTarget } from "../types/forecast";
 
-export type Phase8BundleLoad = { status: "loading" } | { status: "ready"; bundle: Phase8ForecastBundle } | { status: "missing"; message: string } | { status: "error"; message: string };
+export type Phase8BundleLoad = { status: "loading" } | { status: "ready"; bundle: Phase8ForecastBundle; artifactSha256?: string } | { status: "missing"; message: string } | { status: "error"; message: string };
 export type Phase8CellMatch = { status: "matched"; cell: Phase8Cell; distanceKm: number } | { status: "masked"; cell: Phase8Cell } | { status: "outside" };
 const obj = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
 const nonempty = (value: unknown): value is string => typeof value === "string" && value.trim().length > 0;
@@ -195,6 +195,14 @@ export async function loadPhase8ForecastBundle(path = `${import.meta.env.BASE_UR
     const response = await fetch(path, { headers: { Accept: "application/json" } });
     if (response.status === 404) return { status: "missing", message: "phase8_forecast_bundle_v1.json is not installed. Experimental outlook values are unavailable." };
     if (!response.ok) return { status: "error", message: `Could not load Phase 8 bundle (HTTP ${response.status}).` };
-    return { status: "ready", bundle: adaptPhase8ForecastBundle(await response.json() as unknown) };
+    const sourceText = typeof response.text === "function" ? await response.text() : null;
+    const source = sourceText === null ? await response.json() as unknown : JSON.parse(sourceText) as unknown;
+    const bundle = adaptPhase8ForecastBundle(source);
+    let artifactSha256: string | undefined;
+    if (sourceText !== null && globalThis.crypto?.subtle) {
+      const digest = await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(sourceText));
+      artifactSha256 = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+    }
+    return { status: "ready", bundle, artifactSha256 };
   } catch (error) { return { status: "error", message: error instanceof Error ? error.message : "Could not read the Phase 8 bundle." }; }
 }

@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
+import { createHash, webcrypto } from "node:crypto";
 import { resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { adaptPhase8ForecastBundle, loadPhase8ForecastBundle, matchPhase8Cell, resolvePhase8Metric } from "./phase8Forecast";
@@ -74,5 +75,14 @@ describe("Phase 8 experimental forecast bundle adapter", () => {
     expect(bundle.operationally_eligible).toBe(false);
     expect(bundle.spatial_forecasts.eligible_cells).toBe(867);
     expect(bundle.regional_forecasts).toHaveLength(3);
+  });
+
+  it.skipIf(!existsSync(localArtifactPath))("computes the exact source-file checksum for Phase 9 binding", async () => {
+    const sourceText = readFileSync(localArtifactPath, "utf8");
+    vi.stubGlobal("crypto", webcrypto);
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(sourceText, { status: 200, headers: { "Content-Type": "application/json" } })));
+    const loaded = await loadPhase8ForecastBundle("/data/phase8_forecast_bundle_v1.json");
+    expect(loaded.status).toBe("ready");
+    if (loaded.status === "ready") expect(loaded.artifactSha256).toBe(createHash("sha256").update(sourceText).digest("hex"));
   });
 });

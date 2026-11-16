@@ -15,7 +15,7 @@ const localArtifactPath = resolve(process.cwd(), "public/data/phase8_forecast_bu
 function render(state: Parameters<typeof Phase8Outlook>[0]["state"] = { status: "ready", bundle: adaptPhase8ForecastBundle(structuredClone(phase8ForecastFixture)) }, selectedLocation: { latitude: number; longitude: number } | null = null, target: ForecastTarget = "storage") {
   const container = document.createElement("div"); document.body.append(container); root = createRoot(container);
   const onHorizonChange = vi.fn();
-  act(() => root?.render(<Phase8Outlook state={state} horizon={1} onHorizonChange={onHorizonChange} selectedLocation={selectedLocation} fieldName="Test field" cropName="Soybean" growthStageName="Planning / planting" waterManagementName="Unknown" target={target} onRetry={vi.fn()} language="en" formatDate={(value) => value.slice(0, 10)} formatNumber={(value, options) => new Intl.NumberFormat("en-US", options).format(value)} />));
+  act(() => root?.render(<Phase8Outlook state={state} phase9State={{ status: "missing", message: "TEST ONLY Phase 9 artifact absent." }} horizon={1} onHorizonChange={onHorizonChange} selectedLocation={selectedLocation} fieldName="Test field" cropName="Soybean" growthStageName="Planning / planting" waterManagementName="Unknown" target={target} onRetry={vi.fn()} language="en" formatDate={(value) => value.slice(0, 10)} formatNumber={(value, options) => new Intl.NumberFormat("en-US", options).format(value)} />));
   return { container, onHorizonChange };
 }
 
@@ -86,7 +86,7 @@ describe("Phase 8 Research / Experimental Outlook", () => {
   });
   it("shows Spanish experimental and operational status copy", () => {
     const container = document.createElement("div"); document.body.append(container); root = createRoot(container);
-    act(() => root?.render(<Phase8Outlook state={{ status: "ready", bundle: adaptPhase8ForecastBundle(structuredClone(phase8ForecastFixture)) }} horizon={1} onHorizonChange={vi.fn()} selectedLocation={null} fieldName={null} cropName="Soja" growthStageName="Planificación / siembra" waterManagementName="Desconocido" target="storage" onRetry={vi.fn()} language="es" formatDate={(value) => value.slice(0, 10)} formatNumber={(value, options) => new Intl.NumberFormat("es-AR", options).format(value)} />));
+    act(() => root?.render(<Phase8Outlook state={{ status: "ready", bundle: adaptPhase8ForecastBundle(structuredClone(phase8ForecastFixture)) }} phase9State={{ status: "missing", message: "TEST ONLY" }} horizon={1} onHorizonChange={vi.fn()} selectedLocation={null} fieldName={null} cropName="Soja" growthStageName="Planificación / siembra" waterManagementName="Desconocido" target="storage" onRetry={vi.fn()} language="es" formatDate={(value) => value.slice(0, 10)} formatNumber={(value, options) => new Intl.NumberFormat("es-AR", options).format(value)} />));
     expect(container.textContent).toContain("EXPERIMENTAL · NO OPERATIVO");
     expect(container.textContent?.toLowerCase()).toContain("no es un pronóstico operativo");
   });

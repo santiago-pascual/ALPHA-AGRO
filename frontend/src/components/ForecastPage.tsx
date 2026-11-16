@@ -16,7 +16,9 @@ import { buildFarmerAnalysisRequest, CROP_CATALOG, DEFAULT_CROP_CONFIGURATION, t
 import { historicalContextForForecast } from "../data/farmerAnalysis";
 import { ForecastIntervalVisual } from "./ForecastIntervalVisual";
 import { loadPhase8ForecastBundle, type Phase8BundleLoad } from "../data/phase8Forecast";
+import { loadPhase9Interpretation } from "../data/phase9Interpretation";
 import { Phase8Outlook } from "./Phase8Outlook";
+import type { Phase9Load } from "../types/phase9";
 
 const forecastFile = "frontend/public/data/forecast_v1.json";
 
@@ -52,6 +54,7 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
   const [evaluationState, setEvaluationState] = useState<"loading" | "ready" | "error">("loading");
   const [forecastState, setForecastState] = useState<ForecastLoad>({ status: "loading" });
   const [phase8State, setPhase8State] = useState<Phase8BundleLoad>({ status: "loading" });
+  const [phase9State, setPhase9State] = useState<Phase9Load>({ status: "loading" });
   const [submittedRequest, setSubmittedRequest] = useState<ForecastIssueRequest | null>(null);
   const [submittedAnalysis, setSubmittedAnalysis] = useState<FarmerAnalysisRequest | null>(null);
   const [submissionAttempted, setSubmissionAttempted] = useState(false);
@@ -69,6 +72,17 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
     loadPhase8ForecastBundle().then((loadedBundle) => { if (active) setPhase8State(loadedBundle); });
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    if (phase8State.status === "loading") setPhase9State({ status: "loading" });
+    else if (phase8State.status !== "ready") setPhase9State({ status: "error", message: "A validated Phase 8 bundle is required to join Phase 9 cell/month records." });
+    else {
+      setPhase9State({ status: "loading" });
+      loadPhase9Interpretation(phase8State.bundle, phase8State.artifactSha256).then((loaded) => { if (active) setPhase9State(loaded); });
+    }
+    return () => { active = false; };
+  }, [phase8State]);
 
   const retryPhase8Bundle = () => {
     setPhase8State({ status: "loading" });
@@ -275,7 +289,7 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
       <button type="button" className="button-primary forecast-generate" onClick={() => { setIsGenerating(!!requestResult.request && forecastState.status === "loading"); generateForecast(); }} disabled={isGenerating} aria-busy={isGenerating}>{isGenerating ? <LoaderCircle className="forecast-generate-spinner" size={17} aria-hidden="true" /> : <BarChart3 size={17} aria-hidden="true" />}{isGenerating ? t("generating") : t("generateForecast")}<ArrowRight size={16} aria-hidden="true" /></button>
     </section>
 
-    <Phase8Outlook state={phase8State} horizon={horizon} onHorizonChange={setHorizon} selectedLocation={selectedLocation} fieldName={activeField?.name ?? null} cropName={CROP_CATALOG.find((crop) => crop.id === cropConfiguration.crop)?.name[language] ?? cropConfiguration.crop} growthStageName={t(cropConfiguration.growthStage)} waterManagementName={t(cropConfiguration.waterManagement)} target={target} onRetry={retryPhase8Bundle} language={language} formatDate={formatDate} formatNumber={formatNumber} />
+    <Phase8Outlook state={phase8State} phase9State={phase9State} horizon={horizon} onHorizonChange={setHorizon} selectedLocation={selectedLocation} fieldName={activeField?.name ?? null} cropName={CROP_CATALOG.find((crop) => crop.id === cropConfiguration.crop)?.name[language] ?? cropConfiguration.crop} growthStageName={t(cropConfiguration.growthStage)} waterManagementName={t(cropConfiguration.waterManagement)} target={target} onRetry={retryPhase8Bundle} language={language} formatDate={formatDate} formatNumber={formatNumber} />
 
     {submissionAttempted && <section className="forecast-unavailable panel forecast-results" aria-labelledby="forecast-unavailable-title" aria-live="polite">
       <div className="forecast-unavailable-icon"><LockKeyhole size={19} /></div>
