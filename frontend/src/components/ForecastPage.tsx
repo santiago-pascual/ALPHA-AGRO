@@ -18,6 +18,7 @@ import { ForecastIntervalVisual } from "./ForecastIntervalVisual";
 import { loadPhase8ForecastBundle, type Phase8BundleLoad } from "../data/phase8Forecast";
 import { loadPhase9Interpretation } from "../data/phase9Interpretation";
 import { Phase8Outlook } from "./Phase8Outlook";
+import { AgriculturalAnalysis } from "./AgriculturalAnalysis";
 import type { Phase9Load } from "../types/phase9";
 
 const forecastFile = "frontend/public/data/forecast_v1.json";
@@ -58,6 +59,7 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
   const [submittedRequest, setSubmittedRequest] = useState<ForecastIssueRequest | null>(null);
   const [submittedAnalysis, setSubmittedAnalysis] = useState<FarmerAnalysisRequest | null>(null);
   const [submissionAttempted, setSubmissionAttempted] = useState(false);
+  const [analysisGenerated, setAnalysisGenerated] = useState(false);
   const [submitError, setSubmitError] = useState<TranslationKey | null>(null);
 
   useEffect(() => {
@@ -130,6 +132,7 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
     setSubmissionAttempted(false);
     setSubmitError(null);
     setSubmittedAnalysis(null);
+    setAnalysisGenerated(false);
   }, [selectedLocation?.latitude, selectedLocation?.longitude, horizon, target, issueMode, issueDate, cropConfiguration.crop, cropConfiguration.growthStage, cropConfiguration.waterManagement]);
 
   const generateForecast = () => {
@@ -270,12 +273,20 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
 
     <CropDecisionPanel configuration={cropConfiguration} onChange={onCropConfigurationChange} />
 
+    <section className="farmer-analysis-launch" aria-label={language === "es" ? "Generar análisis del campo" : "Generate field analysis"}>
+      <button type="button" className="button-primary forecast-generate" onClick={() => setAnalysisGenerated(true)} disabled={!selectedLocation}>
+        <BarChart3 size={17} aria-hidden="true" />{language === "es" ? "Generar análisis" : "Generate analysis"}<ArrowRight size={16} aria-hidden="true" />
+      </button>
+      {!selectedLocation && <span>{language === "es" ? "Elegí primero la ubicación del campo." : "Select a field location first."}</span>}
+    </section>
+    {analysisGenerated && <AgriculturalAnalysis phase8={phase8State} phase9={phase9State} location={selectedLocation} crop={cropConfiguration} language={language} formatNumber={formatNumber} onChooseCrop={(crop) => onCropConfigurationChange({ ...cropConfiguration, crop })} />}
+
     <section className="forecast-setup panel" aria-labelledby="forecast-setup-title">
       <div className="panel-heading"><div><div className="eyebrow">{t("requestCell")}</div><h2 id="forecast-setup-title">{t("forecastSetup")}</h2></div></div>
       <div className="forecast-controls">
         <label><span>{t("location")}</span><div className="forecast-fixed-field"><MapPin size={14} /> {selectedLocation ? requestResult.request ? `${activeField?.name ? `${activeField.name} · ` : ""}GLDAS cell · ${requestResult.request.grid_cell_id}` : `${formatCoordinate(selectedLocation.latitude, "latitude")} · ${formatCoordinate(selectedLocation.longitude, "longitude")} · ${localizedRequestError ?? t("checking")}` : language === "es" ? "Pampas argentinas · elegí un punto" : "Argentine Pampas · select a point"}</div></label>
         <label><span>{t("horizon")}</span><select aria-label={t("horizon")} value={horizon} onChange={(event) => setHorizon(Number(event.target.value) as 1 | 2 | 3)}><optgroup label={t("shortTermTrack")}><option value="14d" disabled>{t("months14")} — {t("shortTermUnavailable")}</option><option value="28d" disabled>{t("months28")} — {t("shortTermUnavailable")}</option></optgroup><optgroup label={t("monthlyTrack")}><option value="1">{t("oneMonth")}</option><option value="2">{t("twoMonths")}</option><option value="3">{t("threeMonths")}</option></optgroup></select></label>
-        <label><span>{t("target")}</span><select aria-label={t("target")} value={target} onChange={(event) => setTarget(event.target.value as ForecastTarget)}><option value="storage">{t("storage")} (mm)</option><option value="anomaly">{t("anomaly")} (mm)</option><option value="low_moisture">{t("lowMoisture")}</option></select></label>
+        <label><span>{t("target")}</span><select aria-label={t("target")} value={target} onChange={(event) => setTarget(event.target.value as ForecastTarget)}><option value="storage">{t("storage")} (mm)</option><option value="anomaly" disabled>{t("anomaly")} · {t("notAvailable")}</option><option value="low_moisture" disabled>{t("lowMoisture")} · {t("notAvailable")}</option></select></label>
         <label><span>{t("model")}</span><div className="forecast-fixed-field">{evaluationState === "loading" ? t("loading") : selectedModel ? `${selectedModel} · ${language === "es" ? "elegido antes del período reservado" : "selected before holdout"}` : (language === "es" ? "Sin configuración de evaluación" : "No matching evaluation configuration")}</div></label>
         <label><span>{t("issueTime")}</span><select aria-label={t("issueTime")} value={issueMode} onChange={(event) => setIssueMode(event.target.value as ForecastIssueRequest["issue"]["mode"])}><option value="latest_verified_eligible">{language === "es" ? "Última fecha elegible verificada" : "Latest verified eligible date"}</option><option value="date">{language === "es" ? "Elegir fecha UTC" : "Choose UTC issue time"}</option></select></label>
         {issueMode === "date" && <label><span>{language === "es" ? "Fecha y hora UTC" : "UTC issue timestamp"}</span><input aria-label={language === "es" ? "Fecha y hora de emisión UTC" : "UTC issue timestamp"} type="text" inputMode="text" placeholder="2025-10-31T23:59:59Z" value={issueDate} onChange={(event) => setIssueDate(event.target.value)} /> <small>{language === "es" ? "Ingresá una fecha UTC terminada en Z. La fecha de hoy no se considera válida por defecto." : "Enter a UTC timestamp ending in Z. Today’s date is not assumed to be scientifically valid."}</small></label>}
@@ -286,7 +297,10 @@ export function ForecastPage({ dataset, selectedLocation, onLocationChange, save
         <div><b>1 · {language === "es" ? "Investigación histórica" : "Historical research"}</b><span>{language === "es" ? "Disponible en el Observatorio" : "Available in Observatory"}</span></div><div><b>2 · {language === "es" ? "Evaluación retrospectiva" : "Retrospective evaluation"}</b><span>{evaluationState === "ready" ? (language === "es" ? "Artefacto de evaluación cargado" : "Evaluation artifact loaded") : (language === "es" ? "Cargando o no disponible" : "Loading or unavailable")}</span></div><div><b>3 · {language === "es" ? "Investigación prospectiva experimental" : "Experimental prospective"}</b><span>{phase8State.status === "ready" ? (language === "es" ? "Bundle experimental validado · no operativo" : "Experimental bundle validated · not operational") : phase8State.status === "loading" ? t("loading") : (language === "es" ? "Artefacto no disponible" : "Artifact unavailable")}</span></div><div><b>4 · {language === "es" ? "Elegibilidad operativa" : "Operational eligibility"}</b><span>{requestedResolution?.status === "available" ? (language === "es" ? "Evidencia verificada" : "Evidence matched") : (language === "es" ? "No establecida" : "Not established")}</span></div>
       </div>
       </details>
-      <button type="button" className="button-primary forecast-generate" onClick={() => { setIsGenerating(!!requestResult.request && forecastState.status === "loading"); generateForecast(); }} disabled={isGenerating} aria-busy={isGenerating}>{isGenerating ? <LoaderCircle className="forecast-generate-spinner" size={17} aria-hidden="true" /> : <BarChart3 size={17} aria-hidden="true" />}{isGenerating ? t("generating") : t("generateForecast")}<ArrowRight size={16} aria-hidden="true" /></button>
+      <details className="operational-forecast-request"><summary>{language === "es" ? "Comprobar pronóstico operativo validado" : "Check for a validated operational forecast"}</summary>
+        <p>{language === "es" ? "El análisis histórico y la perspectiva experimental no son pronósticos operativos." : "Historical analysis and the experimental outlook are not operational forecasts."}</p>
+        <button type="button" className="button-secondary" onClick={() => { setIsGenerating(!!requestResult.request && forecastState.status === "loading"); generateForecast(); }} disabled={isGenerating} aria-busy={isGenerating}>{isGenerating ? <LoaderCircle className="forecast-generate-spinner" size={17} aria-hidden="true" /> : <BarChart3 size={17} aria-hidden="true" />}{isGenerating ? t("generating") : t("generateForecast")}<ArrowRight size={16} aria-hidden="true" /></button>
+      </details>
     </section>
 
     <Phase8Outlook state={phase8State} phase9State={phase9State} horizon={horizon} onHorizonChange={setHorizon} selectedLocation={selectedLocation} fieldName={activeField?.name ?? null} cropName={CROP_CATALOG.find((crop) => crop.id === cropConfiguration.crop)?.name[language] ?? cropConfiguration.crop} growthStageName={t(cropConfiguration.growthStage)} waterManagementName={t(cropConfiguration.waterManagement)} target={target} onRetry={retryPhase8Bundle} language={language} formatDate={formatDate} formatNumber={formatNumber} />

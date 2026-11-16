@@ -1018,7 +1018,43 @@ h1, h2, h3, p { margin-top: 0; }
 .phase8-provenance dd { margin: 4px 0 0; color: #bac7bc; font-size: 9px; line-height: 1.5; overflow-wrap: anywhere; }
 .phase8-not-operational { display: flex; align-items: flex-start; gap: 8px; margin: 0; padding: 10px; border: 1px solid #594e37; border-radius: 4px; color: #e3d2a8; background: #201d17; font-size: 9px; line-height: 1.5; }
 .phase8-not-operational > svg { flex: 0 0 auto; }
+
+.farmer-analysis-launch { display: flex; align-items: center; gap: 12px; margin: 14px 0; }
+.farmer-analysis-launch > span { color: #aab5aa; font-size: 13px; }
+.operational-forecast-request { margin-top: 14px; padding-top: 10px; border-top: 1px solid #2d3933; }
+.operational-forecast-request > summary { min-height: 42px; display: flex; align-items: center; color: #c8d4c8; font-size: 13px; font-weight: 550; cursor: pointer; }
+.operational-forecast-request > p { color: #aab5aa; font-size: 13px; line-height: 1.55; }
+.agricultural-analysis { display: flex; flex-direction: column; gap: 15px; margin: 14px 0; padding: 20px; border-color: #455044; }
+.agricultural-analysis-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.agricultural-analysis-heading h2 { margin: 5px 0 0; color: #e2e8df; font-size: 20px; font-weight: 560; }
+.agricultural-analysis-crop { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: #b9c5b9; font-size: 14px; }
+.agricultural-analysis-crop b { color: #e0e8de; }
+.agricultural-conditions { padding: 16px; border-left: 3px solid #879a70; background: #121815; }
+.agricultural-conditions > div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.agricultural-conditions > div span, .agricultural-months article > span { color: #a3afa3; font-size: 13px; }
+.agricultural-conditions > div b { color: #e0e9dc; font-size: 18px; font-weight: 570; }
+.agricultural-conditions p, .agricultural-explanation { margin: 8px 0 0; color: #bac6bb; font-size: 14px; line-height: 1.55; }
+.agricultural-months { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.agricultural-months article { min-width: 0; display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid #35433a; border-radius: 4px; background: #141a17; }
+.agricultural-months article > b { color: #d8e5d2; font: 28px var(--mono); overflow-wrap: anywhere; }
+.agricultural-months article > small { color: #aeb9ae; font-size: 13px; }
+.agricultural-months article > div { color: #b6c1b8; font-size: 13px; line-height: 1.5; }
+.agricultural-explanation { padding: 12px 14px; border-left: 2px solid #7890a0; background: #12191c; }
+.agricultural-planning-note { margin: 0; color: #d7cfb7; font-size: 14px; line-height: 1.55; }
+.agricultural-details, .agricultural-source { color: #b9c5bc; }
+.agricultural-details summary, .agricultural-source summary { min-height: 42px; display: flex; align-items: center; color: #d1dcd0; font-size: 14px; font-weight: 550; cursor: pointer; }
+.agricultural-details p, .agricultural-source p { color: #aeb9ae; font-size: 14px; line-height: 1.6; }
+.agricultural-source a { color: #c7d8b9; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.agricultural-alternatives { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.agricultural-alternatives > span { flex: 1 1 100%; color: #aeb9ae; font-size: 13px; line-height: 1.5; }
+.agricultural-alternatives button { min-height: 40px; padding: 8px 12px; border: 1px solid #435144; border-radius: 4px; color: #d7e2d2; background: #18201a; font-size: 14px; cursor: pointer; }
+.agricultural-alternatives button:hover { background: #253229; }
+.agricultural-alternatives button:focus-visible, .agricultural-details summary:focus-visible, .agricultural-source summary:focus-visible, .operational-forecast-request summary:focus-visible { outline: 2px solid #c6ddb9; outline-offset: 2px; }
+.agricultural-analysis a:focus-visible { outline: 2px solid #c6ddb9; outline-offset: 2px; }
+
 @media (max-width: 760px) {
+  .agricultural-months { grid-template-columns: 1fr; }
+  .agricultural-analysis-heading { align-items: flex-start; flex-direction: column; }
   .phase8-farmer-context { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .phase8-month-cards { grid-template-columns: 1fr; }
   .phase8-month-card { min-height: 0; }
@@ -1028,6 +1064,9 @@ h1, h2, h3, p { margin-top: 0; }
   .phase8-research-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 560px) {
+  .agricultural-analysis { padding: 14px; }
+  .farmer-analysis-launch { align-items: stretch; flex-direction: column; }
+  .farmer-analysis-launch .forecast-generate { width: 100%; }
   .phase8-outlook { padding: 14px; }
   .phase8-view-switch { width: 100%; }
   .phase8-view-switch button { flex: 1; }

@@ -68,7 +68,9 @@ describe("ForecastPage location selection", () => {
     expect(horizon?.disabled).toBe(false);
     expect(Array.from(horizon?.options ?? []).filter((option) => option.disabled).map((option) => option.value)).toEqual(["14d", "28d"]);
     expect(Array.from(horizon?.options ?? []).filter((option) => !option.disabled).map((option) => option.value)).toEqual(["1", "2", "3"]);
-    expect(container.querySelector<HTMLSelectElement>("select[aria-label='Target variable']")?.disabled).toBe(false);
+    const targetSelector = container.querySelector<HTMLSelectElement>("select[aria-label='Target variable']");
+    expect(targetSelector?.disabled).toBe(false);
+    expect(Array.from(targetSelector?.options ?? []).filter((option) => option.disabled).map((option) => option.value)).toEqual(["anomaly", "low_moisture"]);
     act(() => {
       if (horizon) { horizon.value = "3"; horizon.dispatchEvent(new Event("change", { bubbles: true })); }
     });
@@ -79,6 +81,23 @@ describe("ForecastPage location selection", () => {
     expect(container.textContent).toContain("Select a supported field location first.");
     expect(container.textContent).toContain("No scientifically validated forecast is currently available");
     expect(container.textContent).toContain("forecast_v1.json");
+  });
+
+  it("generates the farmer analysis without claiming an operational forecast", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const path = String(input);
+      if (path.includes("predictive_evaluation")) return { ok: true, status: 200, json: async () => predictiveEvaluationFixture };
+      if (path.includes("phase8_forecast_bundle")) return { ok: true, status: 200, json: async () => phase8ForecastFixture };
+      return { ok: false, status: 404, json: async () => ({}) };
+    }));
+    const container = renderForecast();
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+    clickButton(container, "Map select supported cell");
+    clickButton(container, "Generate analysis");
+    expect(container.querySelector("#agricultural-analysis-title")?.textContent).toBe("Your field summary");
+    expect(container.textContent).toContain("EXPERIMENTAL OUTLOOK");
+    expect(container.textContent).toContain("not operational");
+    expect(container.querySelector(".forecast-results")).toBeNull();
   });
 
   it("integrates the Phase 8 bundle as a separate experimental outlook, never an operational prediction", async () => {
