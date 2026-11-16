@@ -1047,14 +1047,14 @@ h1, h2, h3, p { margin-top: 0; }
 /* Progressive disclosure keeps essential results visible while retaining full evidence. */
 .landing-more, .forecast-readiness, .forecast-artifact-path, .forecast-scientific-details,
 .farmer-history-details, .crop-comparison-disclosure, .saved-field-more, .location-privacy-note,
-.overview-data-details, .crop-context-note details {
+.overview-data-details, .crop-context-note {
   color: #b9c5bc;
 }
 .landing-more > summary, .forecast-readiness > summary, .forecast-artifact-path > summary,
 .forecast-scientific-details > summary, .farmer-history-details > summary,
 .crop-comparison-disclosure > summary, .saved-field-more > summary,
 .location-privacy-note > summary, .overview-data-details > summary,
-.crop-context-note details > summary {
+.crop-context-note > summary {
   min-height: 42px; display: flex; align-items: center; width: fit-content; max-width: 100%;
   padding: 7px 2px; color: #c8d4c8; font-size: 13px; font-weight: 550; cursor: pointer;
 }
@@ -1094,7 +1094,7 @@ h1, h2, h3, p { margin-top: 0; }
 .saved-field-more > div { display: grid; gap: 5px; padding: 0 0 9px; color: #aeb9b0; font-size: 12px; overflow-wrap: anywhere; }
 .saved-field-more > div > span { display: block; }
 .saved-field-select { min-height: 48px; }
-.saved-field-panel button, .location-tool button { min-height: 40px; }
+.saved-fields-panel button, .location-tool button { min-height: 40px; }
 .page-intro > div > p { font-size: 15px; }
 .metric-detail { font-size: 12px; line-height: 1.4; }
 
