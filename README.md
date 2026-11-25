@@ -1,5 +1,7 @@
 # Alpha Agro | Earth system intelligence for agriculture
 
+[![Portfolio checks](https://github.com/santiago-pascual/quant-alpha-agro/actions/workflows/portfolio-ci.yml/badge.svg)](https://github.com/santiago-pascual/quant-alpha-agro/actions/workflows/portfolio-ci.yml)
+
 Independent scientific computing project by **Santiago Pascual**, developed as a solo participant in the 2026 NASA Space Apps Challenge, [Be An Earth System Trend Detective!](https://www.spaceappschallenge.org/2026/challenges/earth-system-trend-detective/). Alpha Agro combines NASA land-surface-model data, reproducible statistical inference, retrospective predictive evaluation and an interactive Earth-system observatory for the Argentine Pampas.
 
 **Research question:** Has modeled soil-water storage in the upper metre changed over 2006–2025, and can historical hydrological information improve on seasonal-climatology forecasts?
@@ -34,7 +36,7 @@ The engine validates granules, units, time bounds and masks; computes spherical-
 | Result | Value |
 |---|---:|
 | Period | Jan 2006–Dec 2025 (240 months) |
-| Common valid grid | 867/896 cells (96.76% area coverage) |
+| Common valid grid | 867/896 cells (96.76% of grid cells) |
 | Regional slope | −2.83 mm/decade |
 | 95% HAC interval | [−23.69, +18.03] mm/decade |
 | HAC p-value | 0.790 |
@@ -88,7 +90,7 @@ python scripts/portfolio_evidence.py
 
 ## Testing and validation
 
-Local Windows verification: 119 Python tests and four subtests passed; all 117 frontend tests across 22 suites passed using Node.js 22; TypeScript compilation, production build and offline artifact verification passed. Scientific JSON files are checked out with LF line endings to preserve provenance hashes. See [portfolio audit](docs/PORTFOLIO_AUDIT.md) for executed checks and remaining blockers. The existing [manual Pages workflow](.github/workflows/deploy-alpha-agro.yml) checks public artifacts, TypeScript, frontend tests and build before deployment. A separate [CI workflow](.github/workflows/portfolio-ci.yml) is provided for non-deploying frontend and artifact checks; its remote status is not yet verified.
+Local Windows verification: 119 Python tests and four subtests passed; all 117 frontend tests across 22 suites passed using Node.js 22; TypeScript compilation, production build and offline artifact verification passed. Scientific JSON files are checked out with LF line endings to preserve provenance hashes. See [portfolio audit](docs/PORTFOLIO_AUDIT.md) for executed checks and remaining blockers. The existing [manual Pages workflow](.github/workflows/deploy-alpha-agro.yml) checks public artifacts, TypeScript, frontend tests and build before deployment. A separate [CI workflow](.github/workflows/portfolio-ci.yml) is provided for non-deploying frontend and artifact checks; the workflow has passed on GitHub Actions.
 
 ## Scientific limitations
 
