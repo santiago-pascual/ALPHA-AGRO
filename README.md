@@ -1,58 +1,99 @@
-# Alpha Agro
+# Alpha Agro | Earth system intelligence for agriculture
 
-**Alpha Agro** is NASA-powered Earth system intelligence for agriculture, developed by team **Quant Alpha** for the 2026 NASA Space Apps Challenge, [Be An Earth System Trend Detective!](https://www.spaceappschallenge.org/2026/challenges/earth-system-trend-detective/). **From Earth data to agricultural insight.** The application helps users explore historical Earth observation trends and hydrological context for the Argentine Pampas, with cautious context for soybean, maize, and wheat.
+Independent scientific computing project by **Santiago Pascual**, developed as a solo participant in the 2026 NASA Space Apps Challenge, [Be An Earth System Trend Detective!](https://www.spaceappschallenge.org/2026/challenges/earth-system-trend-detective/). Alpha Agro combines NASA land-surface-model data, reproducible statistical inference, retrospective predictive evaluation and an interactive Earth-system observatory for the Argentine Pampas.
 
-The initial scope is one region and one crop. Historical trend analysis is the core deliverable. The statistical engine is documented in [Trend engine](docs/TREND_ENGINE.md); it does not establish crop effects. Any hydrological prediction shown will require historical validation.
+**Research question:** Has modeled soil-water storage in the upper metre changed over 2006–2025, and can historical hydrological information improve on seasonal-climatology forecasts?
 
-## Local Python environment
+## Application
 
-This checkout has been configured and tested with the installed Python 3.15.2. Use the existing .venv where available; the pinned development requirements were verified as binary-wheel installable on Python 3.15.2. Recreate only when needed using the installed Python 3.15 executable, without relying on the Windows Store alias.
+The React/TypeScript application includes an Observatory (regional time series, anomalies and cell trends), Forecast workspace (saved locations and experimental outlook), Research & Methods (retrospective model comparisons), and About & Data Sources. English and Spanish are supported. Agricultural context is exploratory; it is not field-level advice. The repository includes five approved public JSON artifacts, so the historical demonstration does not require an Earthdata credential. The following screenshots were captured from the locally running production build on 25 November 2026.
 
-```powershell
-$python315 = Join-Path $env:LOCALAPPDATA "Python\bin\python.exe"
-& $python315 --version
-& $python315 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install --only-binary=:all: -r requirements-dev.txt
-.\.venv\Scripts\python.exe -m pip check
-.\.venv\Scripts\python.exe -c "import numpy, pandas, scipy, xarray, requests, netCDF4, matplotlib, sklearn, streamlit, plotly, folium, pytest; print('Candidate imports OK')"
+![Earth System Observatory — regional trend, uncertainty and spatial coverage](docs/figures/portfolio/historical_observatory.png)
+
+![Alpha Agro landing page](docs/figures/portfolio/application_overview.png)
+
+![Research and Methods — retrospective model evaluation](docs/figures/portfolio/research_methods.png)
+
+Additional application views: [field selection](docs/figures/portfolio/forecast_location.png) and [experimental field outlook](docs/figures/portfolio/forecast_explorer.png). The outlook is not an operational forecast.
+
+## Data and provenance
+
+| Product | Role |
+|---|---|
+| [GLDAS Noah v2.1 monthly, 0.25°](https://doi.org/10.5067/SXAVCZFAQLNO) | Core modeled 0–100 cm soil-water storage; 240 monthly records |
+| GLDAS Noah v2.1 three-hourly | Cadence and units verification sample |
+| MOD17A3HGF annual NPP and Argentine agricultural estimates | Exploratory vegetation and provincial yield context, not predictions |
+| GPM IMERG, MOD13Q1 and SMAP | Candidate comparison products / separate research tracks; not inputs to the core trend result |
+
+The provisional study box is 64–57°W, 38–30°S, not an official Pampas boundary or crop mask. Storage sums three GLDAS layers (0–10, 10–40 and 40–100 cm); kg/m² is numerically equivalent to mm water equivalent. See [data inventory](docs/PHASE_1_DATA_INVENTORY.md), [monthly checksums](docs/GLDAS_MONTHLY_SHA256.csv) and [data manifest](docs/DATA_MANIFEST.md). Raw NetCDF exports are not distributed in this checkout.
+
+## Methodology and historical findings
+
+The engine validates granules, units, time bounds and masks; computes spherical-area-weighted regional means; subtracts calendar-month climatologies; fits OLS with calendar-month fixed effects and 12-lag Newey–West HAC covariance; and evaluates cell-level slopes with Benjamini–Hochberg correction. Seasonal Sen and Kendall estimates are complementary descriptive diagnostics. See [trend engine](docs/TREND_ENGINE.md) and [real-data report](docs/REAL_DATA_RESULTS.md).
+
+| Result | Value |
+|---|---:|
+| Period | Jan 2006–Dec 2025 (240 months) |
+| Common valid grid | 867/896 cells (96.76% area coverage) |
+| Regional slope | −2.83 mm/decade |
+| 95% HAC interval | [−23.69, +18.03] mm/decade |
+| HAC p-value | 0.790 |
+| Seasonal Sen slope | −3.93 mm/decade |
+| Cell slopes | 517 negative, 350 positive |
+| Cells significant after BH at 0.05 | 0 |
+
+The direction of the regional trend remains unresolved. A negative point estimate is not evidence of statistically significant drying. The offline portfolio check independently reproduces the regional slope and HAC interval from the exported series and checks spatial aggregation and manifest consistency; it does not re-download or revalidate raw NetCDF files.
+
+![Regional storage](docs/figures/portfolio/regional_storage.png)
+![Trend uncertainty](docs/figures/portfolio/trend_uncertainty.png)
+![Monthly anomalies](docs/figures/portfolio/monthly_anomalies.png)
+![Spatial trends](docs/figures/portfolio/spatial_trends.png)
+
+## Predictive research: baselines before complexity
+
+The committed retrospective evaluation compares six model families (seasonal climatology, persistence, autoregressive ridge, ridge, XGBoost and XGBoost with forward-filtered HMM features) across regional and spatial targets, three monthly horizons and three target definitions. Expanding walk-forward selection precedes the reserved January 2024–December 2025 holdout. Training-only preprocessing and issue-time availability cutoffs are documented in [predictive results](docs/PREDICTIVE_REAL_DATA_RESULTS.md).
+
+All 18 recorded pre-holdout selections favor seasonal climatology. For the regional one-month anomaly target, the selected baseline has holdout RMSE 29.84 mm; ridge has 28.36 mm descriptively, and persistence 51.36 mm. Holdout ranking is not a new model-selection rule. Archived final products use an assumed five-month release lag, not verified historical release snapshots. The holdout is only 24 months; spatial cells are not independent time replicates. These scores were checked against the committed evaluation artifact, not independently refitted.
+
+![Retrospective holdout comparison](docs/figures/portfolio/predictive_holdout.png)
+
+The separate Phase 8 bundle is explicitly experimental (`operationally_eligible: false`). Operational forecast and spatial hindcast artifacts are absent; the application must withhold unsupported values. No crop-damage, yield or irrigation recommendations follow from these experiments.
+
+## Architecture and stack
+
+```text
+NASA Earthdata / local NetCDF → gldas acquisition + validation
+                              → trend / relationship / predictive research
+                              → versioned JSON artifacts
+                              → React + TypeScript + Vite static application
 ```
 
-The dependency snapshot captures candidate packages and their dependencies. All pinned development requirements installed from binary wheels in the Python 3.15.2 environment used for this branch. The trend engine uses `netCDF4` and `numpy` for masked NetCDF input; its estimators use the Python standard library. In VS Code, select `.venv\Scripts\python.exe` as the workspace interpreter.
+Python, NumPy, pandas, SciPy, netCDF4, scikit-learn and optional XGBoost support research; React, Leaflet and Recharts support the interface. `gldas/` contains acquisition, validation, trend, availability and predictive modules; `config/` contains contracts; `tests/` contains Python tests; `frontend/` contains UI, adapters and tests; `docs/` contains research evidence and provenance.
 
-## Planning documents
+## Reproduce and run
 
+See [setup and verification](docs/PORTFOLIO_REPRODUCTION.md) for environment, Earthdata authentication, offline artifact checks and full research commands. Quick frontend demonstration (Node.js 22, locally tested):
 
-For the statistical analysis API, assumptions, JSON contract, and run command, see [Trend engine](docs/TREND_ENGINE.md).
-
-For the current research checkpoint, start with [project status](docs/PROJECT_STATUS.md) and [handoff](docs/HANDOFF.md).
-
-- [Vision](docs/PROJECT_VISION.md), [requirements](docs/REQUIREMENTS.md), and [architecture proposal](docs/ARCHITECTURE_PROPOSAL.md)
-- [Scientific research charter](docs/SCIENTIFIC_RESEARCH_CHARTER.md), [NASA source research](docs/DATA_SOURCE_RESEARCH.md), and [scientific plan](docs/SCIENTIFIC_PLAN.md)
-- [Phase 1 dataset inventory](docs/PHASE_1_DATA_INVENTORY.md), [GLDAS data dictionary](docs/PHASE_1_DATA_DICTIONARY.md), and [acquisition report](docs/PHASE_1_ACQUISITION_REPORT.md)
-- [48-hour development plan](docs/DEVELOPMENT_PLAN.md), [two-computer workflow](docs/TEAM_WORKFLOW.md), and [submission checklist](docs/SUBMISSION_CHECKLIST.md)
-- [Agent instructions](AGENTS.md)
-
-## Reproduce the validated research
-
-Alpha Agro studies changes in modelled soil-water storage in a provisional Pampas region of Argentina, with soybean as the initial use case. The validated acquisition covers all **240 months from January 2006 through December 2025**. Each monthly export contains three soil-water layers for a 0.25° grid. The same 867 of 896 cells have all three layers throughout the record.
-
-| NASA dataset | Role |
-| --- | --- |
-| GLDAS Noah v2.1 monthly | Verified historical inputs for 0–100 cm soil-water trend analysis |
-| GLDAS Noah v2.1 three-hourly | Verified one-day sample for checking data cadence and units |
-| GPM IMERG Final V07B, Terra MODIS MOD13Q1 v061, and SMAP | Candidate precipitation, vegetation, and soil-moisture comparisons. Coverage and dependencies differ by product. |
-
-See the [dataset inventory](docs/PHASE_1_DATA_INVENTORY.md) for collection identifiers, DOIs, and coverage.
-
-The acquisition layer discovers version-pinned NASA granules, downloads the Pampas subset, and validates its schema, time bounds, and provenance. The statistical engine reads those local exports and produces regional and grid-cell trend results. The planned interface will consume validated results.
-
-After installing the dependencies above, store an authorized Earthdata token once per Windows account using the hidden prompt, then fetch the monthly inputs. Run the trend engine on the **historical OPeNDAP directory**. The NetCDF exports and generated outputs stay under ignored `data/`.
-
-```powershell
-.\.venv\Scripts\python.exe -m gldas.auth
-.\.venv\Scripts\python.exe -m gldas.history --batches 60
-.\.venv\Scripts\python.exe -m gldas.trends data/phase1/historical-opendap --output data/analysis/trend_analysis.json
-.\.venv\Scripts\python.exe -m pytest -q
+```sh
+cd frontend
+npm ci
+npm run dev
 ```
 
-The verification run on all 240 months estimated a regional linear trend of **−2.83 mm per decade**. The 95% interval allowing for temporal autocorrelation was **−23.69 to +18.03 mm per decade** (`p = 0.79`). The estimate is uncertain for this period and provisional box. The grid represents modelled regional soil water, and field conditions, soybean damage, and forecast skill require separate evidence. [Trend engine and assumptions](docs/TREND_ENGINE.md) · [Input checksums](docs/GLDAS_MONTHLY_SHA256.csv) · [Earthdata setup](docs/HANDOFF.md#earthdata-authentication)
+Offline artifact verification and figure generation (NumPy and matplotlib required):
+
+```sh
+python scripts/portfolio_evidence.py
+```
+
+## Testing and validation
+
+Local Windows verification: 119 Python tests and four subtests passed; all 117 frontend tests across 22 suites passed using Node.js 22; TypeScript compilation, production build and offline artifact verification passed. Scientific JSON files are checked out with LF line endings to preserve provenance hashes. See [portfolio audit](docs/PORTFOLIO_AUDIT.md) for executed checks and remaining blockers. The existing [manual Pages workflow](.github/workflows/deploy-alpha-agro.yml) checks public artifacts, TypeScript, frontend tests and build before deployment. A separate [CI workflow](.github/workflows/portfolio-ci.yml) is provided for non-deploying frontend and artifact checks; its remote status is not yet verified.
+
+## Scientific limitations
+
+GLDAS is modeled hydrology, not direct field measurements. The region is provisional; no independent in situ validation or causal attribution is established. The retrospective full-period anomaly climatology must not be reused as a forecast feature without training-only fitting. Spatial dependence limits multiplicity interpretation; release-lag assumptions limit predictive conclusions. Agricultural and experimental outlook panels do not establish operational forecast skill, crop stress, yield, damage or field-specific recommendations.
+
+## Author and acknowledgments
+
+Santiago Pascual — independent solo developer and research participant. Acknowledgment to NASA GES DISC and the GLDAS data providers, NASA Space Apps Challenge organizers, and the open-source scientific and mapping communities. This project does not imply NASA employment, endorsement, sponsorship or an award.

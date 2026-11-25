@@ -1,3 +1,5 @@
+> **Current checkout note:** The five approved public JSON artifacts are tracked and included. Earlier phase instructions below describing them as ignored or absent are historical; see [deployment](DEPLOYMENT.md) and [current root README](../README.md) for the current demo workflow. Operational `forecast_v1.json` and `spatial_hindcast_v1.json` remain absent.
+
 # Alpha Agro frontend
 
 **Alpha Agro** is NASA-powered Earth system intelligence for agriculture, developed by team **Quant Alpha** for NASA Space Apps Challenge 2026: **Be An Earth System Trend Detective!** Its tagline is **From Earth data to agricultural insight.** The public interface is real-data-first and presents only schema-validated scientific artifacts. Test fixtures remain confined to tests; synthetic observations are not a public dashboard mode.
